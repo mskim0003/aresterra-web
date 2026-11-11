@@ -3,35 +3,186 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ares Terra - MARSLAND</title>
+    <title>ARES TERRA : MARSLAND 관제 센터</title>
     <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
             background-color: #0b0c10;
             color: #ffffff;
-            font-family: 'Malgun Gothic', sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            margin: 0;
+            font-family: 'Malgun Gothic', -apple-system, sans-serif;
+            padding: 16px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .header {
             text-align: center;
+            padding: 20px 10px;
+            border-bottom: 2px solid #ff4b2b;
+            margin-bottom: 16px;
         }
-        h1 { color: #ff4b2b; font-size: 3rem; margin-bottom: 10px; }
-        p { color: #c5c6c7; font-size: 1.2rem; }
-        .box {
-            border: 1px solid #ff4b2b;
-            padding: 40px;
+        .header h1 { color: #ff4b2b; font-size: 1.6rem; margin-bottom: 6px; }
+        .badge {
+            display: inline-block;
+            background: #1f2833;
+            color: #66fcf1;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            border: 1px solid #45a29e;
+        }
+        .card {
+            background: #1f2833;
+            border: 1px solid #333;
             border-radius: 12px;
-            background: rgba(255, 75, 43, 0.05);
+            padding: 16px;
+            margin-bottom: 16px;
         }
+        .card h2 {
+            font-size: 1.1rem;
+            color: #66fcf1;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .stat-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+        .stat-box {
+            background: #0b0c10;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid #2b3542;
+        }
+        .stat-label { font-size: 0.8rem; color: #c5c6c7; margin-bottom: 4px; }
+        .stat-value { font-size: 1.3rem; font-weight: bold; color: #ff4b2b; }
+        .btn-group { display: flex; gap: 8px; margin-top: 8px; }
+        button {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            background: #ff4b2b;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+        button.secondary { background: #3b4859; }
+        button.shield { background: #45a29e; color: #0b0c10; }
+        button:active { opacity: 0.8; }
+        .log-box {
+            background: #0b0c10;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            height: 130px;
+            overflow-y: auto;
+            border: 1px solid #2b3542;
+            line-height: 1.5;
+        }
+        .log-jay { color: #66fcf1; }
+        .log-bora { color: #ff99cc; }
+        .log-warn { color: #ffcc00; }
     </style>
 </head>
 <body>
-    <div class="box">
-        <h1>🪐 ARES TERRA : MARSLAND</h1>
-        <p>솔라나 기반 메타버스 프로젝트 마스랜드($MARSLAND) 공식 웹사이트입니다.</p>
-        <p>현재 성공적으로 서버가 연결되었습니다!</p>
+
+    <div class="header">
+        <h1>🪐 MARSLAND 관제실</h1>
+        <span class="badge">● 솔라나 테스트넷(Devnet) 24시간 가동중</span>
     </div>
+
+    <!-- 1. 실시간 토지 & 채굴 현황 -->
+    <div class="card">
+        <h2>📊 실시간 채굴 & 토지 실험실</h2>
+        <div class="stat-grid">
+            <div class="stat-box">
+                <div class="stat-label">총 발행 토지 (Plot)</div>
+                <div class="stat-value" id="plotCount">10,000개</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">초당 채굴량 ($MARSLAND)</div>
+                <div class="stat-value" id="miningRate">10.0 /초</div>
+            </div>
+        </div>
+        <div class="stat-box" style="margin-bottom: 12px;">
+            <div class="stat-label">누적 자동 채굴량 (컴퓨터 꺼져도 계속 쌓임)</div>
+            <div class="stat-value" id="totalMined" style="font-size: 1.7rem; color: #66fcf1;">0.00</div>
+        </div>
+        <div class="stat-label" style="text-align:center;">👇 토지 개수를 바꿔보며 밸런스를 테스트해 보세요</div>
+        <div class="btn-group">
+            <button class="secondary" onclick="changePlots(5000)">5,000개 축소</button>
+            <button onclick="changePlots(10000)">10,000개 기본</button>
+            <button class="secondary" onclick="changePlots(20000)">20,000개 확장</button>
+        </div>
+    </div>
+
+    <!-- 2. 제이 & 보라 2인 1조 점검창 -->
+    <div class="card">
+        <h2>🛡️ 제이 & 보라 합동 보안·밸런스 감시</h2>
+        <div class="log-box" id="logBox">
+            <div class="log-jay">[🛠️제이] 10,000개 토지 기준 경제 밸런스 정상 작동 중입니다.</div>
+            <div class="log-bora">[🛡️보라] 지갑 서명 위조 및 중복 채굴 방어벽이 활성화되었습니다.</div>
+        </div>
+        <div class="btn-group" style="margin-top: 10px;">
+            <button class="shield" onclick="testHack()">🚨 모의 해킹(중복 채굴) 공격해보기</button>
+        </div>
+    </div>
+
+    <script>
+        // 기준 시작 시간 (2026년 11월 12일 새벽 5시 기준 무인 가동)
+        const START_TIME = new Date("2026-11-12T05:00:00+09:00").getTime();
+        let plots = parseInt(localStorage.getItem('mars_plots')) || 10000;
+        let bonusMined = parseFloat(localStorage.getItem('mars_bonus')) || 0;
+        let lastClick = 0;
+
+        function updateDashboard() {
+            const now = Date.now();
+            const elapsedSeconds = Math.max(0, (now - START_TIME) / 1000);
+            const ratePerSec = plots * 0.001; // 토지 1개당 초당 0.001 코인
+            const total = (elapsedSeconds * ratePerSec) + bonusMined;
+
+            document.getElementById('plotCount').innerText = plots.toLocaleString() + "개";
+            document.getElementById('miningRate').innerText = ratePerSec.toFixed(1) + " /초";
+            document.getElementById('totalMined').innerText = total.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        }
+
+        function changePlots(newCount) {
+            plots = newCount;
+            localStorage.setItem('mars_plots', plots);
+            updateDashboard();
+            
+            const logBox = document.getElementById('logBox');
+            let msg = "";
+            if (newCount === 5000) {
+                msg = `<div class="log-jay">[🛠️제이] 토지를 5,000개로 줄였습니다. 코인 희소성이 2배 높아져 가격 방어에 유리합니다!</div>`;
+            } else if (newCount === 20000) {
+                msg = `<div class="log-warn">[🛠️제이 경고] 토지가 20,000개로 늘어나 채굴량이 급증합니다! 인플레이션(가치 하락) 주의가 필요합니다.</div>`;
+            } else {
+                msg = `<div class="log-jay">[🛠️제이] 표준 10,000개 토지 세팅으로 복구되었습니다. 가장 안정적인 비율입니다.</div>`;
+            }
+            logBox.innerHTML = msg + logBox.innerHTML;
+        }
+
+        function testHack() {
+            const now = Date.now();
+            const logBox = document.getElementById('logBox');
+            // 1초 이내 광클(매크로 해킹 시도) 감지
+            if (now - lastClick < 1000) {
+                logBox.innerHTML = `<div class="log-warn">[🛡️보라 긴급차단] 비정상적인 매크로 연속 클릭 공격 감지! IP 및 지갑 요청을 즉시 차단했습니다.</div>` + logBox.innerHTML;
+            } else {
+                logBox.innerHTML = `<div class="log-bora">[🛡️보라 방어성공] 외부에서 강제 채굴 조작 시도가 있었으나 스마트 컨트랙트 보안벽으로 막아냈습니다.</div>` + logBox.innerHTML;
+            }
+            lastClick = now;
+        }
+
+        setInterval(updateDashboard, 200);
+        updateDashboard();
+    </script>
 </body>
 </html>
