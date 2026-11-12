@@ -2,187 +2,310 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ARES TERRA : MARSLAND 관제 센터</title>
+    <title>Ares Terra ($REDM) - Official Testnet Gateway</title>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
-            background-color: #0b0c10;
+            background-color: #05070d;
+            color: #f3f4f6;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+
+        /* --- 1단계: 게이트웨이 (첫 화면) --- */
+        #gatewayScreen {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            background: radial-gradient(circle at center, #1a0b12 0%, #05070d 70%);
+            transition: opacity 0.8s ease-in-out;
+            position: relative;
+        }
+        .portal-ring {
+            width: 220px;
+            height: 220px;
+            border: 4px dashed #ff5722;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            animation: spin 15s linear infinite;
+            margin-bottom: 30px;
+            box-shadow: 0 0 35px rgba(255, 87, 34, 0.5);
+        }
+        .portal-core {
+            width: 180px;
+            height: 180px;
+            background: radial-gradient(circle, #ff5722 0%, #3d120a 80%);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
+            transition: transform 0.3s;
+        }
+        .portal-core:hover {
+            transform: scale(1.08);
+            box-shadow: 0 0 25px #ff5722;
+        }
+        .portal-core span {
+            font-weight: bold;
+            font-size: 1.1rem;
             color: #ffffff;
-            font-family: 'Malgun Gothic', -apple-system, sans-serif;
-            padding: 16px;
-            max-width: 600px;
+            letter-spacing: 1px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .gateway-title h1 {
+            color: #ff5722;
+            font-size: 2.8rem;
+            margin-bottom: 10px;
+            letter-spacing: 3px;
+        }
+        .gateway-title p {
+            color: #9ca3af;
+            font-size: 1.15rem;
+            max-width: 550px;
+            line-height: 1.6;
+        }
+
+        /* --- 2단계: 랜드 분양 & $REDM 시뮬레이터 화면 --- */
+        #simulatorScreen {
+            display: none;
+            padding: 30px 20px;
+            animation: fadeIn 0.8s ease-in-out;
+            max-width: 900px;
             margin: 0 auto;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
         .header {
             text-align: center;
-            padding: 20px 10px;
-            border-bottom: 2px solid #ff4b2b;
-            margin-bottom: 16px;
+            margin-bottom: 30px;
         }
-        .header h1 { color: #ff4b2b; font-size: 1.6rem; margin-bottom: 6px; }
-        .badge {
-            display: inline-block;
-            background: #1f2833;
-            color: #66fcf1;
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            border: 1px solid #45a29e;
+        .header h1 {
+            color: #ff5722;
+            margin-bottom: 5px;
         }
-        .card {
-            background: #1f2833;
-            border: 1px solid #333;
-            border-radius: 12px;
-            padding: 16px;
-            margin-bottom: 16px;
-        }
-        .card h2 {
-            font-size: 1.1rem;
-            color: #66fcf1;
-            margin-bottom: 12px;
+        .dashboard {
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .stat-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-bottom: 12px;
+            justify-content: space-around;
+            background: #151b2b;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            border: 1px solid #2a344d;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
         }
         .stat-box {
-            background: #0b0c10;
-            padding: 12px;
-            border-radius: 8px;
             text-align: center;
-            border: 1px solid #2b3542;
         }
-        .stat-label { font-size: 0.8rem; color: #c5c6c7; margin-bottom: 4px; }
-        .stat-value { font-size: 1.3rem; font-weight: bold; color: #ff4b2b; }
-        .btn-group { display: flex; gap: 8px; margin-top: 8px; }
-        button {
-            flex: 1;
-            padding: 10px;
-            border: none;
-            border-radius: 8px;
-            background: #ff4b2b;
-            color: white;
-            font-weight: bold;
-            cursor: pointer;
+        .stat-box p {
+            margin: 0 0 5px 0;
+            color: #9ca3af;
             font-size: 0.9rem;
         }
-        button.secondary { background: #3b4859; }
-        button.shield { background: #45a29e; color: #0b0c10; }
-        button:active { opacity: 0.8; }
-        .log-box {
-            background: #0b0c10;
-            padding: 10px;
-            border-radius: 8px;
-            font-size: 0.85rem;
-            height: 130px;
-            overflow-y: auto;
-            border: 1px solid #2b3542;
-            line-height: 1.5;
+        .stat-box span {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #00bcd4;
         }
-        .log-jay { color: #66fcf1; }
-        .log-bora { color: #ff99cc; }
-        .log-warn { color: #ffcc00; }
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+        .land-card {
+            background: #1a2238;
+            border: 1px solid #2e3b5e;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            transition: 0.2s;
+        }
+        .land-card.owned {
+            border-color: #ff5722;
+            background: #221417;
+        }
+        .land-card h3 {
+            margin-top: 0;
+            color: #ffab91;
+            font-size: 1.1rem;
+        }
+        .land-card p {
+            font-size: 0.95rem;
+            color: #d1d5db;
+        }
+        button.action-btn {
+            background-color: #ff5722;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 10px;
+            width: 100%;
+            transition: 0.2s;
+        }
+        button.action-btn:hover {
+            background-color: #e64a19;
+        }
+        button.action-btn:disabled {
+            background-color: #374151;
+            color: #9ca3af;
+            cursor: not-allowed;
+        }
+        .back-bar {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+        .back-btn {
+            background: transparent;
+            border: 1px solid #4b5563;
+            color: #9ca3af;
+            padding: 8px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .back-btn:hover {
+            border-color: #ff5722;
+            color: #ff5722;
+        }
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <h1>🪐 MARSLAND 관제실</h1>
-        <span class="badge">● 솔라나 테스트넷(Devnet) 24시간 가동중</span>
-    </div>
-
-    <!-- 1. 실시간 토지 & 채굴 현황 -->
-    <div class="card">
-        <h2>📊 실시간 채굴 & 토지 실험실</h2>
-        <div class="stat-grid">
-            <div class="stat-box">
-                <div class="stat-label">총 발행 토지 (Plot)</div>
-                <div class="stat-value" id="plotCount">10,000개</div>
-            </div>
-            <div class="stat-box">
-                <div class="stat-label">초당 채굴량 ($MARSLAND)</div>
-                <div class="stat-value" id="miningRate">10.0 /초</div>
-            </div>
+    <!-- 1단계: 게이트웨이 대문 화면 -->
+    <div id="gatewayScreen">
+        <div class="gateway-title">
+            <h1>ARES TERRA</h1>
+            <p>환영한다, 개척자여.<br>강렬한 레드엠(<strong>$REDM</strong>) 토큰으로 화성의 위대한 영토를 선점하라.</p>
         </div>
-        <div class="stat-box" style="margin-bottom: 12px;">
-            <div class="stat-label">누적 자동 채굴량 (컴퓨터 꺼져도 계속 쌓임)</div>
-            <div class="stat-value" id="totalMined" style="font-size: 1.7rem; color: #66fcf1;">0.00</div>
-        </div>
-        <div class="stat-label" style="text-align:center;">👇 토지 개수를 바꿔보며 밸런스를 테스트해 보세요</div>
-        <div class="btn-group">
-            <button class="secondary" onclick="changePlots(5000)">5,000개 축소</button>
-            <button onclick="changePlots(10000)">10,000개 기본</button>
-            <button class="secondary" onclick="changePlots(20000)">20,000개 확장</button>
+        <div class="portal-ring">
+            <div class="portal-core" onclick="enterGateway()">
+                <span>ENTER GATE</span>
+            </div>
         </div>
     </div>
 
-    <!-- 2. 제이 & 보라 2인 1조 점검창 -->
-    <div class="card">
-        <h2>🛡️ 제이 & 보라 합동 보안·밸런스 감시</h2>
-        <div class="log-box" id="logBox">
-            <div class="log-jay">[🛠️제이] 10,000개 토지 기준 경제 밸런스 정상 작동 중입니다.</div>
-            <div class="log-bora">[🛡️보라] 지갑 서명 위조 및 중복 채굴 방어벽이 활성화되었습니다.</div>
+    <!-- 2단계: 랜드 분양 & $REDM 시뮬레이터 화면 -->
+    <div id="simulatorScreen">
+        <div class="back-bar">
+            <button class="back-btn" onclick="exitGateway()">← 화성 게이트로 돌아가기</button>
         </div>
-        <div class="btn-group" style="margin-top: 10px;">
-            <button class="shield" onclick="testHack()">🚨 모의 해킹(중복 채굴) 공격해보기</button>
+        <div class="header">
+            <h1>Ares Terra ($REDM) Testnet</h1>
+            <p>화성 가상 영토 분양 및 실시간 토큰 흐름 시뮬레이터 (aresterra.io)</p>
+        </div>
+
+        <div class="dashboard">
+            <div class="stat-box">
+                <p>내 보유 잔고</p>
+                <span id="balance">10,000</span> REDM
+            </div>
+            <div class="stat-box">
+                <p>회사 초기 보유 물량</p>
+                <span id="companyStock">1,000,000</span> REDM
+            </div>
+            <div class="stat-box">
+                <p>총 소각된 토큰 (Burn)</p>
+                <span id="burnedStock">0</span> REDM
+            </div>
+        </div>
+
+        <div class="grid-container" id="landGrid">
+            <!-- 동적 생성 -->
         </div>
     </div>
 
     <script>
-        // 기준 시작 시간 (2026년 11월 12일 새벽 5시 기준 무인 가동)
-        const START_TIME = new Date("2026-11-12T05:00:00+09:00").getTime();
-        let plots = parseInt(localStorage.getItem('mars_plots')) || 10000;
-        let bonusMined = parseFloat(localStorage.getItem('mars_bonus')) || 0;
-        let lastClick = 0;
+        let myBalance = 10000;
+        let companyStock = 1000000;
+        let burnedStock = 0;
 
-        function updateDashboard() {
-            const now = Date.now();
-            const elapsedSeconds = Math.max(0, (now - START_TIME) / 1000);
-            const ratePerSec = plots * 0.001; // 토지 1개당 초당 0.001 코인
-            const total = (elapsedSeconds * ratePerSec) + bonusMined;
+        const lands = [
+            { id: 1, name: "Sector A-01 (Olympus Prime)", price: 1500, owner: null },
+            { id: 2, name: "Sector A-02 (Valles Marineris)", price: 2000, owner: null },
+            { id: 3, name: "Sector B-01 (Elysium Planitia)", price: 1200, owner: null },
+            { id: 4, name: "Sector B-02 (Arcadia Planitia)", price: 1000, owner: null },
+            { id: 5, name: "Sector C-01 (Hellas Basin)", price: 2500, owner: null },
+            { id: 6, name: "Sector C-02 (Tharsis Dome)", price: 3000, owner: null }
+        ];
 
-            document.getElementById('plotCount').innerText = plots.toLocaleString() + "개";
-            document.getElementById('miningRate').innerText = ratePerSec.toFixed(1) + " /초";
-            document.getElementById('totalMined').innerText = total.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        function enterGateway() {
+            const gateway = document.getElementById('gatewayScreen');
+            gateway.style.opacity = '0';
+            setTimeout(() => {
+                gateway.style.display = 'none';
+                const sim = document.getElementById('simulatorScreen');
+                sim.style.display = 'block';
+                renderLands();
+            }, 800);
         }
 
-        function changePlots(newCount) {
-            plots = newCount;
-            localStorage.setItem('mars_plots', plots);
-            updateDashboard();
+        function exitGateway() {
+            const sim = document.getElementById('simulatorScreen');
+            sim.style.display = 'none';
+            const gateway = document.getElementById('gatewayScreen');
+            gateway.style.display = 'flex';
+            setTimeout(() => {
+                gateway.style.opacity = '1';
+            }, 50);
+        }
+
+        function renderLands() {
+            const grid = document.getElementById('landGrid');
+            grid.innerHTML = '';
             
-            const logBox = document.getElementById('logBox');
-            let msg = "";
-            if (newCount === 5000) {
-                msg = `<div class="log-jay">[🛠️제이] 토지를 5,000개로 줄였습니다. 코인 희소성이 2배 높아져 가격 방어에 유리합니다!</div>`;
-            } else if (newCount === 20000) {
-                msg = `<div class="log-warn">[🛠️제이 경고] 토지가 20,000개로 늘어나 채굴량이 급증합니다! 인플레이션(가치 하락) 주의가 필요합니다.</div>`;
-            } else {
-                msg = `<div class="log-jay">[🛠️제이] 표준 10,000개 토지 세팅으로 복구되었습니다. 가장 안정적인 비율입니다.</div>`;
-            }
-            logBox.innerHTML = msg + logBox.innerHTML;
+            lands.forEach(land => {
+                const card = document.createElement('div');
+                card.className = `land-card ${land.owner ? 'owned' : ''}`;
+                card.innerHTML = `
+                    <h3>${land.name}</h3>
+                    <p>분양가: <b>${land.price.toLocaleString()} REDM</b></p>
+                    <p>상태: ${land.owner ? '🏠 소유주: ' + land.owner : '✨ 분양 대기중'}</p>
+                    <button class="action-btn" ${land.owner ? 'disabled' : ''} onclick="buyLand(${land.id})">
+                        ${land.owner ? '분양 완료' : '토지 청약하기'}
+                    </button>
+                `;
+                grid.appendChild(card);
+            });
+
+            document.getElementById('balance').innerText = myBalance.toLocaleString();
+            document.getElementById('companyStock').innerText = companyStock.toLocaleString();
+            document.getElementById('burnedStock').innerText = burnedStock.toLocaleString();
         }
 
-        function testHack() {
-            const now = Date.now();
-            const logBox = document.getElementById('logBox');
-            // 1초 이내 광클(매크로 해킹 시도) 감지
-            if (now - lastClick < 1000) {
-                logBox.innerHTML = `<div class="log-warn">[🛡️보라 긴급차단] 비정상적인 매크로 연속 클릭 공격 감지! IP 및 지갑 요청을 즉시 차단했습니다.</div>` + logBox.innerHTML;
-            } else {
-                logBox.innerHTML = `<div class="log-bora">[🛡️보라 방어성공] 외부에서 강제 채굴 조작 시도가 있었으나 스마트 컨트랙트 보안벽으로 막아냈습니다.</div>` + logBox.innerHTML;
-            }
-            lastClick = now;
-        }
+        function buyLand(id) {
+            const land = lands.find(l => l.id === id);
+            if (myBalance >= land.price) {
+                myBalance -= land.price;
+                companyStock += land.price; 
+                
+                // 분양 대금의 10% 소각(Burn) 메커니즘 적용
+                const burnAmount = Math.floor(land.price * 0.1);
+                companyStock -= burnAmount;
+                burnedStock += burnAmount;
 
-        setInterval(updateDashboard, 200);
-        updateDashboard();
+                land.owner = "오빠 (개척자)";
+                alert(`🎉 [${land.name}] 분양 성공!\n\n- 지불 금액: ${land.price.toLocaleString()} REDM\n- 생태계 소각(Burn): ${burnAmount.toLocaleString()} REDM`);
+                renderLands();
+            } else {
+                alert("❌ 잔고($REDM)가 부족합니다!");
+            }
+        }
     </script>
+
 </body>
 </html>
