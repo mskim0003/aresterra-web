@@ -12,8 +12,6 @@
             padding: 0;
             overflow-x: hidden;
         }
-
-        /* --- 1단계: 게이트웨이 (첫 화면) --- */
         #gatewayScreen {
             height: 100vh;
             display: flex;
@@ -75,8 +73,6 @@
             max-width: 550px;
             line-height: 1.6;
         }
-
-        /* --- 2단계: 랜드 분양 & $REDM 시뮬레이터 화면 --- */
         #simulatorScreen {
             display: none;
             padding: 30px 20px;
@@ -186,7 +182,6 @@
 </head>
 <body>
 
-    <!-- 1단계: 게이트웨이 대문 화면 -->
     <div id="gatewayScreen">
         <div class="gateway-title">
             <h1>ARES TERRA</h1>
@@ -199,7 +194,6 @@
         </div>
     </div>
 
-    <!-- 2단계: 랜드 분양 & $REDM 시뮬레이터 화면 -->
     <div id="simulatorScreen">
         <div class="back-bar">
             <button class="back-btn" onclick="exitGateway()">← 화성 게이트로 돌아가기</button>
@@ -224,9 +218,7 @@
             </div>
         </div>
 
-        <div class="grid-container" id="landGrid">
-            <!-- 동적 생성 -->
-        </div>
+        <div class="grid-container" id="landGrid"></div>
     </div>
 
     <script>
@@ -293,7 +285,6 @@
                 myBalance -= land.price;
                 companyStock += land.price; 
                 
-                // 분양 대금의 10% 소각(Burn) 메커니즘 적용
                 const burnAmount = Math.floor(land.price * 0.1);
                 companyStock -= burnAmount;
                 burnedStock += burnAmount;
@@ -306,6 +297,5 @@
             }
         }
     </script>
-
 </body>
 </html>
