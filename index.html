@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ares Terra ($REDM) - Fullscreen 3D Mars</title>
+    <title>Ares Terra ($REDM) - 3D Mars v2.0</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
         * { box-sizing: border-box; user-select: none; }
@@ -36,6 +36,10 @@
             font-size: 1.35rem; font-weight: 800; color: #ff5722;
             letter-spacing: 2px; text-shadow: 0 0 15px rgba(255, 87, 34, 0.6);
         }
+        .ver-tag {
+            background: #10b981; color: #022c22; font-size: 0.72rem; font-weight: bold;
+            padding: 2px 8px; border-radius: 10px;
+        }
         .altitude-badge {
             font-family: monospace; background: rgba(0, 229, 255, 0.12);
             border: 1px solid rgba(0, 229, 255, 0.4); color: #00e5ff;
@@ -51,7 +55,7 @@
         .bora-hud {
             position: fixed; bottom: 24px; left: 24px; z-index: 10;
             width: 420px; max-width: calc(100vw - 48px);
-            background: rgba(10, 16, 34, 0.86); border: 1px solid rgba(0, 229, 255, 0.5);
+            background: rgba(10, 16, 34, 0.88); border: 1px solid rgba(0, 229, 255, 0.5);
             border-radius: 16px; padding: 16px 20px; backdrop-filter: blur(12px);
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7), 0 0 20px rgba(0, 229, 255, 0.15);
             display: flex; gap: 15px; align-items: flex-start;
@@ -116,21 +120,21 @@
         .region-pin.city { border-color: #f59e0b; box-shadow: 0 0 20px rgba(245, 158, 11, 0.6); }
 
         .plot-grid-box {
-            width: 115px; height: 78px; background: rgba(16, 185, 129, 0.28);
+            width: 115px; height: 78px; background: rgba(16, 185, 129, 0.32);
             border: 2px solid #10b981; border-radius: 8px; display: flex; flex-direction: column;
             justify-content: center; align-items: center; text-align: center;
             backdrop-filter: blur(2px); box-shadow: 0 0 15px rgba(16, 185, 129, 0.4);
         }
         .plot-grid-box.city-plot {
-            width: 92px; height: 64px; background: rgba(245, 158, 11, 0.28);
+            width: 95px; height: 66px; background: rgba(245, 158, 11, 0.32);
             border-color: #f59e0b; box-shadow: 0 0 15px rgba(245, 158, 11, 0.4);
         }
         .plot-grid-box.owned {
-            background: rgba(255, 87, 34, 0.45); border-color: #fff; box-shadow: 0 0 25px #ff5722;
+            background: rgba(255, 87, 34, 0.55); border-color: #fff; box-shadow: 0 0 25px #ff5722;
         }
         .plot-grid-box b { font-size: 0.78rem; color: #fff; text-shadow: 0 1px 3px #000; }
         .plot-grid-box span {
-            font-size: 0.65rem; color: #ecfdf5; background: rgba(0,0,0,0.65);
+            font-size: 0.65rem; color: #ecfdf5; background: rgba(0,0,0,0.7);
             padding: 1px 6px; border-radius: 4px; margin-top: 3px;
         }
 
@@ -160,6 +164,7 @@
     <div class="hud-top">
         <div class="brand-box">
             <div class="brand-title">🪐 ARES TERRA</div>
+            <span class="ver-tag">v2.0 드론뷰 적용됨</span>
             <div class="altitude-badge" id="altitudeDisplay">고도: 15,000 KM (우주 궤도 뷰)</div>
         </div>
         <div class="stats-hud">
@@ -173,7 +178,7 @@
         <div class="bora-holo-avatar">👩‍🚀</div>
         <div class="bora-content">
             <h4><span>AI 개척 파트너 보라</span> <span style="font-size:0.75rem; color:#10b981;">● LIVE 수신중</span></h4>
-            <p id="boraSpeech">“사장님! 이제 기지 건물이 땅에 파묻히거나 삐딱하게 눕지 않고, <b>지표면 위에 반듯하게 서서 기지 전체 전경이 한눈에</b> 들어오도록 드론 카메라 각도를 완벽하게 교정했어요!”</p>
+            <p id="boraSpeech">“사장님! v2.0 업그레이드가 완료되었어요! 이제 어색한 파란 직선 대신 자연스러운 해안선과 강줄기가 흐르고, 착륙 시 기지가 절대 옆으로 눕지 않고 반듯한 드론 뷰로 한눈에 들어옵니다!”</p>
         </div>
     </div>
 
@@ -202,12 +207,12 @@
                 sub: '넓은 땅 · 30일 무상임대',
                 type: 'free',
                 lat: 12, lon: -25,
-                boraMsg: '“리버사이드 강변 상공입니다! 푸른 대운하 옆에 쳐진 <b>초록색 토지 구획</b>들이 보이시죠? 원하는 위치를 직접 클릭해 보세요!”',
+                boraMsg: '“리버사이드 강변 상공입니다! 자연스럽게 구불구불 흐르는 푸른 강줄기 옆에 <b>초록색 토지 구획</b>들이 보이시죠? 원하는 위치를 클릭해 보세요!”',
                 plots: [
-                    { id: 'RV-01', name: '강변 녹지 A-01호(대형)', dLat: 4, dLon: -6, price: 1200, canFree: true, owner: null, status: 'none', desc: '대운하 북서쪽 수변 광활한 녹지' },
-                    { id: 'RV-02', name: '강변 녹지 A-02호(대형)', dLat: 5, dLon: 6, price: 1300, canFree: true, owner: null, status: 'none', desc: '강물 취수가 가장 유리한 특급 명당' },
-                    { id: 'RV-03', name: '강변 숲 구역 A-03호(대형)', dLat: -5, dLon: -5, price: 1100, canFree: true, owner: null, status: 'none', desc: '대규모 산소 돔 및 생태 농장 부지' },
-                    { id: 'RV-04', name: '강변 삼각주 A-04호(대형)', dLat: -4, dLon: 7, price: 1500, canFree: true, owner: null, status: 'none', desc: '두 강줄기가 합류하는 비옥한 삼각주' }
+                    { id: 'RV-01', name: '강변 녹지 A-01호(대형)', dLat: 3.5, dLon: -5, price: 1200, canFree: true, owner: null, status: 'none', desc: '대운하 북서쪽 수변 광활한 녹지' },
+                    { id: 'RV-02', name: '강변 녹지 A-02호(대형)', dLat: 4, dLon: 5, price: 1300, canFree: true, owner: null, status: 'none', desc: '강물 취수가 가장 유리한 특급 명당' },
+                    { id: 'RV-03', name: '강변 숲 구역 A-03호(대형)', dLat: -4, dLon: -4, price: 1100, canFree: true, owner: null, status: 'none', desc: '대규모 산소 돔 및 생태 농장 부지' },
+                    { id: 'RV-04', name: '강변 삼각주 A-04호(대형)', dLat: -3.5, dLon: 6, price: 1500, canFree: true, owner: null, status: 'none', desc: '두 강줄기가 합류하는 비옥한 삼각주' }
                 ]
             },
             {
@@ -215,12 +220,12 @@
                 name: '🌲 그린밸리 대평원',
                 sub: '넓은 땅 · 30일 무상임대',
                 type: 'free',
-                lat: -18, lon: 35,
-                boraMsg: '“그린밸리 대평원 상공입니다, 사장님! 넓고 평탄한 녹지 구획들이라 거대한 기지를 세우기 딱 좋아요. 눈으로 보고 마음에 드는 구획을 골라보세요!”',
+                lat: -16, lon: 35,
+                boraMsg: '“그린밸리 대평원 상공입니다, 사장님! 푸른 숲과 호수가 어우러진 대형 녹지 구획들이에요. 마음에 드는 구획을 골라보세요!”',
                 plots: [
-                    { id: 'GV-01', name: '그린밸리 B-01호(대형)', dLat: 4, dLon: -5, price: 1000, canFree: true, owner: null, status: 'none', desc: '태양광 발전 및 대평원 복합 단지' },
-                    { id: 'GV-02', name: '오아시스 B-02호(대형)', dLat: 3, dLon: 6, price: 1400, canFree: true, owner: null, status: 'none', desc: '천연 지하수 호수를 품은 핵심 녹지' },
-                    { id: 'GV-03', name: '그린밸리 남단 B-03호(대형)', dLat: -5, dLon: 0, price: 1100, canFree: true, owner: null, status: 'none', desc: '테라포밍 산림 공원 예정 구역' }
+                    { id: 'GV-01', name: '그린밸리 B-01호(대형)', dLat: 3.5, dLon: -4.5, price: 1000, canFree: true, owner: null, status: 'none', desc: '태양광 발전 및 대평원 복합 단지' },
+                    { id: 'GV-02', name: '오아시스 B-02호(대형)', dLat: 3, dLon: 5, price: 1400, canFree: true, owner: null, status: 'none', desc: '천연 지하수 호수를 품은 핵심 녹지' },
+                    { id: 'GV-03', name: '그린밸리 남단 B-03호(대형)', dLat: -4, dLon: 0, price: 1100, canFree: true, owner: null, status: 'none', desc: '테라포밍 산림 공원 예정 구역' }
                 ]
             },
             {
@@ -228,12 +233,12 @@
                 name: '🌊 코스탈 베이 해안도시',
                 sub: '소형 알짜 · $REDM 코인 전용',
                 type: 'city',
-                lat: 22, lon: 40,
-                boraMsg: '“푸른 바다가 출렁이는 코스탈 베이 해안도시 상공이에요! 여긴 중요 도시 구역이라 무상임대 없이 <b>$REDM 코인 정식 분양</b>으로만 선점하실 수 있어요!”',
+                lat: 20, lon: 40,
+                boraMsg: '“푸른 바다와 해안선이 펼쳐진 코스탈 베이 해안도시 상공이에요! 여긴 중요 도시 구역이라 무상임대 없이 <b>$REDM 코인 정식 분양</b>으로만 선점하실 수 있어요!”',
                 plots: [
                     { id: 'CB-01', name: '오션뷰 하버 C-01호(소형)', dLat: 3, dLon: -4, price: 2500, canFree: false, owner: null, status: 'none', desc: '바다 조망권 1열 최고급 해안 상업지' },
-                    { id: 'CB-02', name: '마리나 부두 C-02호(소형)', dLat: 4, dLon: 5, price: 2800, canFree: false, owner: null, status: 'none', desc: '해상 교역선 중심 항만 노른자위 땅' },
-                    { id: 'CB-03', name: '선셋 비치 C-03호(소형)', dLat: -4, dLon: 1, price: 2400, canFree: false, owner: null, status: 'none', desc: '해안 휴양 돔 복합 개발 지구' }
+                    { id: 'CB-02', name: '마리나 부두 C-02호(소형)', dLat: 3.5, dLon: 4.5, price: 2800, canFree: false, owner: null, status: 'none', desc: '해상 교역선 중심 항만 노른자위 땅' },
+                    { id: 'CB-03', name: '선셋 비치 C-03호(소형)', dLat: -3.5, dLon: 1, price: 2400, canFree: false, owner: null, status: 'none', desc: '해안 휴양 돔 복합 개발 지구' }
                 ]
             },
             {
@@ -245,8 +250,8 @@
                 boraMsg: '“화성의 수도 올림푸스 센트럴 시티 상공입니다! 반짝이는 미래 도시 도로망 위에 자리 잡은 핵심지라 오직 <b>$REDM 코인</b>으로만 영구 분양이 가능합니다!”',
                 plots: [
                     { id: 'OL-01', name: '센트럴 광장 D-01호(소형)', dLat: 3, dLon: -4, price: 3200, canFree: false, owner: null, status: 'none', desc: '중앙 광장 바로 앞 초특급 랜드마크 부지' },
-                    { id: 'OL-02', name: '테크 타워 D-02호(소형)', dLat: 3, dLon: 5, price: 3000, canFree: false, owner: null, status: 'none', desc: '우주 엘리베이터 및 통신 본부 인접지' },
-                    { id: 'OL-03', name: '메트로 역세권 D-03호(소형)', dLat: -4, dLon: 0, price: 2700, canFree: false, owner: null, status: 'none', desc: '자기부상열차 중앙역 환승 특구' }
+                    { id: 'OL-02', name: '테크 타워 D-02호(소형)', dLat: 3, dLon: 4.5, price: 3000, canFree: false, owner: null, status: 'none', desc: '우주 엘리베이터 및 통신 본부 인접지' },
+                    { id: 'OL-03', name: '메트로 역세권 D-03호(소형)', dLat: -3.5, dLon: 0, price: 2700, canFree: false, owner: null, status: 'none', desc: '자기부상열차 중앙역 환승 특구' }
                 ]
             }
         ];
@@ -254,9 +259,11 @@
         let scene, camera, renderer, planetGroup, marsMesh, base3DGroup, radarDish, roverMesh;
         const PLANET_RADIUS = 10;
 
-        let camDist = 28, targetCamDist = 28;
-        let camHeightOffset = 0, targetCamHeightOffset = 0;
-        let lookAtYOffset = 0, targetLookAtYOffset = 0;
+        let camPos = new THREE.Vector3(0, 0, 28);
+        let targetCamPos = new THREE.Vector3(0, 0, 28);
+        let camLook = new THREE.Vector3(0, 0, 0);
+        let targetCamLook = new THREE.Vector3(0, 0, 0);
+
         let currentRotX = 0.15, currentRotY = 0;
         let targetRotX = 0.15, targetRotY = 0;
         let autoRotate = true;
@@ -271,7 +278,8 @@
             return new THREE.Vector3(x, y, z);
         }
 
-        function generateSmoothMarsTexture(mode = 'current') {
+        // 형광펜 같은 직선 대신 자연스러운 강줄기·호수·해안선 그라데이션을 그리는 고해상도 텍스처
+        function generateNaturalMarsTexture(mode = 'current') {
             const canvas = document.createElement('canvas');
             canvas.width = 2048;
             canvas.height = 1024;
@@ -284,34 +292,25 @@
                 bgGrad.addColorStop(1, '#260904');
             } else {
                 bgGrad.addColorStop(0, '#4a150b');
-                bgGrad.addColorStop(0.5, '#a8381b');
-                bgGrad.addColorStop(1, '#330d06');
+                bgGrad.addColorStop(0.5, '#9a3412');
+                bgGrad.addColorStop(1, '#2e0c05');
             }
             ctx.fillStyle = bgGrad;
             ctx.fillRect(0, 0, 2048, 1024);
 
-            for (let i = 0; i < 180; i++) {
+            // 자연스러운 화성 고지대/분지 음영
+            for (let i = 0; i < 220; i++) {
                 const x = Math.random() * 2048;
                 const y = Math.random() * 1024;
-                const r = Math.random() * 65 + 15;
+                const r = Math.random() * 60 + 10;
                 const g = ctx.createRadialGradient(x, y, r * 0.1, x, y, r);
-                if (i % 2 === 0) {
-                    g.addColorStop(0, 'rgba(35, 9, 4, 0.35)');
-                    g.addColorStop(1, 'transparent');
-                } else {
-                    g.addColorStop(0, 'rgba(249, 115, 22, 0.2)');
-                    g.addColorStop(1, 'transparent');
-                }
+                g.addColorStop(0, i % 2 === 0 ? 'rgba(30, 8, 4, 0.35)' : 'rgba(234, 88, 12, 0.22)');
+                g.addColorStop(1, 'transparent');
                 ctx.fillStyle = g;
                 ctx.beginPath();
                 ctx.arc(x, y, r, 0, Math.PI * 2);
                 ctx.fill();
             }
-
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
-            ctx.lineWidth = 1;
-            for (let x = 0; x < 2048; x += 32) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, 1024); ctx.stroke(); }
-            for (let y = 0; y < 1024; y += 32) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(2048, y); ctx.stroke(); }
 
             if (mode === 'lastMonth') return new THREE.CanvasTexture(canvas);
 
@@ -321,158 +320,166 @@
                 const u = ((reg.lon + 180) / 360) * 2048;
                 const v = ((90 - reg.lat) / 180) * 1024;
 
-                const greenGrad = ctx.createRadialGradient(u, v, 5, u, v, 210);
-                greenGrad.addColorStop(0, `rgba(16, 185, 129, ${0.82 * alpha})`);
-                greenGrad.addColorStop(0.55, `rgba(5, 150, 105, ${0.5 * alpha})`);
+                // 1) 넓은 초록 생태 숲 지대
+                const greenGrad = ctx.createRadialGradient(u, v, 10, u, v, 200);
+                greenGrad.addColorStop(0, `rgba(16, 185, 129, ${0.75 * alpha})`);
+                greenGrad.addColorStop(0.5, `rgba(5, 150, 105, ${0.45 * alpha})`);
                 greenGrad.addColorStop(1, 'transparent');
                 ctx.fillStyle = greenGrad;
                 ctx.beginPath();
-                ctx.arc(u, v, 210, 0, Math.PI * 2);
+                ctx.arc(u, v, 200, 0, Math.PI * 2);
                 ctx.fill();
 
-                ctx.save();
-                ctx.strokeStyle = `rgba(56, 189, 248, ${alpha})`;
-                ctx.lineWidth = 14;
-                ctx.shadowColor = '#00e5ff';
-                ctx.shadowBlur = 15;
-                ctx.beginPath();
-                ctx.moveTo(u - 170, v - 80);
-                ctx.bezierCurveTo(u - 50, v + 40, u + 40, v - 50, u + 180, v + 70);
-                ctx.stroke();
-
-                if (reg.type === 'city') {
-                    ctx.strokeStyle = `rgba(251, 191, 36, ${0.55 * alpha})`;
-                    ctx.lineWidth = 2;
-                    for (let dx = -90; dx <= 90; dx += 18) {
-                        ctx.beginPath(); ctx.moveTo(u + dx, v - 90); ctx.lineTo(u + dx, v + 90); ctx.stroke();
-                        ctx.beginPath(); ctx.moveTo(u - 90, v + dx); ctx.lineTo(u + 90, v + dx); ctx.stroke();
-                    }
+                // 2) 끝이 뭉툭하지 않고 자연스럽게 퍼지는 호수와 해안선(연속된 부드러운 원형 블렌딩)
+                for (let step = -120; step <= 120; step += 8) {
+                    const wx = u + step;
+                    const wy = v + Math.sin(step * 0.035) * 38 + (step * 0.25);
+                    const radius = (1 - Math.abs(step) / 135) * 26 + 4;
+                    const wGrad = ctx.createRadialGradient(wx, wy, 1, wx, wy, radius);
+                    wGrad.addColorStop(0, `rgba(56, 189, 248, ${0.9 * alpha})`);
+                    wGrad.addColorStop(0.6, `rgba(2, 132, 199, ${0.65 * alpha})`);
+                    wGrad.addColorStop(1, 'transparent');
+                    ctx.fillStyle = wGrad;
+                    ctx.beginPath();
+                    ctx.arc(wx, wy, radius, 0, Math.PI * 2);
+                    ctx.fill();
                 }
 
+                // 3) 해안 도시에는 넓은 푸른 내해(바다) 추가
                 if (reg.id === 'coastal') {
-                    const seaGrad = ctx.createRadialGradient(u + 45, v - 25, 10, u + 45, v - 25, 140);
-                    seaGrad.addColorStop(0, `rgba(2, 132, 199, ${alpha})`);
-                    seaGrad.addColorStop(0.8, `rgba(14, 165, 233, ${0.7 * alpha})`);
+                    const seaGrad = ctx.createRadialGradient(u + 60, v - 35, 15, u + 60, v - 35, 145);
+                    seaGrad.addColorStop(0, `rgba(3, 105, 161, ${alpha})`);
+                    seaGrad.addColorStop(0.55, `rgba(14, 165, 233, ${0.8 * alpha})`);
+                    seaGrad.addColorStop(0.85, `rgba(56, 189, 248, ${0.35 * alpha})`);
                     seaGrad.addColorStop(1, 'transparent');
                     ctx.fillStyle = seaGrad;
                     ctx.beginPath();
-                    ctx.arc(u + 45, v - 25, 140, 0, Math.PI * 2);
+                    ctx.arc(u + 60, v - 35, 145, 0, Math.PI * 2);
                     ctx.fill();
                 }
-                ctx.restore();
+
+                // 4) 도시 구역 정밀 도로망
+                if (reg.type === 'city') {
+                    ctx.strokeStyle = `rgba(251, 191, 36, ${0.45 * alpha})`;
+                    ctx.lineWidth = 1.5;
+                    for (let dx = -80; dx <= 80; dx += 16) {
+                        ctx.beginPath(); ctx.moveTo(u + dx, v - 80); ctx.lineTo(u + dx, v + 80); ctx.stroke();
+                        ctx.beginPath(); ctx.moveTo(u - 80, v + dx); ctx.lineTo(u + 80, v + dx); ctx.stroke();
+                    }
+                }
             });
 
             return new THREE.CanvasTexture(canvas);
         }
 
-        // ★ 핵심 교정: Y축(위쪽)을 지표면 수직 기준으로 삼아 모든 건물이 땅 위에 반듯하게 서도록 설계!
+        // ★ 핵심 해결: 화성 회전과 상관없이 항상 카메라 정면(0, 0, PLANET_RADIUS)에 수평·수직으로 반듯하게 서는 3D SF 기지 단지!
         function createDetailedMarsBase() {
-            const group = new THREE.Group();
+            // baseRoot는 구면(0, 0, 10)에 놓이고, 그 안의 buildingGroup은 Z축(바깥쪽)을 천장(위쪽)으로 삼아 반듯하게 정렬됨
+            const baseRoot = new THREE.Group();
+            baseRoot.position.set(0, 0, PLANET_RADIUS);
 
-            // 0) 초근접 시 흐릿한 배경을 가려주는 고해상도 테라포밍 육각 구획 바닥링
-            const groundRingGeo = new THREE.RingGeometry(0.24, 0.55, 32);
-            const groundRingMat = new THREE.MeshBasicMaterial({
-                color: 0x00e5ff, wireframe: true, transparent: true, opacity: 0.28, side: THREE.DoubleSide
-            });
-            const groundRing = new THREE.Mesh(groundRingGeo, groundRingMat);
-            groundRing.rotation.x = Math.PI / 2;
-            groundRing.position.y = 0.005;
-            group.add(groundRing);
+            const buildingGroup = new THREE.Group();
+            buildingGroup.rotation.x = Math.PI / 2; // Y축(높이)이 화성 바깥쪽(+Z)을 향하도록 90도 세움
+            baseRoot.add(buildingGroup);
 
-            // 1) 기지 메인 착륙 플랫폼 (납작하고 넓게 땅에 밀착)
-            const padGeo = new THREE.CylinderGeometry(0.24, 0.27, 0.018, 32);
-            const padMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, metalness: 0.6, roughness: 0.4 });
+            // 1) 기지 주변 초근접 고해상도 테라포밍 바닥 그리드 & 활주로 패드
+            const gridHelper = new THREE.PolarGridHelper(0.65, 16, 8, 64, 0x00e5ff, 0x10b981);
+            gridHelper.position.y = 0.005;
+            buildingGroup.add(gridHelper);
+
+            const padGeo = new THREE.CylinderGeometry(0.28, 0.32, 0.02, 32);
+            const padMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, metalness: 0.5, roughness: 0.4 });
             const pad = new THREE.Mesh(padGeo, padMat);
-            pad.position.y = 0.009;
-            group.add(pad);
+            pad.position.y = 0.01;
+            buildingGroup.add(pad);
 
-            // 플랫폼 위 푸른 바이오 생태 숲 바닥
-            const parkGeo = new THREE.CylinderGeometry(0.16, 0.16, 0.022, 32);
-            const parkMat = new THREE.MeshStandardMaterial({ color: 0x10b981, roughness: 0.7 });
-            const park = new THREE.Mesh(parkGeo, parkMat);
-            park.position.y = 0.012;
-            group.add(park);
+            const lawnGeo = new THREE.CylinderGeometry(0.18, 0.18, 0.024, 32);
+            const lawnMat = new THREE.MeshStandardMaterial({ color: 0x059669, roughness: 0.8 });
+            const lawn = new THREE.Mesh(lawnGeo, lawnMat);
+            lawn.position.y = 0.012;
+            buildingGroup.add(lawn);
 
-            // 2) 중앙 메인 지오데식 생태 돔 (Y축 위쪽으로 반듯하게 솟은 반구형 돔)
-            const mainDomeGeo = new THREE.SphereGeometry(0.15, 24, 16, 0, Math.PI * 2, 0, Math.PI / 2);
+            // 2) 중앙 메인 지오데식 생태 산소 돔
+            const mainDomeGeo = new THREE.SphereGeometry(0.16, 24, 16, 0, Math.PI * 2, 0, Math.PI / 2);
             const mainDomeMat = new THREE.MeshStandardMaterial({
-                color: 0x38bdf8, transparent: true, opacity: 0.42, roughness: 0.1, metalness: 0.3
+                color: 0x38bdf8, transparent: true, opacity: 0.42, roughness: 0.15, metalness: 0.2
             });
             const mainDome = new THREE.Mesh(mainDomeGeo, mainDomeMat);
             mainDome.position.y = 0.015;
-            group.add(mainDome);
+            buildingGroup.add(mainDome);
 
-            const wireGeo = new THREE.SphereGeometry(0.152, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2);
-            const wireMat = new THREE.MeshBasicMaterial({ color: 0x00e5ff, wireframe: true, transparent: true, opacity: 0.75 });
+            const wireGeo = new THREE.SphereGeometry(0.162, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2);
+            const wireMat = new THREE.MeshBasicMaterial({ color: 0x00e5ff, wireframe: true, transparent: true, opacity: 0.8 });
             const wireDome = new THREE.Mesh(wireGeo, wireMat);
             wireDome.position.y = 0.015;
-            group.add(wireDome);
+            buildingGroup.add(wireDome);
 
-            // 3) 돔 내부에 우뚝 솟은 미래형 마천루 빌딩 5개
-            for (let i = 0; i < 5; i++) {
-                const bH = 0.045 + (i % 3) * 0.025;
-                const bGeo = new THREE.BoxGeometry(0.024, bH, 0.024);
-                const bMat = new THREE.MeshStandardMaterial({ color: 0xf8fafc, emissive: 0x0284c7, emissiveIntensity: 0.5 });
+            // 3) 메인 돔 내부의 미래형 마천루 타워 6개
+            for (let i = 0; i < 6; i++) {
+                const bH = 0.05 + (i % 3) * 0.03;
+                const bGeo = new THREE.BoxGeometry(0.026, bH, 0.026);
+                const bMat = new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0x0284c7, emissiveIntensity: 0.6 });
                 const bMesh = new THREE.Mesh(bGeo, bMat);
                 const angle = (i / 5) * Math.PI * 2;
-                const r = i === 0 ? 0 : 0.055;
+                const r = i === 0 ? 0 : 0.06;
                 bMesh.position.set(Math.cos(angle) * r, 0.015 + bH / 2, Math.sin(angle) * r);
-                group.add(bMesh);
+                buildingGroup.add(bMesh);
             }
 
-            // 4) 주변 3개의 보조 거주 바이오 돔 + 메인 돔과 이어지는 연결 터널
-            const subAngles = [0.4, 2.5, 4.6];
+            // 4) 좌우·후방 3개의 보조 바이오 돔 + 연결 통로
+            const subAngles = [-0.6, 2.5, 3.8];
             subAngles.forEach(ang => {
-                const dist = 0.21;
+                const dist = 0.23;
                 const sx = Math.cos(ang) * dist;
                 const sz = Math.sin(ang) * dist;
 
                 const subDome = new THREE.Mesh(
-                    new THREE.SphereGeometry(0.06, 16, 12, 0, Math.PI * 2, 0, Math.PI / 2),
+                    new THREE.SphereGeometry(0.065, 16, 12, 0, Math.PI * 2, 0, Math.PI / 2),
                     mainDomeMat
                 );
                 subDome.position.set(sx, 0.012, sz);
-                group.add(subDome);
+                buildingGroup.add(subDome);
 
                 const subWire = new THREE.Mesh(
-                    new THREE.SphereGeometry(0.062, 8, 6, 0, Math.PI * 2, 0, Math.PI / 2),
+                    new THREE.SphereGeometry(0.067, 8, 6, 0, Math.PI * 2, 0, Math.PI / 2),
                     wireMat
                 );
                 subWire.position.set(sx, 0.012, sz);
-                group.add(subWire);
+                buildingGroup.add(subWire);
 
-                // 연결 통로 파이프
-                const tunnelGeo = new THREE.BoxGeometry(0.08, 0.018, 0.022);
-                const tunnelMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8 });
-                const tunnel = new THREE.Mesh(tunnelGeo, tunnelMat);
+                const tunnel = new THREE.Mesh(
+                    new THREE.BoxGeometry(0.09, 0.018, 0.024),
+                    new THREE.MeshStandardMaterial({ color: 0x94a3b8 })
+                );
                 tunnel.position.set(sx * 0.65, 0.02, sz * 0.65);
                 tunnel.rotation.y = -ang;
-                group.add(tunnel);
+                buildingGroup.add(tunnel);
             });
 
-            // 5) 우측 레드엠($REDM) 채굴 타워 & 회전 레이더 안테나
-            const towerGeo = new THREE.CylinderGeometry(0.01, 0.024, 0.19, 12);
-            const towerMat = new THREE.MeshStandardMaterial({ color: 0xff5722, emissive: 0x9a3412, emissiveIntensity: 0.6 });
-            const tower = new THREE.Mesh(towerGeo, towerMat);
-            tower.position.set(0.16, 0.015 + 0.095, -0.12);
-            group.add(tower);
+            // 5) 우측 레드엠($REDM) 코어 채굴 타워 & 회전 레이더
+            const tower = new THREE.Mesh(
+                new THREE.CylinderGeometry(0.012, 0.028, 0.22, 12),
+                new THREE.MeshStandardMaterial({ color: 0xff5722, emissive: 0x9a3412, emissiveIntensity: 0.7 })
+            );
+            tower.position.set(0.19, 0.12, 0.08);
+            buildingGroup.add(tower);
 
             radarDish = new THREE.Mesh(
-                new THREE.BoxGeometry(0.09, 0.012, 0.018),
+                new THREE.BoxGeometry(0.1, 0.014, 0.02),
                 new THREE.MeshBasicMaterial({ color: 0x00e5ff })
             );
-            radarDish.position.set(0.16, 0.215, -0.12);
-            group.add(radarDish);
+            radarDish.position.set(0.19, 0.235, 0.08);
+            buildingGroup.add(radarDish);
 
-            // 6) 기지 둘레를 실시간으로 순찰하며 도는 화성 탐사 로버
+            // 6) 기지 둘레를 순찰하는 노란색 화성 탐사 로버
             roverMesh = new THREE.Mesh(
-                new THREE.BoxGeometry(0.028, 0.016, 0.04),
+                new THREE.BoxGeometry(0.035, 0.02, 0.05),
                 new THREE.MeshBasicMaterial({ color: 0xfacc15 })
             );
-            roverMesh.position.set(0.32, 0.015, 0);
-            group.add(roverMesh);
+            roverMesh.position.set(0.36, 0.02, 0);
+            buildingGroup.add(roverMesh);
 
-            return group;
+            return baseRoot;
         }
 
         function initWorld() {
@@ -480,25 +487,25 @@
             scene = new THREE.Scene();
 
             camera = new THREE.PerspectiveCamera(42, window.innerWidth / window.innerHeight, 0.1, 1000);
-            camera.position.set(0, 0, camDist);
+            camera.position.copy(camPos);
 
             renderer = new THREE.WebGLRenderer({ antialias: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
             renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
             container.appendChild(renderer.domElement);
 
-            scene.add(new THREE.AmbientLight(0xdbeafe, 0.7));
+            scene.add(new THREE.AmbientLight(0xdbeafe, 0.75));
             const sun = new THREE.DirectionalLight(0xfff1e6, 1.35);
-            sun.position.set(20, 22, 25);
+            sun.position.set(18, 22, 28);
             scene.add(sun);
 
             planetGroup = new THREE.Group();
             scene.add(planetGroup);
 
             const marsGeo = new THREE.SphereGeometry(PLANET_RADIUS, 128, 128);
-            const tex = generateSmoothMarsTexture('current');
+            const tex = generateNaturalMarsTexture('current');
             const marsMat = new THREE.MeshStandardMaterial({
-                map: tex, roughness: 0.78, metalness: 0.1
+                map: tex, roughness: 0.8, metalness: 0.08
             });
             marsMesh = new THREE.Mesh(marsGeo, marsMat);
             planetGroup.add(marsMesh);
@@ -509,9 +516,10 @@
             });
             planetGroup.add(new THREE.Mesh(atmosGeo, atmosMat));
 
+            // 기지 단지는 scene에 직접 고정하여 어떤 땅으로 가든 항상 카메라 정면 땅바닥에 100% 반듯하게 서 있도록 설계!
             base3DGroup = createDetailedMarsBase();
             base3DGroup.visible = false;
-            planetGroup.add(base3DGroup);
+            scene.add(base3DGroup);
 
             const starGeo = new THREE.BufferGeometry();
             const starPos = new Float32Array(2000 * 3);
@@ -526,15 +534,11 @@
             });
             window.addEventListener('mouseup', () => dragging = false);
             window.addEventListener('mousemove', e => {
-                if (!dragging) return;
+                if (!dragging || currentZoomStage === 3) return;
                 const speed = currentZoomStage === 1 ? 0.005 : 0.0018;
                 targetRotY += (e.clientX - prev.x) * speed;
                 targetRotX = Math.max(-1.2, Math.min(1.2, targetRotX + (e.clientY - prev.y) * speed));
                 prev = { x: e.clientX, y: e.clientY };
-            });
-
-            container.addEventListener('wheel', e => {
-                targetCamDist = Math.max(10.85, Math.min(34, targetCamDist + e.deltaY * 0.01));
             });
 
             window.addEventListener('resize', () => {
@@ -623,9 +627,8 @@
             base3DGroup.visible = false;
 
             aimGlobeAt(region.lat, region.lon);
-            targetCamDist = 13.4;
-            targetCamHeightOffset = 0;
-            targetLookAtYOffset = 0;
+            targetCamPos.set(0, 0, 13.5);
+            targetCamLook.set(0, 0, 0);
 
             document.getElementById('boraSpeech').innerHTML = region.boraMsg;
             document.getElementById('btnZoomOut').style.display = 'block';
@@ -635,12 +638,11 @@
         function selectPlotIn3D(region, plot) {
             activePlot = plot;
             aimGlobeAt(region.lat + plot.dLat, region.lon + plot.dLon);
-            targetCamDist = 12.2;
-            targetCamHeightOffset = 0;
-            targetLookAtYOffset = 0;
+            targetCamPos.set(0, 0, 12.3);
+            targetCamLook.set(0, 0, 0);
 
             if (plot.owner) {
-                document.getElementById('boraSpeech').innerHTML = `“사장님의 영토인 <b>[${plot.name}]</b>입니다! 오른쪽 아래의 <b>[🚀 지표면 기지로 착륙하기]</b>를 누르면 반듯하게 지어진 3D 기지 전체 전경이 펼쳐져요!”`;
+                document.getElementById('boraSpeech').innerHTML = `“사장님의 영토인 <b>[${plot.name}]</b>입니다! 오른쪽 아래의 <b>[🚀 드론 기지 뷰로 착륙하기]</b>를 누르면 반듯하게 지어진 3D 기지 전체 전경이 펼쳐져요!”`;
             } else if (plot.canFree) {
                 if (!hasUsedFreeLease) {
                     document.getElementById('boraSpeech').innerHTML = `“사장님, <b>[${plot.name}]</b> 위치가 정말 끝내줘요! 첫 녹지 혜택으로 <b>30일간 비용 없이 무상임대</b>를 받아 바로 개척해 보시겠어요?”`;
@@ -653,33 +655,27 @@
             renderControlPanel();
         }
 
-        // ★ [3단계 착륙 교정] 기지를 구면 법선(Surface Normal)에 맞춰 100% 수직으로 세우고, 드론 조망 앵글로 비스듬히 내려다봄!
+        // ★ [3단계 드론 조망 뷰] 선택한 땅을 정면으로 돌려놓고, 카메라가 아래쪽(Y: -0.75)에서 위쪽 기지(0, 0.08, 10)를 비스듬히 올려다보며 조망!
         function zoomToStage3Base(plot) {
             currentZoomStage = 3;
             const lat = activeRegion.lat + plot.dLat;
             const lon = activeRegion.lon + plot.dLon;
 
-            const surfacePos = latLonToVector3(lat, lon, PLANET_RADIUS);
-            base3DGroup.position.copy(surfacePos);
-
-            // 화성 중심에서 바깥쪽을 향하는 수직 벡터(Normal)에 기지의 위쪽(Y축)을 정확히 일치시킴!
-            const normal = surfacePos.clone().normalize();
-            base3DGroup.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), normal);
-            base3DGroup.visible = true;
+            aimGlobeAt(lat, lon);
 
             if (currentTimelineMode !== 'current') {
                 currentTimelineMode = 'current';
-                marsMesh.material.map = generateSmoothMarsTexture('current');
+                marsMesh.material.map = generateNaturalMarsTexture('current');
                 marsMesh.material.needsUpdate = true;
             }
 
-            // 기지가 정면 살짝 아래쪽에 놓이도록 회전하고, 드론이 상공에서 비스듬히 기지 전체를 내려다보는 구도 설정
-            aimGlobeAt(lat - 2.2, lon);
-            targetCamDist = 11.25;         // 너무 코앞에 붙지 않고 기지 단지 전체가 한눈에 들어오는 황금 거리!
-            targetCamHeightOffset = -0.55; // 카메라 위치와 시선을 조절해 입체적인 드론 조망 각도 완성
-            targetLookAtYOffset = 0.35;
+            base3DGroup.visible = true;
 
-            document.getElementById('boraSpeech').innerHTML = `“와아! <b>[${plot.name}]</b> 상공 드론 뷰로 착륙했어요! 이제 기지가 삐딱하게 눕지 않고 지표면 위에 반듯하게 서서 <b>중앙 생태 돔, 보조 기지, 채굴 타워, 순찰 로버</b>까지 한눈에 다 들어오죠?”`;
+            // 기지(0, 0, 10)로부터 살짝 뒤·아래쪽(Y: -0.75, Z: 10.95)에서 기지 전체를 비스듬히 내려다보는 완벽한 3D 조감도 구도!
+            targetCamPos.set(0, -0.75, 10.95);
+            targetCamLook.set(0, 0.08, PLANET_RADIUS);
+
+            document.getElementById('boraSpeech').innerHTML = `“와아! <b>[${plot.name}]</b> 상공 드론 뷰로 착륙했어요! 이제 기지가 삐딱하게 눕지 않고 지표면 위에 반듯하게 서서 <b>중앙 생태 돔, 3개의 보조 돔, 채굴 타워, 순찰 로버</b>까지 한눈에 다 들어오죠?”`;
             renderControlPanel();
         }
 
@@ -691,9 +687,8 @@
                 activeRegion = null;
                 activePlot = null;
                 base3DGroup.visible = false;
-                targetCamDist = 28;
-                targetCamHeightOffset = 0;
-                targetLookAtYOffset = 0;
+                targetCamPos.set(0, 0, 28);
+                targetCamLook.set(0, 0, 0);
                 autoRotate = true;
                 document.getElementById('btnZoomOut').style.display = 'none';
                 document.getElementById('boraSpeech').innerHTML = `“다시 우주 궤도로 줌아웃했습니다, 사장님! 둥근 화성을 돌려보며 다른 대륙이나 해안 도시도 클릭해 보세요.”`;
@@ -712,7 +707,7 @@
             activePlot.status = "leased";
             updatePlotMarkerText(document.getElementById(`marker-${activePlot.id}`), activePlot);
             updateTopHUD();
-            alert(`🎉 [${activePlot.name}] 30일 무상임대 완료!\n이제 지표면 기지로 착륙해 전경을 감상해 보세요!`);
+            alert(`🎉 [${activePlot.name}] 30일 무상임대 완료!\n이제 드론 기지 뷰로 착륙해 전경을 감상해 보세요!`);
             zoomToStage3Base(activePlot);
         }
 
@@ -752,14 +747,14 @@
             document.querySelectorAll('.time-btn').forEach(b => b.classList.remove('active'));
             if (btn) btn.classList.add('active');
 
-            const newTex = generateSmoothMarsTexture(mode);
+            const newTex = generateNaturalMarsTexture(mode);
             marsMesh.material.map = newTex;
             marsMesh.material.needsUpdate = true;
 
             if (mode === 'current') {
                 base3DGroup.visible = true;
                 base3DGroup.scale.set(1, 1, 1);
-                document.getElementById('boraSpeech').innerHTML = `“<b>[현재 모습]</b> 푸른 강물이 흐르고 육각형 생태 돔 단지가 반듯하게 가동 중인 테라포밍 화성이에요!”`;
+                document.getElementById('boraSpeech').innerHTML = `“<b>[현재 모습]</b> 자연스러운 강물과 함께 육각형 생태 돔 단지가 반듯하게 가동 중인 테라포밍 화성이에요!”`;
             } else if (mode === 'lastWeek') {
                 base3DGroup.visible = true;
                 base3DGroup.scale.set(0.55, 0.55, 0.55);
@@ -806,7 +801,7 @@
                         if (activePlot.status === 'leased') {
                             buttonsHtml += `<button class="btn-coin" onclick="buyPlotWithCoin()">👑 영구 소유 전환 (${activePlot.price} REDM)</button>`;
                         }
-                        buttonsHtml += `<button class="btn-primary" onclick="zoomToStage3Base(activePlot)">🚀 지표면 기지로 착륙하기</button>`;
+                        buttonsHtml += `<button class="btn-primary" onclick="zoomToStage3Base(activePlot)">🚀 드론 기지 뷰로 착륙하기</button>`;
                     } else {
                         if (activePlot.canFree) {
                             buttonsHtml += `<button class="btn-primary" onclick="claimFreeLease()">🎁 30일 무상임대 (0 REDM)</button>`;
@@ -821,7 +816,7 @@
                     `;
                 }
             } else if (currentZoomStage === 3) {
-                titleEl.innerText = `🚀 3단계: ${activePlot.name} 지표면 기지`;
+                titleEl.innerText = `🚀 3단계: ${activePlot.name} 드론 기지 뷰`;
                 bodyEl.innerHTML = `
                     <div class="timeline-row">
                         <button class="time-btn active" onclick="change3DTimeline('current', this)">🟢 현재 푸른 기지</button>
@@ -852,8 +847,8 @@
             if (base3DGroup && base3DGroup.visible) {
                 if (radarDish) radarDish.rotation.y += 0.05;
                 if (roverMesh) {
-                    roverAngle += 0.015;
-                    roverMesh.position.set(Math.cos(roverAngle) * 0.31, 0.015, Math.sin(roverAngle) * 0.31);
+                    roverAngle += 0.018;
+                    roverMesh.position.set(Math.cos(roverAngle) * 0.36, 0.02, Math.sin(roverAngle) * 0.36);
                     roverMesh.rotation.y = -roverAngle;
                 }
             }
@@ -863,14 +858,12 @@
             planetGroup.rotation.x = currentRotX;
             planetGroup.rotation.y = currentRotY;
 
-            camDist += (targetCamDist - camDist) * 0.07;
-            camHeightOffset += (targetCamHeightOffset - camHeightOffset) * 0.07;
-            lookAtYOffset += (targetLookAtYOffset - lookAtYOffset) * 0.07;
+            camPos.lerp(targetCamPos, 0.07);
+            camLook.lerp(targetCamLook, 0.07);
+            camera.position.copy(camPos);
+            camera.lookAt(camLook);
 
-            camera.position.set(0, camHeightOffset, camDist);
-            camera.lookAt(0, lookAtYOffset, 0);
-
-            const km = Math.max(1, Math.floor((camDist - 11.2) * 850));
+            const km = currentZoomStage === 3 ? 2 : Math.max(15, Math.floor((camPos.z - 10.9) * 850));
             document.getElementById('altitudeDisplay').innerText = `고도: ${km.toLocaleString()} KM (${currentZoomStage === 1 ? '우주 궤도' : currentZoomStage === 2 ? '지역 상공 구획 뷰' : '지표면 드론 조망 뷰'})`;
 
             syncMarkersWith3DGlobe();
