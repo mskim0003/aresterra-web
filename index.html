@@ -2,6 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ares Terra ($REDM) - Official Testnet Gateway</title>
     <style>
         body {
@@ -12,6 +13,7 @@
             padding: 0;
             overflow-x: hidden;
         }
+        /* --- 1단계: 게이트웨이 화면 --- */
         #gatewayScreen {
             height: 100vh;
             display: flex;
@@ -22,20 +24,29 @@
             background: radial-gradient(circle at center, #1a0b12 0%, #05070d 70%);
             transition: opacity 0.8s ease-in-out;
             position: relative;
+            padding: 0 20px;
         }
-        .portal-ring {
+        .portal-wrapper {
+            position: relative;
             width: 220px;
             height: 220px;
-            border: 4px dashed #ff5722;
-            border-radius: 50%;
             display: flex;
             justify-content: center;
             align-items: center;
-            animation: spin 15s linear infinite;
             margin-bottom: 30px;
+        }
+        .portal-ring {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border: 4px dashed #ff5722;
+            border-radius: 50%;
+            animation: spin 15s linear infinite;
             box-shadow: 0 0 35px rgba(255, 87, 34, 0.5);
         }
         .portal-core {
+            position: relative;
+            z-index: 2;
             width: 180px;
             height: 180px;
             background: radial-gradient(circle, #ff5722 0%, #3d120a 80%);
@@ -69,10 +80,13 @@
         }
         .gateway-title p {
             color: #9ca3af;
-            font-size: 1.15rem;
+            font-size: 1.1rem;
             max-width: 550px;
             line-height: 1.6;
+            margin-bottom: 35px;
         }
+
+        /* --- 2단계: 분양 시뮬레이터 화면 --- */
         #simulatorScreen {
             display: none;
             padding: 30px 20px;
@@ -94,7 +108,9 @@
         }
         .dashboard {
             display: flex;
+            flex-wrap: wrap;
             justify-content: space-around;
+            gap: 15px;
             background: #151b2b;
             padding: 20px;
             border-radius: 12px;
@@ -117,7 +133,7 @@
         }
         .grid-container {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
             gap: 20px;
         }
         .land-card {
@@ -145,21 +161,35 @@
             background-color: #ff5722;
             color: white;
             border: none;
-            padding: 10px 15px;
+            padding: 12px 15px;
             border-radius: 6px;
             cursor: pointer;
             font-weight: bold;
             margin-top: 10px;
             width: 100%;
             transition: 0.2s;
+            font-size: 0.95rem;
         }
         button.action-btn:hover {
             background-color: #e64a19;
         }
-        button.action-btn:disabled {
-            background-color: #374151;
-            color: #9ca3af;
-            cursor: not-allowed;
+        button.work-btn {
+            background: linear-gradient(90deg, #00bcd4, #008ba3);
+            color: white;
+            border: none;
+            padding: 12px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 10px;
+            width: 100%;
+            transition: 0.2s;
+            font-size: 0.95rem;
+            box-shadow: 0 0 12px rgba(0, 188, 212, 0.4);
+        }
+        button.work-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 18px rgba(0, 188, 212, 0.7);
         }
         .back-bar {
             margin-bottom: 20px;
@@ -178,22 +208,158 @@
             border-color: #ff5722;
             color: #ff5722;
         }
+
+        /* --- 3단계: 화성 영토 영상 및 작업 화면 --- */
+        #marsWorkScreen {
+            display: none;
+            padding: 30px 20px;
+            max-width: 900px;
+            margin: 0 auto;
+            animation: fadeIn 0.8s ease-in-out;
+        }
+        .mars-viewport {
+            position: relative;
+            width: 100%;
+            height: 360px;
+            border-radius: 16px;
+            overflow: hidden;
+            border: 2px solid #ff5722;
+            box-shadow: 0 0 30px rgba(255, 87, 34, 0.3);
+            background: linear-gradient(180deg, #120507 0%, #4a150b 55%, #8c2d19 80%, #b84121 100%);
+            margin-bottom: 25px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        /* 화성 배경 영상/시각 애니메이션 효과 */
+        .mars-sun {
+            position: absolute;
+            top: 40px;
+            right: 60px;
+            width: 70px;
+            height: 70px;
+            background: radial-gradient(circle, #ffccbc 0%, #ff5722 60%, transparent 70%);
+            border-radius: 50%;
+            box-shadow: 0 0 50px #ff5722;
+            animation: pulseSun 4s infinite alternate;
+        }
+        @keyframes pulseSun {
+            from { transform: scale(1); opacity: 0.85; }
+            to { transform: scale(1.15); opacity: 1; }
+        }
+        .mars-dune {
+            position: absolute;
+            bottom: 0;
+            width: 200%;
+            height: 110px;
+            background: repeating-linear-gradient(
+                90deg,
+                #6e1f0e 0px,
+                #8f2c15 200px,
+                #591709 400px,
+                #6e1f0e 600px
+            );
+            clip-path: polygon(0 45%, 15% 20%, 35% 55%, 55% 15%, 75% 50%, 90% 25%, 100% 45%, 100% 100%, 0 100%);
+            animation: moveTerrain 25s linear infinite;
+            opacity: 0.9;
+        }
+        @keyframes moveTerrain {
+            from { transform: translateX(0); }
+            to { transform: translateX(-50%); }
+        }
+        .hud-overlay {
+            position: relative;
+            z-index: 3;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(5, 7, 13, 0.6);
+            border-bottom: 1px solid rgba(255, 87, 34, 0.4);
+            font-family: monospace;
+            color: #00bcd4;
+        }
+        .live-badge {
+            background: #dc2626;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 0.8rem;
+            animation: blink 1.5s infinite;
+        }
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+        .mars-center-status {
+            position: relative;
+            z-index: 3;
+            text-align: center;
+            margin: auto;
+            background: rgba(0, 0, 0, 0.55);
+            padding: 18px 28px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 171, 145, 0.4);
+        }
+        .mars-center-status h2 {
+            margin: 0 0 8px 0;
+            color: #ffab91;
+            font-size: 1.5rem;
+        }
+        .mars-center-status p {
+            margin: 0;
+            color: #e5e7eb;
+            font-size: 1rem;
+        }
+        .work-controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .work-card {
+            background: #151b2b;
+            border: 1px solid #2a344d;
+            border-radius: 12px;
+            padding: 18px;
+            text-align: center;
+        }
+        .work-card h4 {
+            margin: 0 0 8px 0;
+            color: #00bcd4;
+        }
+        .log-box {
+            background: #0d111a;
+            border: 1px solid #1f293d;
+            border-radius: 8px;
+            padding: 15px;
+            font-family: monospace;
+            color: #10b981;
+            height: 110px;
+            overflow-y: auto;
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
     </style>
 </head>
 <body>
 
+    <!-- 1단계: 게이트웨이 -->
     <div id="gatewayScreen">
         <div class="gateway-title">
             <h1>ARES TERRA</h1>
             <p>환영한다, 개척자여.<br>강렬한 레드엠(<strong>$REDM</strong>) 토큰으로 화성의 위대한 영토를 선점하라.</p>
         </div>
-        <div class="portal-ring">
+        <div class="portal-wrapper">
+            <div class="portal-ring"></div>
             <div class="portal-core" onclick="enterGateway()">
                 <span>ENTER GATE</span>
             </div>
         </div>
     </div>
 
+    <!-- 2단계: 토지 분양 대시보드 -->
     <div id="simulatorScreen">
         <div class="back-bar">
             <button class="back-btn" onclick="exitGateway()">← 화성 게이트로 돌아가기</button>
@@ -221,10 +387,54 @@
         <div class="grid-container" id="landGrid"></div>
     </div>
 
+    <!-- 3단계: 화성 현지 영상 & 작업 화면 -->
+    <div id="marsWorkScreen">
+        <div class="back-bar">
+            <button class="back-btn" onclick="backToSimulator()">← 영토 목록(대시보드)으로 돌아가기</button>
+        </div>
+
+        <div class="mars-viewport">
+            <div class="hud-overlay">
+                <span id="marsSectorTitle">SECTOR: A-01</span>
+                <span class="live-badge">● LIVE MARS CAM</span>
+            </div>
+            <div class="mars-sun"></div>
+            <div class="mars-center-status">
+                <h2 id="marsStatusHeading">화성 개척 기지 가동 중</h2>
+                <p id="marsStatusSub">탐사 로버 및 채굴 모듈이 명령을 대기하고 있습니다.</p>
+            </div>
+            <div class="mars-dune"></div>
+        </div>
+
+        <div class="work-controls">
+            <div class="work-card">
+                <h4>🛰️ 화성 지질 탐사</h4>
+                <p>표면 광물 및 얼음층 스캔 (+50 REDM 보상)</p>
+                <button class="action-btn" onclick="doMarsWork('지질 탐사 로버 가동', 50)">탐사 시작하기</button>
+            </div>
+            <div class="work-card">
+                <h4>⛏️ 레드엠($REDM) 원석 채굴</h4>
+                <p>심층 코어 시추 작업 (+120 REDM 보상)</p>
+                <button class="action-btn" onclick="doMarsWork('심층 에너지 코어 채굴', 120)">채굴 가동하기</button>
+            </div>
+            <div class="work-card">
+                <h4>🏗️ 산소 돔 기지 건설</h4>
+                <p>거주 구역 확장 공사 (+200 REDM 가치 상승)</p>
+                <button class="action-btn" onclick="doMarsWork('산소 돔 베이스캠프 증축', 200)">기지 건설하기</button>
+            </div>
+        </div>
+
+        <div class="log-box" id="workLog">
+            > [시스템] 화성 현지 위성 카메라 연결 완료...<br>
+            > [시스템] 개척자님의 작업 명령을 기다리는 중입니다.
+        </div>
+    </div>
+
     <script>
         let myBalance = 10000;
         let companyStock = 1000000;
         let burnedStock = 0;
+        let currentSectorName = "";
 
         const lands = [
             { id: 1, name: "Sector A-01 (Olympus Prime)", price: 1500, owner: null },
@@ -247,8 +457,7 @@
         }
 
         function exitGateway() {
-            const sim = document.getElementById('simulatorScreen');
-            sim.style.display = 'none';
+            document.getElementById('simulatorScreen').style.display = 'none';
             const gateway = document.getElementById('gatewayScreen');
             gateway.style.display = 'flex';
             setTimeout(() => {
@@ -263,13 +472,19 @@
             lands.forEach(land => {
                 const card = document.createElement('div');
                 card.className = `land-card ${land.owner ? 'owned' : ''}`;
+                
+                let buttonHtml = '';
+                if (land.owner) {
+                    buttonHtml = `<button class="work-btn" onclick="enterMarsSector(${land.id})">🚀 화성 영토 입장 (작업하기)</button>`;
+                } else {
+                    buttonHtml = `<button class="action-btn" onclick="buyLand(${land.id})">토지 청약하기</button>`;
+                }
+
                 card.innerHTML = `
                     <h3>${land.name}</h3>
                     <p>분양가: <b>${land.price.toLocaleString()} REDM</b></p>
                     <p>상태: ${land.owner ? '🏠 소유주: ' + land.owner : '✨ 분양 대기중'}</p>
-                    <button class="action-btn" ${land.owner ? 'disabled' : ''} onclick="buyLand(${land.id})">
-                        ${land.owner ? '분양 완료' : '토지 청약하기'}
-                    </button>
+                    ${buttonHtml}
                 `;
                 grid.appendChild(card);
             });
@@ -290,11 +505,38 @@
                 burnedStock += burnAmount;
 
                 land.owner = "오빠 (개척자)";
-                alert(`🎉 [${land.name}] 분양 성공!\n\n- 지불 금액: ${land.price.toLocaleString()} REDM\n- 생태계 소각(Burn): ${burnAmount.toLocaleString()} REDM`);
+                alert(`🎉 [${land.name}] 분양 성공!\n\n이제 [🚀 화성 영토 입장] 버튼을 눌러 내 땅의 실시간 화성 화면으로 들어갈 수 있습니다!`);
                 renderLands();
             } else {
                 alert("❌ 잔고($REDM)가 부족합니다!");
             }
+        }
+
+        function enterMarsSector(id) {
+            const land = lands.find(l => l.id === id);
+            currentSectorName = land.name;
+            document.getElementById('simulatorScreen').style.display = 'none';
+            document.getElementById('marsWorkScreen').style.display = 'block';
+            document.getElementById('marsSectorTitle').innerText = `SECTOR: ${land.name}`;
+            document.getElementById('marsStatusHeading').innerText = `${land.name} 기지 가동 중`;
+            document.getElementById('marsStatusSub').innerText = `소유주 [${land.owner}]님의 작업 명령을 대기하고 있습니다.`;
+        }
+
+        function backToSimulator() {
+            document.getElementById('marsWorkScreen').style.display = 'none';
+            document.getElementById('simulatorScreen').style.display = 'block';
+            renderLands();
+        }
+
+        function doMarsWork(workType, reward) {
+            myBalance += reward;
+            companyStock -= reward;
+            document.getElementById('marsStatusHeading').innerText = `⚡ ${workType} 진행 중!`;
+            document.getElementById('marsStatusSub').innerText = `작업 보상으로 +${reward} REDM이 내 잔고에 지급되었습니다!`;
+            
+            const logBox = document.getElementById('workLog');
+            const now = new Date().toLocaleTimeString();
+            logBox.innerHTML = `> [${now}] '${currentSectorName}'에서 [${workType}] 완료! (+${reward} REDM 획득)<br>` + logBox.innerHTML;
         }
     </script>
 </body>
