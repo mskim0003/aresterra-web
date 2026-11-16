@@ -1,0 +1,2887 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ARESTERRA.IO | 화성 노바테라주 오아시스구 제1특구 100필지 통합 관제소</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto+Sans+KR', sans-serif;
+            background-color: #0b0706;
+            color: #f8fafc;
+            overflow-x: hidden;
+        }
+        /* 화성 적색 사막 원시 암반 질감 */
+        .mars-raw-soil {
+            background-color: #3d180e;
+            background-image: 
+                linear-gradient(135deg, rgba(120, 42, 18, 0.45) 25%, transparent 25%),
+                linear-gradient(225deg, rgba(120, 42, 18, 0.45) 25%, transparent 25%),
+                linear-gradient(45deg, rgba(60, 20, 9, 0.55) 25%, transparent 25%),
+                linear-gradient(315deg, rgba(60, 20, 9, 0.55) 25%, #3d180e 25%);
+            background-size: 40px 40px;
+        }
+        /* 십자(+) 메인 도로 및 산소 파이프라인 */
+        .pipeline-road {
+            background: repeating-linear-gradient(
+                90deg,
+                #0f172a,
+                #0f172a 12px,
+                #1e293b 12px,
+                #1e293b 24px
+            );
+        }
+        .plot-selected {
+            outline: 3px solid #38bdf8 !important;
+            outline-offset: 1px;
+            z-index: 20;
+        }
+
+        /* 아바타 부드러운 연속 이동 트랜지션 */
+        #field-avatar-actor, .npc-imjang-actor {
+            transition: left 2.4s linear, top 2.4s linear;
+            pointer-events: none;
+        }
+
+        /* 통상(상시) 살아 움직이는 아바타 연속 보행 & 한복 자락 모션 */
+        @keyframes continuousAvatarMotion {
+            0%   { transform: translateY(0px) rotate(-3deg) scale(1); }
+            25%  { transform: translateY(-6px) rotate(0deg) scale(1.04); }
+            50%  { transform: translateY(0px) rotate(3deg) scale(1); }
+            75%  { transform: translateY(-6px) rotate(0deg) scale(1.04); }
+            100% { transform: translateY(0px) rotate(-3deg) scale(1); }
+        }
+        .avatar-body-box {
+            animation: continuousAvatarMotion 0.55s infinite ease-in-out;
+        }
+
+        /* 걸어서 이동 중일 때 발걸음이 더 경쾌해지는 강조 효과 */
+        .avatar-moving-active .avatar-body-box {
+            animation-duration: 0.32s !important;
+            border-color: #facc15 !important;
+            box-shadow: 0 0 28px rgba(250, 204, 21, 0.9) !important;
+        }
+
+        /* 꽃신/태사혜 발걸음 교차 애니메이션 */
+        @keyframes legStepLeft {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-5px); }
+        }
+        @keyframes legStepRight {
+            0%, 100% { transform: translateY(-5px); }
+            50% { transform: translateY(0px); }
+        }
+        .step-foot-l { display: inline-block; animation: legStepLeft 0.4s infinite; }
+        .step-foot-r { display: inline-block; animation: legStepRight 0.4s infinite; }
+
+        /* 0.38G 점프 */
+        @keyframes marsJumpAnim {
+            0% { transform: translate(-50%, -50%) scale(1); }
+            50% { transform: translate(-50%, -120%) scale(1.25); }
+            100% { transform: translate(-50%, -50%) scale(1); }
+        }
+        .mars-jumping {
+            animation: marsJumpAnim 0.7s ease-out;
+        }
+
+        /* 목표 지점 파동 링 */
+        @keyframes targetPulseRing {
+            0% { transform: translate(-50%, -50%) scale(0.5); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(2.2); opacity: 0; }
+        }
+        .target-ring-anim {
+            animation: targetPulseRing 1s infinite ease-out;
+        }
+
+        /* AI 로봇 일꾼 상시 왕복 모션 */
+        @keyframes robotWorkPatrol {
+            0%, 100% { transform: translateX(-4px); }
+            50% { transform: translateX(4px); }
+        }
+        .robot-patrol {
+            display: inline-block;
+            animation: robotWorkPatrol 1.2s infinite ease-in-out;
+        }
+
+        /* 내 사진 캐리커처 필터 효과 */
+        .caricature-filter-vivid {
+            filter: contrast(1.38) saturate(1.65) brightness(1.06);
+        }
+        .caricature-filter-warm {
+            filter: sepia(0.28) contrast(1.3) saturate(1.5) brightness(1.08);
+        }
+
+        .grab-viewport { cursor: grab; }
+        .grab-viewport:active { cursor: grabbing; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <!-- 상단 고정 헤더: mskim0003 전용 관제 바 + 🌐 aresterra.io 공식 도메인 주소창 -->
+    <header class="sticky top-0 z-40 bg-[#120b09]/95 backdrop-blur-md border-b border-orange-900/60 px-3 py-2.5 shadow-xl">
+        <div class="max-w-[1600px] mx-auto flex flex-col gap-2">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-9 h-9 rounded-lg bg-gradient-to-br from-orange-500 to-amber-600 flex items-center justify-center text-lg shadow">
+                        🪐
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-1.5">
+                            <span class="px-2 py-0.5 text-[10px] font-black rounded bg-amber-500 text-slate-950">ARESTERRA.IO 공식 플랫폼</span>
+                            <h1 class="text-sm sm:text-base font-black text-white">화성 노바테라주 오아시스구 100필지 & 👘 K-한복 아바타 임장 관제소</h1>
+                        </div>
+                        <p class="text-[11px] text-orange-200/80">우주복 없이 자유롭게 걷는 K-한복 아바타 · 한국식 지적도(1대·2장·3답·71임) · 공식 도메인(<b>aresterra.io</b>)</p>
+                    </div>
+                </div>
+
+                <!-- 🌐 공식 도메인(aresterra.io) 직행 주소창 -->
+                <div class="flex items-center gap-1 bg-slate-950 border-2 border-cyan-400/70 rounded-xl px-2.5 py-1 shadow-[0_0_15px_rgba(34,211,238,0.25)]">
+                    <span class="text-xs font-black text-cyan-400">🌐 https://aresterra.io/</span>
+                    <input id="top-domain-bar-input" type="text" value="mskim0003" placeholder="예: mskim0003 / jay / bora" onkeydown="if(event.key==='Enter') navigateByDomainBar()" class="bg-transparent text-xs font-black text-yellow-300 focus:outline-none w-28 sm:w-36">
+                    <button onclick="navigateByDomainBar()" class="px-2 py-0.5 rounded bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-black text-[10px]">
+                        직행이동
+                    </button>
+                    <button onclick="openModal('domain')" class="px-2 py-0.5 rounded bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-[10px]">
+                        🌐 주소분양
+                    </button>
+                </div>
+
+                <!-- mskim0003 코인 지갑 & 한복 아바타 의상실 버튼 -->
+                <div class="flex items-center gap-2">
+                    <button onclick="openModal('avatar')" class="px-2.5 py-1.5 rounded-lg bg-gradient-to-r from-amber-400 via-rose-400 to-purple-500 hover:opacity-95 text-slate-950 font-black text-[11px] shadow-lg flex items-center gap-1 border border-white">
+                        <span>👘</span>
+                        <span>한복 의상실·캐리커처</span>
+                    </button>
+                    <button onclick="openModal('invite')" class="px-2.5 py-1.5 rounded-lg bg-gradient-to-r from-pink-500 to-amber-400 hover:opacity-95 text-slate-950 font-black text-[11px] shadow-lg flex items-center gap-1 border border-white">
+                        <span>💌</span>
+                        <span>지인 초대장</span>
+                    </button>
+                    <div onclick="openModal('avatar')" class="cursor-pointer bg-slate-900 border border-cyan-500/40 hover:border-amber-400 rounded-lg px-2.5 py-1 flex items-center gap-1.5 transition" title="클릭하여 한복 & 캐리커처 변경">
+                        <span id="header-avatar-preview" class="text-base">👑👘</span>
+                        <div class="text-[11px] leading-tight">
+                            <div id="header-hanbok-name" class="text-amber-300 font-bold text-[10px]">황금 곤룡포 대군</div>
+                            <div class="font-black text-white">👑 mskim0003</div>
+                        </div>
+                    </div>
+                    <div class="bg-slate-900 border border-amber-500/40 rounded-lg px-2.5 py-1 text-[11px] leading-tight">
+                        <div class="text-amber-200/80">보유 건설자금</div>
+                        <div class="font-black text-amber-400"><span id="wallet-balance">50,000</span> $MARSM</div>
+                    </div>
+                    <div class="bg-emerald-950/80 border border-emerald-500/50 rounded-lg px-2.5 py-1 flex items-center gap-1.5 text-[11px]">
+                        <div>
+                            <div class="text-emerald-200/80 text-[10px]">24H 자동채굴</div>
+                            <div class="font-black text-emerald-300">+<span id="vault-pending">1,420.0</span></div>
+                        </div>
+                        <button onclick="harvestVault()" class="px-2 py-1 rounded bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-[10px]">
+                            수확
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 뷰 전환 & aresterra.io 핫플레이스 직행 바 -->
+            <div class="flex flex-wrap items-center justify-between gap-2 bg-black/60 p-1.5 rounded-xl border border-orange-800/50">
+                <div class="flex flex-wrap items-center gap-1.5">
+                    <a href="index.html" class="px-2.5 py-1 rounded-lg text-xs font-black bg-indigo-950 hover:bg-indigo-800 text-indigo-200 border border-indigo-400/60 shadow flex items-center gap-1" title="3D 화성 전체 지구본 화면으로 이동">
+                        🪐 3D 화성 지구본
+                    </a>
+                    <button id="tab-btn-map" onclick="switchViewMode('map')" class="px-3 py-1 rounded-lg text-xs font-black bg-orange-600 text-white shadow">
+                        🗺️ 전체 100필지 지도
+                    </button>
+                    <button id="tab-btn-field" onclick="switchViewMode('field')" class="px-3 py-1 rounded-lg text-xs font-black bg-stone-800 text-orange-200 hover:bg-stone-700">
+                        👘 땅 내부 한복 아바타 임장 현장
+                    </button>
+                    <span class="text-stone-600 hidden sm:inline">|</span>
+                    <button onclick="quickJumpToLot(1)" class="px-2 py-1 rounded-lg bg-cyan-950 hover:bg-cyan-800 text-cyan-200 border border-cyan-500/50 text-[11px] font-bold">
+                        👑 aresterra.io/mskim0003 (#001)
+                    </button>
+                    <button onclick="quickJumpToLot(2)" class="px-2 py-1 rounded-lg bg-amber-950 hover:bg-amber-800 text-amber-200 border border-amber-500/50 text-[11px] font-bold">
+                        ⚡ aresterra.io/jay (#002)
+                    </button>
+                    <button onclick="quickJumpToLot(3)" class="px-2 py-1 rounded-lg bg-emerald-950 hover:bg-emerald-800 text-emerald-200 border border-emerald-500/50 text-[11px] font-bold">
+                        🌱 aresterra.io/bora (#003)
+                    </button>
+                    <button onclick="openModal('avatar')" class="px-2.5 py-1 rounded-lg bg-gradient-to-r from-amber-300 via-pink-400 to-rose-400 hover:opacity-95 text-slate-950 font-black text-[11px] shadow">
+                        👘 K-한복 고르기 & 내 사진 캐리커처
+                    </button>
+                </div>
+                <div class="flex flex-wrap items-center gap-1.5">
+                    <button onclick="openModal('airdrop')" class="px-2.5 py-1 rounded-lg bg-amber-950 hover:bg-amber-800 text-amber-200 border border-amber-400/60 text-[11px] font-black">
+                        🪂 테스트코인 풀
+                    </button>
+                    <button onclick="openModal('market')" class="px-2.5 py-1 rounded-lg bg-purple-950 hover:bg-purple-800 text-purple-200 border border-purple-400/60 text-[11px] font-black">
+                        🛒 #004 마켓·거래소
+                    </button>
+                    <button onclick="openModal('presale')" class="px-2.5 py-1 rounded-lg bg-gradient-to-r from-rose-600 to-orange-500 text-white border border-yellow-300 text-[11px] font-black shadow">
+                        🚩 제2특구(#101~#500) 사전청약
+                    </button>
+                </div>
+            </div>
+
+            <!-- 초보자 10초 가이드 & 3단 도면 오버랩 스위치 -->
+            <div class="flex flex-wrap items-center justify-between gap-2 bg-[#1c100c] border border-orange-700/40 rounded-xl px-3 py-2">
+                <div class="flex flex-wrap items-center gap-1.5">
+                    <span class="px-2 py-0.5 rounded bg-emerald-500/20 border border-emerald-400/50 text-emerald-300 font-black text-[11px]">
+                        🌱 초보유저 보라 & 제이 안내
+                    </span>
+                    <button onclick="setOverlayMode('bare')" id="btn-mode-bare" class="px-2.5 py-1 rounded-lg text-xs font-black border border-stone-600 bg-stone-800 text-stone-200 hover:bg-stone-700">
+                        🏜️ 1. 순수 화성 빈땅 (도면 OFF)
+                    </button>
+                    <button onclick="setOverlayMode('cadastral')" id="btn-mode-cadastral" class="px-2.5 py-1 rounded-lg text-xs font-black border-2 border-yellow-300 bg-amber-500 text-slate-950 shadow">
+                        📐 2. 한국식 지적도 오버랩 (1대·2장·3답·71임)
+                    </button>
+                    <button onclick="setOverlayMode('urban')" id="btn-mode-urban" class="px-2.5 py-1 rounded-lg text-xs font-black border border-cyan-500/50 bg-slate-900 text-cyan-200 hover:bg-slate-800">
+                        🗺️ 3. 도시계획도 오버랩 (5대특구·십자도로·2차확장)
+                    </button>
+                    <button onclick="switchViewMode('field')" class="px-3 py-1 rounded-lg text-xs font-black bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow">
+                        👘 4. 땅 안으로 들어가서 한복 아바타 임장보기 ▶
+                    </button>
+                </div>
+
+                <div class="flex flex-wrap items-center gap-1.5">
+                    <div class="flex items-center gap-1.5 bg-black/50 px-2.5 py-1 rounded-lg border border-stone-700 text-xs">
+                        <span class="text-stone-300 font-bold">도면 투명도:</span>
+                        <input id="overlay-opacity-range" type="range" min="0" max="100" value="100" oninput="changeOverlayOpacity(this.value)" class="w-16 accent-amber-400 cursor-pointer">
+                        <span id="overlay-opacity-text" class="text-amber-300 font-black w-8 text-right">100%</span>
+                    </div>
+                    <button onclick="openModal('certificate')" class="px-2.5 py-1 rounded-lg bg-yellow-500/90 hover:bg-yellow-400 border border-yellow-200 text-slate-950 font-black text-xs shadow">
+                        📜 등기권리증·간판
+                    </button>
+                    <button onclick="openModal('qa')" class="px-2.5 py-1 rounded-lg bg-teal-950/90 hover:bg-teal-800 border border-teal-400/60 text-teal-200 font-black text-xs shadow">
+                        🛠️ 24H QA (<span id="qa-fix-count">5</span>)
+                    </button>
+                    <button onclick="openModal('briefing')" class="px-2.5 py-1 rounded-lg bg-indigo-950/90 hover:bg-indigo-800 border border-indigo-400/60 text-indigo-200 font-black text-xs shadow">
+                        🤖 3분 AI비서
+                    </button>
+                    <button onclick="openModal('security')" class="px-2.5 py-1 rounded-lg bg-emerald-950/90 hover:bg-emerald-800 border border-emerald-400/60 text-emerald-200 font-bold text-xs">
+                        🔐 3중 금고
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- 메인 워크스페이스 -->
+    <main class="max-w-[1600px] w-full mx-auto px-3 py-3 flex-1 grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
+
+        <!-- 좌측 8컬럼 -->
+        <div class="lg:col-span-8 flex flex-col gap-3">
+
+            <!-- 화면 A: 전체 100필지 정방형 지도 -->
+            <section id="section-map-view" class="bg-[#160d0a] border border-orange-900/60 rounded-2xl p-3.5 shadow-2xl">
+                <div class="flex flex-wrap items-center justify-between gap-2 pb-2.5 mb-2.5 border-b border-stone-800">
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span id="current-mode-badge" class="px-2 py-0.5 rounded text-xs font-black bg-amber-400 text-slate-950">
+                                📐 한국식 지적도 오버랩 모드
+                            </span>
+                            <h2 class="text-sm sm:text-base font-black text-white">ARESTERRA.IO 오아시스구 100필지 (클릭: 토지대장 / 더블클릭: 한복 아바타 현장임장)</h2>
+                        </div>
+                        <p id="current-mode-desc" class="text-xs text-stone-300 mt-0.5">
+                            답답한 우주복 대신 <b>전통 한복(곤룡포·선비도포·당의·색동한복)</b>을 입은 아바타들이 한국식 지적도 대지 위를 자유롭게 걸어 다닙니다!
+                        </p>
+                    </div>
+                    <button onclick="switchViewMode('field')" class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-black text-xs shadow-lg flex items-center gap-1.5">
+                        <span>👘</span>
+                        <span id="quick-enter-btn-label">#001 mskim0003 본부 한복 임장하러 가기 ▶</span>
+                    </button>
+                </div>
+
+                <!-- 북쪽 1차 개척지 구획 경계선 -->
+                <div id="boundary-banner-north" onclick="openModal('presale')" class="mb-2 px-3 py-1.5 rounded-lg border border-dashed border-amber-400 bg-amber-950/40 hover:bg-amber-900/50 cursor-pointer flex flex-wrap items-center justify-between gap-1 text-[11px] text-amber-200 transition">
+                    <span>🚩 <b>[북쪽 구획 경계선]</b> 너머: <b>오아시스구 제2특구 (2차 분양 예정지 · #101~#200번지)</b></span>
+                    <span class="px-2 py-0.5 rounded bg-amber-400 text-slate-950 font-black text-[10px]">🔥 제2특구 사전청약 대기번호표 발급받기 ▶</span>
+                </div>
+
+                <!-- 100필지 + 중앙 십자도로 + 중앙광장 (11x11 정방형 그리드) -->
+                <div class="mars-raw-soil p-2.5 sm:p-3.5 rounded-xl border-2 border-amber-600/60 shadow-inner overflow-x-auto">
+                    <div id="cadastral-map-grid" class="grid grid-cols-11 gap-1 min-w-[660px]"></div>
+                </div>
+
+                <!-- 남쪽 1차 개척지 구획 경계선 -->
+                <div id="boundary-banner-south" onclick="openModal('presale')" class="mt-2 px-3 py-1.5 rounded-lg border border-dashed border-amber-400 bg-amber-950/40 hover:bg-amber-900/50 cursor-pointer flex flex-wrap items-center justify-between gap-1 text-[11px] text-amber-200 transition">
+                    <span>🚩 <b>[남쪽·동서 구획 경계선]</b> 너머: <b>오아시스구 제2특구 (본게임 오픈 시 2차 확장 구역 · #201~#500번지)</b></span>
+                    <span class="text-yellow-300 font-black">👑 1차 개척지(원조 수도) 땅주인 0순위 우선청약 특권 적용중! ▶</span>
+                </div>
+            </section>
+
+            <!-- 화면 B: 땅 내부 연속 현장 (K-한복 아바타 & 임장단) -->
+            <section id="section-field-view" class="hidden bg-[#160d0a] border-2 border-cyan-500/70 rounded-2xl p-3.5 shadow-2xl">
+                <div class="mb-3 bg-gradient-to-r from-orange-600 via-amber-500 to-orange-600 p-2 rounded-xl flex flex-wrap items-center justify-between gap-2 shadow-lg">
+                    <div class="flex items-center gap-2 text-slate-950 font-black text-xs sm:text-sm px-2">
+                        <span class="text-lg">👘</span>
+                        <span><b>[K-한복 아바타 실시간 임장]</b> 우주복 없이 멋진 한복 차림으로 👑 mskim0003 임장단과 팔도 한복 투자단이 화성 땅을 답사합니다!</span>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <button onclick="openModal('avatar')" class="px-3 py-1.5 rounded-lg bg-pink-600 hover:bg-pink-500 text-white font-black text-xs shadow border border-white transition">
+                            👘 한복 갈아입기·캐리커처
+                        </button>
+                        <button onclick="switchViewMode('map')" class="px-4 py-1.5 rounded-lg bg-slate-950 hover:bg-stone-900 text-amber-300 font-black text-xs shadow border border-amber-300 transition">
+                            🔙 전체 100필지 지도로 나가기 (클릭)
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 상시 임장 투어 스위치 & 크루 컨트롤 -->
+                <div class="flex flex-wrap items-center justify-between gap-2 pb-2.5 mb-2.5 border-b border-stone-800">
+                    <div class="flex items-center gap-2">
+                        <span class="px-2.5 py-1 rounded bg-emerald-400 text-slate-950 font-black text-xs animate-pulse">
+                            👘 한복 임장단 가동중
+                        </span>
+                        <h2 id="field-header-title" class="text-sm sm:text-base font-black text-white">
+                            #001 aresterra.io/mskim0003 (1대) 및 100필지 연속 임장 현장
+                        </h2>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-1.5">
+                        <button id="btn-auto-patrol" onclick="toggleAutoPatrol()" class="px-3 py-1.5 rounded-lg bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs shadow border border-white">
+                            🔄 자동 임장 투어: ON (유망필지 연속답사)
+                        </button>
+                        <button id="btn-npc-crew-toggle" onclick="toggleNpcCrews()" class="px-2.5 py-1.5 rounded-lg bg-cyan-950 hover:bg-cyan-800 text-cyan-200 border border-cyan-500/50 font-bold text-xs">
+                            🎎 한복 임장단 3팀: 활동중
+                        </button>
+                        <button id="btn-companion-toggle" onclick="toggleCompanions()" class="px-2.5 py-1.5 rounded-lg bg-emerald-950 hover:bg-emerald-800 text-emerald-200 border border-emerald-500/50 font-bold text-xs">
+                            👯 제이·보라 한복동행: ON
+                        </button>
+                        <button onclick="triggerMarsJump()" class="px-2.5 py-1.5 rounded-lg bg-purple-950 hover:bg-purple-800 text-purple-200 border border-purple-500/50 font-bold text-xs">
+                            🚀 0.38G 한복점프
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 실시간 현장 임장 브리핑 & 수동 방향키 -->
+                <div class="mb-3 bg-black/85 border border-amber-500/50 rounded-xl p-2.5 flex flex-wrap items-center justify-between gap-2 text-xs">
+                    <div class="flex items-center gap-2.5 flex-1">
+                        <div class="w-9 h-9 rounded-xl bg-amber-500/20 border border-amber-400 flex items-center justify-center text-lg shrink-0">
+                            👘
+                        </div>
+                        <div class="leading-relaxed">
+                            <div class="flex items-center gap-1.5 mb-0.5">
+                                <span id="walk-state-badge" class="px-2 py-0.5 rounded bg-amber-400 text-slate-950 font-black text-[10px]">👘 K-한복 임장 브리핑</span>
+                                <span id="imjang-grade-pill" class="px-2 py-0.5 rounded bg-cyan-500/20 border border-cyan-400/50 text-cyan-300 font-black text-[10px]">입지: S+등급 · aresterra.io/mskim0003</span>
+                            </div>
+                            <div id="field-live-dialogue" class="text-white font-bold">
+                                "👑 mskim0003 오빠! 답답한 우주복 벗고 황금 곤룡포와 당의 한복 차림으로 화성 대지를 거니니까 진짜 품격 넘쳐요!"
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-1 shrink-0">
+                        <button onclick="moveAvatarByStep(-1, 0)" class="px-2 py-1 rounded bg-stone-800 hover:bg-cyan-700 text-white font-bold border border-stone-600">◀ 서쪽</button>
+                        <button onclick="moveAvatarByStep(0, -1)" class="px-2 py-1 rounded bg-stone-800 hover:bg-cyan-700 text-white font-bold border border-stone-600">▲ 북쪽</button>
+                        <button onclick="moveAvatarByStep(0, 1)" class="px-2 py-1 rounded bg-stone-800 hover:bg-cyan-700 text-white font-bold border border-stone-600">▼ 남쪽</button>
+                        <button onclick="moveAvatarByStep(1, 0)" class="px-2 py-1 rounded bg-stone-800 hover:bg-cyan-700 text-white font-bold border border-stone-600">동쪽 ▶</button>
+                    </div>
+                </div>
+
+                <!-- 땅 내부 연속 월드 뷰포트 -->
+                <div id="field-world-viewport" class="relative mars-raw-soil rounded-xl border-2 border-cyan-500/60 overflow-auto max-h-[540px] p-4 grab-viewport select-none">
+                    <div onclick="openModal('presale')" class="text-center text-[11px] text-amber-300 font-bold mb-2 py-1.5 bg-black/70 hover:bg-amber-950/80 cursor-pointer rounded border border-dashed border-amber-400 transition">
+                        🚩 [북쪽 1차 개척지 구획 끝] 너머는 오아시스구 제2특구(#101~#200)로 도로가 직결됩니다 (클릭 시 2차 분양 사전청약 접수 ▶)
+                    </div>
+
+                    <div id="field-world-wrapper" class="relative min-w-[960px] pb-2" onclick="handleFieldWrapperClick(event)">
+                        <div id="field-world-grid" class="grid grid-cols-11 gap-2"></div>
+
+                        <svg id="field-walk-svg" class="absolute inset-0 w-full h-full pointer-events-none z-20">
+                            <line id="field-walk-line" x1="0" y1="0" x2="0" y2="0" stroke="#facc15" stroke-width="4" stroke-dasharray="8,6" class="hidden" />
+                        </svg>
+
+                        <div id="field-target-marker" class="hidden absolute z-20 pointer-events-none" style="left: 0px; top: 0px;">
+                            <div class="w-12 h-12 rounded-full border-4 border-yellow-400 target-ring-anim"></div>
+                            <div class="px-2 py-0.5 rounded bg-yellow-400 text-slate-950 font-black text-[10px] shadow whitespace-nowrap -translate-x-1/2 -translate-y-8">
+                                📍 한복 임장 목표지점!
+                            </div>
+                        </div>
+
+                        <!-- 외부 한복 투자자 임장 크루 1: 갓 쓴 선비 도포 임장단 -->
+                        <div id="npc-crew-1" class="npc-imjang-actor absolute z-20 flex flex-col items-center" style="left: 360px; top: 240px; transform: translate(-50%, -50%);">
+                            <div id="npc-bubble-1" class="mb-0.5 px-2 py-0.5 rounded-full bg-yellow-300 text-slate-950 font-black text-[10px] shadow whitespace-nowrap border border-slate-900">
+                                🎩 "에헴! 1번지 mskim0003 대감의 명당이로세!"
+                            </div>
+                            <div class="avatar-body-box flex flex-col items-center bg-amber-950/95 px-2 py-1 rounded-xl border border-amber-400 shadow-lg">
+                                <div class="flex items-center gap-1 text-sm">
+                                    <span>🎩👘</span><span>🪭</span><span>📜</span>
+                                </div>
+                                <div class="text-[8px] font-black text-amber-200">청학동 선비 도포 임장단</div>
+                            </div>
+                        </div>
+
+                        <!-- 외부 한복 투자자 임장 크루 2: 궁중 당의 마님 투자단 -->
+                        <div id="npc-crew-2" class="npc-imjang-actor absolute z-20 flex flex-col items-center" style="left: 620px; top: 180px; transform: translate(-50%, -50%);">
+                            <div id="npc-bubble-2" class="mb-0.5 px-2 py-0.5 rounded-full bg-emerald-300 text-slate-950 font-black text-[10px] shadow whitespace-nowrap border border-slate-900">
+                                🌺 "당의 한복 입고 걷기 딱 좋은 정방형 대지네!"
+                            </div>
+                            <div class="avatar-body-box flex flex-col items-center bg-emerald-950/95 px-2 py-1 rounded-xl border border-emerald-400 shadow-lg">
+                                <div class="flex items-center gap-1 text-sm">
+                                    <span>🌺👘</span><span>🎀</span><span>🏮</span>
+                                </div>
+                                <div class="text-[8px] font-black text-emerald-200">궁중 당의 큰손 마님단</div>
+                            </div>
+                        </div>
+
+                        <!-- 외부 한복 투자자 임장 크루 3: 어사화 암행어사 분석팀 -->
+                        <div id="npc-crew-3" class="npc-imjang-actor absolute z-20 flex flex-col items-center" style="left: 740px; top: 420px; transform: translate(-50%, -50%);">
+                            <div id="npc-bubble-3" class="mb-0.5 px-2 py-0.5 rounded-full bg-purple-300 text-slate-950 font-black text-[10px] shadow whitespace-nowrap border border-slate-900">
+                                🪙 "암행어사 출두요! 55번지가 2차 확장 관문 명당!"
+                            </div>
+                            <div class="avatar-body-box flex flex-col items-center bg-purple-950/95 px-2 py-1 rounded-xl border border-purple-400 shadow-lg">
+                                <div class="flex items-center gap-1 text-sm">
+                                    <span>🏵️👘</span><span>🪙</span><span>📐</span>
+                                </div>
+                                <div class="text-[8px] font-black text-purple-200">어사화 풍수지리 분석단</div>
+                            </div>
+                        </div>
+
+                        <!-- 중앙 광장 상주: 홍포 사령관 대감 NPC -->
+                        <div id="veteran-commander-npc" class="absolute z-20 flex flex-col items-center pointer-events-auto cursor-pointer" onclick="openModal('briefing')" style="left: 480px; top: 270px; transform: translate(-50%, -50%);">
+                            <div class="mb-0.5 px-2 py-0.5 rounded-full bg-rose-500 text-white font-black text-[10px] shadow whitespace-nowrap border border-white animate-bounce">
+                                🎖️ 홍포 사령관 대감 NPC (클릭 시 3분 브리핑)
+                            </div>
+                            <div class="flex flex-col items-center bg-rose-950/95 px-2.5 py-1 rounded-xl border-2 border-rose-400 shadow-lg">
+                                <div class="flex items-center gap-1 text-base">
+                                    <span>🎩👘</span><span>📜</span>
+                                </div>
+                                <div class="text-[9px] font-black text-rose-200">광장 총괄안내 대감</div>
+                            </div>
+                        </div>
+
+                        <!-- mskim0003 + 제이 + 보라 K-한복 본부 임장단 (우주복/헬멧 완전 제거!) -->
+                        <div id="field-avatar-actor" class="absolute z-30 flex flex-col items-center" style="left: 120px; top: 120px; transform: translate(-50%, -50%);">
+                            <div id="avatar-speech-bubble" class="mb-1 px-3 py-0.5 rounded-full bg-amber-400 text-slate-950 font-black text-[11px] shadow-lg whitespace-nowrap border-2 border-white">
+                                👑 황금 곤룡포 mskim0003 한복 임장단 행차중!
+                            </div>
+                            <div id="avatar-main-card" class="avatar-body-box flex flex-col items-center bg-gradient-to-b from-amber-950/95 via-slate-950/95 to-rose-950/95 px-3.5 py-1.5 rounded-2xl border-2 border-amber-400 shadow-[0_0_26px_rgba(251,191,36,0.85)]">
+                                <div class="flex items-center gap-2">
+                                    <!-- 보라 (비취 당의 한복) -->
+                                    <div id="avatar-bora-icon" class="flex flex-col items-center" title="보라 (비취 당의 한복)">
+                                        <span class="text-sm leading-none">🌺😊</span>
+                                        <span class="text-xs leading-none -mt-0.5">👘</span>
+                                    </div>
+
+                                    <!-- mskim0003 주인공 아바타 (캐리커처 얼굴 + 선택한 한복) -->
+                                    <div class="flex flex-col items-center px-1">
+                                        <span id="actor-headgear-top" class="text-xs leading-none">👑</span>
+                                        <div id="actor-face-container" class="w-8 h-8 rounded-full bg-amber-900/60 border-2 border-yellow-300 flex items-center justify-center overflow-hidden shadow">
+                                            <span id="actor-face-emoji" class="text-lg">😎</span>
+                                            <img id="actor-face-img" src="" alt="캐리커처" class="hidden w-full h-full object-cover caricature-filter-vivid" />
+                                        </div>
+                                        <div class="flex items-center gap-0.5 -mt-1">
+                                            <span id="actor-hanbok-robe" class="text-lg leading-none">👘</span>
+                                            <span id="actor-hanbok-prop" class="text-xs leading-none">🪭</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- 제이 (홍색 쾌자 한복) -->
+                                    <div id="avatar-jay-icon" class="flex flex-col items-center" title="제이 (홍색 쾌자 한복)">
+                                        <span class="text-sm leading-none">🎀😉</span>
+                                        <span class="text-xs leading-none -mt-0.5">👘</span>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-2 text-[10px] mt-0.5">
+                                    <span class="step-foot-l">👞</span>
+                                    <span id="actor-hanbok-badge-text" class="text-amber-300 font-black text-[9px]">황금 곤룡포</span>
+                                    <span class="step-foot-r">👞</span>
+                                </div>
+                            </div>
+                            <div id="avatar-footstep-label" class="mt-0.5 px-2.5 py-0.5 rounded-full bg-amber-950 border border-amber-300 text-[10px] font-black text-amber-200 whitespace-nowrap shadow">
+                                👑 mskim0003 한복 임장단 (자유 보행중)
+                            </div>
+                        </div>
+                    </div>
+
+                    <div onclick="openModal('presale')" class="text-center text-[11px] text-amber-300 font-bold mt-2 py-1.5 bg-black/70 hover:bg-amber-950/80 cursor-pointer rounded border border-dashed border-amber-400 transition">
+                        🚩 [남쪽 1차 개척지 구획 끝] 너머는 오아시스구 제2특구(#201~#500) 확장 구역입니다 (클릭 시 사전청약 현황 열람 ▶)
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- 우측 4컬럼: 화성 공식 토지대장 & 👘 K-한복 아바타/도메인 콘솔 -->
+        <aside class="lg:col-span-4 bg-[#160d0a] border border-orange-900/60 rounded-2xl p-4 shadow-2xl sticky top-28">
+            <div class="grid grid-cols-2 gap-1.5 mb-3">
+                <button onclick="switchViewMode('field')" class="py-2.5 px-3 rounded-xl bg-gradient-to-r from-blue-600 via-cyan-500 to-teal-400 hover:opacity-95 text-slate-950 font-black text-xs shadow-lg flex items-center justify-center gap-1">
+                    <span>🕵️‍♂️</span>
+                    <span>현장 임장 들어가기</span>
+                </button>
+                <button onclick="openModal('avatar')" class="py-2.5 px-3 rounded-xl bg-gradient-to-r from-amber-400 via-rose-400 to-pink-500 hover:opacity-95 text-slate-950 font-black text-xs shadow-lg flex items-center justify-center gap-1">
+                    <span>👘</span>
+                    <span>한복·캐리커처 변경</span>
+                </button>
+            </div>
+
+            <div class="flex items-center justify-between pb-2.5 mb-3 border-b border-stone-800">
+                <div>
+                    <span id="deed-jimok-badge" class="px-2 py-0.5 rounded text-[10px] font-black bg-cyan-500 text-slate-950">
+                        지목: 대 (대지 · 완공 랜드마크)
+                    </span>
+                    <h3 id="deed-lot-title" class="text-lg font-black text-white mt-0.5">
+                        오아시스구 #001번지 (표기: 1대)
+                    </h3>
+                </div>
+                <div class="text-right">
+                    <div class="text-[10px] text-stone-400">임장 입지등급</div>
+                    <div id="deed-lot-level" class="text-base font-black text-amber-400">★ S+등급 (Lv.5)</div>
+                </div>
+            </div>
+
+            <!-- 🌐 공식 도메인(aresterra.io) 필지 전용 주소 분양 & 복사 카드 -->
+            <div class="bg-gradient-to-r from-cyan-950/90 via-slate-900 to-blue-950/90 border-2 border-cyan-400/80 rounded-xl p-3 mb-3 text-xs shadow-lg">
+                <div class="flex items-center justify-between mb-1.5">
+                    <span class="font-black text-cyan-300 flex items-center gap-1">
+                        <span>🌐</span>
+                        <span>공식 도메인 주소 (ARESTERRA.IO)</span>
+                    </span>
+                    <button onclick="openModal('domain')" class="px-2 py-0.5 rounded bg-cyan-400 hover:bg-cyan-300 text-slate-950 font-black text-[10px] shadow">
+                        🌐 주소 분양·경매소
+                    </button>
+                </div>
+                <div class="flex items-center justify-between px-2.5 py-1.5 rounded bg-black/80 border border-cyan-500/40 mb-2">
+                    <div class="truncate">
+                        <span class="text-[10px] text-stone-400">공식URL:</span>
+                        <span id="deed-domain-display" class="font-black text-yellow-300 text-xs ml-1">https://aresterra.io/mskim0003</span>
+                    </div>
+                    <button onclick="copyCurrentLotDomainUrl()" class="px-2 py-0.5 rounded bg-stone-800 hover:bg-stone-700 text-cyan-200 font-bold text-[10px] shrink-0">
+                        📋 주소복사
+                    </button>
+                </div>
+                <div class="flex gap-1.5">
+                    <span class="flex items-center text-cyan-300 font-black text-[11px] px-1">aresterra.io/</span>
+                    <input id="quick-domain-input" type="text" maxlength="16" placeholder="원하는 주소명 (예: king, 001)" class="flex-1 bg-black/80 border border-stone-700 rounded-lg px-2 py-1 text-[11px] text-white">
+                    <button onclick="registerCustomDomain()" class="px-2.5 py-1 rounded-lg bg-gradient-to-r from-cyan-400 to-amber-400 hover:opacity-95 text-slate-950 font-black text-[11px] shrink-0 shadow">
+                        🌐 주소등기
+                    </button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2 text-xs mb-3">
+                <div class="bg-black/50 border border-stone-800 rounded-lg p-2.5">
+                    <div class="text-stone-400 text-[10px]">등기 소유자</div>
+                    <div id="deed-owner" class="font-black text-cyan-300 text-sm mt-0.5">👑 mskim0003</div>
+                </div>
+                <div class="bg-black/50 border border-stone-800 rounded-lg p-2.5">
+                    <div class="text-stone-400 text-[10px]">24시간 로봇 일일 채굴량</div>
+                    <div id="deed-daily-yield" class="font-black text-emerald-400 text-sm mt-0.5">+550 $MARSM/일</div>
+                </div>
+                <div class="bg-black/50 border border-stone-800 rounded-lg p-2.5">
+                    <div class="text-stone-400 text-[10px]">도시계획 용도지역</div>
+                    <div id="deed-zone-name" class="font-bold text-amber-200 text-xs mt-0.5">중앙 행정·상업 코어 특구</div>
+                </div>
+                <div class="bg-black/50 border border-stone-800 rounded-lg p-2.5">
+                    <div class="text-stone-400 text-[10px]">도로망 & 맹지 여부</div>
+                    <div id="deed-road-status" class="font-bold text-emerald-300 text-xs mt-0.5">십자(+) 대로 접함 (맹지 0%)</div>
+                </div>
+            </div>
+
+            <!-- 내 땅 커스텀 간판(팻말) & 공식 등기권리증 발급 박스 -->
+            <div class="bg-gradient-to-r from-amber-950/70 via-stone-900 to-amber-950/70 border border-yellow-400/60 rounded-xl p-3 mb-3 text-xs shadow">
+                <div class="flex items-center justify-between mb-1.5">
+                    <span class="font-black text-yellow-300 flex items-center gap-1">
+                        <span>🪧</span>
+                        <span>필지 커스텀 간판 & 땅문서</span>
+                    </span>
+                    <button onclick="openModal('certificate')" class="px-2 py-0.5 rounded bg-gradient-to-r from-yellow-400 to-amber-500 text-slate-950 font-black text-[10px] shadow">
+                        📜 황금 등기권리증 보기
+                    </button>
+                </div>
+                <div id="deed-signboard-display" class="mb-2 px-2.5 py-1.5 rounded bg-black/70 border border-yellow-500/40 text-yellow-200 font-black text-[11px] truncate">
+                    🪧 간판: "👑 mskim0003 제1특구 통합본부"
+                </div>
+                <div class="flex gap-1.5">
+                    <input id="quick-signboard-input" type="text" maxlength="18" placeholder="내 땅에 세울 간판 문구 입력..." class="flex-1 bg-black/80 border border-stone-700 rounded-lg px-2.5 py-1 text-[11px] text-white">
+                    <button onclick="saveCustomSignboard()" class="px-2.5 py-1 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-[11px] shrink-0">
+                        🪧 간판달기
+                    </button>
+                </div>
+            </div>
+
+            <!-- 제이 & 보라의 현장 임장 분석 리포트 박스 -->
+            <div class="bg-stone-900/95 border border-amber-500/50 rounded-xl p-3 mb-3 text-xs">
+                <div class="font-black text-amber-300 mb-1.5 flex items-center justify-between">
+                    <span>📋 제이·보라의 현장 임장 체크리스트</span>
+                    <button id="btn-stamp-lot" onclick="toggleImjangStamp()" class="px-2 py-0.5 rounded bg-rose-600 hover:bg-rose-500 text-white font-black text-[10px] shadow">
+                        🚩 임장 찜하기
+                    </button>
+                </div>
+                <p id="deed-description" class="text-stone-200 leading-relaxed text-[11px]">
+                    mskim0003 오빠의 제1특구 통합 본부 대지(aresterra.io/mskim0003)입니다. 정방형 사각 스카이돔과 24시간 AI 로봇 일꾼이 가동 중입니다.
+                </p>
+            </div>
+
+            <!-- 5단계 건물 건설 리스트 -->
+            <div class="mb-3">
+                <div class="flex items-center justify-between text-xs font-black text-stone-200 mb-1.5">
+                    <span>🏗️ 5단계 정방형 시설 건설 내역</span>
+                    <span class="text-[10px] text-amber-300">단계별 착공 시 수익 즉시 상승</span>
+                </div>
+                <div id="deed-stage-list" class="space-y-1 text-[11px]"></div>
+            </div>
+
+            <div class="space-y-2">
+                <button id="btn-upgrade-lot" onclick="upgradeCurrentLot()" class="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-black text-xs sm:text-sm shadow-lg transition">
+                    🔨 다음 단계 사각 모듈 증축하기 (1,000 $MARSM)
+                </button>
+                <div class="grid grid-cols-2 gap-1.5">
+                    <button onclick="openModal('invite')" class="py-2 px-2.5 rounded-lg bg-pink-950/90 hover:bg-pink-800 border border-pink-400/60 text-pink-200 font-black text-[11px] shadow">
+                        💌 지인 초대장 & 쿠폰 복사
+                    </button>
+                    <button onclick="openModal('market')" class="py-2 px-2.5 rounded-lg bg-purple-950/90 hover:bg-purple-800 border border-purple-400/60 text-purple-200 font-black text-[11px] shadow">
+                        🛒 #004 마켓·부동산 거래소
+                    </button>
+                </div>
+            </div>
+        </aside>
+    </main>
+
+    <!-- 좌측 하단 플로팅 버튼 -->
+    <button onclick="openModal('briefing')" class="fixed bottom-5 left-5 z-40 px-4 py-2.5 rounded-2xl bg-gradient-to-r from-indigo-600 via-cyan-500 to-emerald-400 text-slate-950 font-black text-xs shadow-2xl border-2 border-white flex items-center gap-2 hover:scale-105 transition">
+        <span class="text-base">🤖</span>
+        <span>호출형 AI 비서 (3분 결재 브리핑)</span>
+    </button>
+
+    <!-- 공통 모달 -->
+    <div id="common-modal-backdrop" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-[#180e0b] border-2 border-amber-500/60 rounded-2xl max-w-lg w-full p-5 shadow-2xl">
+            <div class="flex items-center justify-between pb-3 mb-3 border-b border-stone-800">
+                <h3 id="modal-title" class="text-base font-black text-white">모달 제목</h3>
+                <button onclick="closeModal()" class="px-2.5 py-1 rounded bg-stone-800 hover:bg-stone-700 text-stone-300 text-xs font-bold">닫기 ✕</button>
+            </div>
+            <div id="modal-content" class="text-xs text-stone-200 space-y-3 max-h-[68vh] overflow-y-auto"></div>
+        </div>
+    </div>
+
+    <!-- 토스트 알림 -->
+    <div id="toast-box" class="hidden fixed bottom-5 right-5 z-50 bg-slate-950 border-2 border-amber-400 text-white px-4 py-2.5 rounded-xl shadow-2xl text-xs font-bold"></div>
+
+    <script>
+        const OFFICIAL_BASE_DOMAIN = "aresterra.io";
+
+        // 👘 K-한복 컬렉션 (우주복/헬멧 완전 배제! 한복 위주 의상실)
+        const HANBOK_OUTFITS = [
+            {
+                id: 'gonryongpo',
+                name: '황금 곤룡포 대군복',
+                headgear: '👑',
+                robe: '👘',
+                prop: '🪭',
+                shoes: '👞',
+                cardTheme: 'from-amber-950/95 via-slate-950/95 to-rose-950/95 border-amber-400',
+                desc: '👑 mskim0003 본부장 전용 황금 용포와 익선관! 제1특구 대장주의 위엄이 넘칩니다.'
+            },
+            {
+                id: 'seonbi',
+                name: '청학동 선비 학창의·갓',
+                headgear: '🎩',
+                robe: '👘',
+                prop: '📜',
+                shoes: '👞',
+                cardTheme: 'from-cyan-950/95 via-slate-950/95 to-blue-950/95 border-cyan-300',
+                desc: '멋스러운 흑립(갓)에 학창의 도포와 합죽선을 든 지적인 풍수지리 명당 임장복!'
+            },
+            {
+                id: 'eosahwa',
+                name: '암행어사 어사화 관복',
+                headgear: '🏵️',
+                robe: '👘',
+                prop: '🪙',
+                shoes: '👢',
+                cardTheme: 'from-purple-950/95 via-slate-950/95 to-indigo-950/95 border-purple-400',
+                desc: '어사화를 꽂고 마패(🪙)를 든 암행어사 복장! 숨겨진 저평가 명당 필지를 귀신같이 찾아냅니다.'
+            },
+            {
+                id: 'dangui',
+                name: '궁중 금박 당의·화관',
+                headgear: '🌺',
+                robe: '👘',
+                prop: '🏮',
+                shoes: '🥿',
+                cardTheme: 'from-emerald-950/95 via-slate-950/95 to-teal-950/95 border-emerald-400',
+                desc: '우아한 비취빛 금박 당의와 화관, 청사초롱을 든 품격 있는 궁중 한복 스타일!'
+            },
+            {
+                id: 'saekdong',
+                name: '잔칫날 오방 색동한복',
+                headgear: '🎀',
+                robe: '👘',
+                prop: '🪁',
+                shoes: '🥿',
+                cardTheme: 'from-pink-950/95 via-slate-950/95 to-amber-950/95 border-pink-400',
+                desc: '화사한 오방색 색동저고리와 복주머니·방패연을 든 신나는 개척 축제 한복!'
+            },
+            {
+                id: 'kwaeja',
+                name: '무관 전복·쾌자 활옷',
+                headgear: '🪖',
+                robe: '👘',
+                prop: '⚔️',
+                shoes: '👢',
+                cardTheme: 'from-red-950/95 via-slate-950/95 to-orange-950/95 border-red-400',
+                desc: '화성 대지를 호령하는 당당한 조선 무관 쾌자 한복! 거침없는 추진력을 상징합니다.'
+            }
+        ];
+
+        // 캐리커처 기본 얼굴 표정 프리셋
+        const CARICATURE_FACES = ['😎', '🤠', '😄', '🧐', '🤩', '🤴', '👸', '🦁'];
+
+        // 현재 아바타 커스터마이징 상태
+        let currentHanbokIndex = 0;
+        let currentFaceEmoji = '😎';
+        let uploadedCaricatureDataUrl = null;
+        let caricatureFilterStyle = 'vivid'; // 'vivid' | 'warm'
+
+        // 5단계 건설 밸런스
+        const BUILDING_STAGES = [
+            { level: 1, name: "1단계: 사각 산소 방어막 모듈", cost: 1000, yield: 30 },
+            { level: 2, name: "2단계: 정방형 태양광 발전 어레이", cost: 2000, yield: 80 },
+            { level: 3, name: "3단계: 지하 얼음·수자원 시추기", cost: 4000, yield: 180 },
+            { level: 4, name: "4단계: 보라형 사각 스마트팜 큐브", cost: 7000, yield: 320 },
+            { level: 5, name: "5단계: 제이형 성간 통신·거래 타워", cost: 12000, yield: 550 }
+        ];
+
+        // 상태 변수
+        let walletBalance = 50000;
+        let vaultPending = 1420.0;
+        let totalMintedSupply = 10000000;
+        let airdropPoolRemaining = 2850000;
+        let dailyFaucetCount = 1;
+        let airdropLogs = [
+            { target: "👑 mskim0003 (본부 금고)", amount: 50000, type: "창립자 초기 건설기금", time: "세팅 완료" },
+            { target: "⚡ 제이(Jay) (#002 발전장)", amount: 30000, type: "선발대 1차 에어드랍", time: "지급 완료" },
+            { target: "🌱 보라(Bora) (#003 스마트팜)", amount: 30000, type: "선발대 1차 에어드랍", time: "지급 완료" },
+            { target: "🎎 한복 임장단 10팀", amount: 100000, type: "30일 테스트 착공 바우처", time: "방금 전" }
+        ];
+        let selectedLotId = 1;
+        let currentViewMode = 'map';
+        let currentOverlayMode = 'cadastral';
+        let overlayOpacity = 1.0;
+        let companionsActive = true;
+        let npcCrewsVisible = true;
+
+        // 임장 찜(도장) 찍은 필지 목록
+        const stampedLots = new Set([1, 2, 3, 18, 55]);
+
+        // 필지별 커스텀 간판(팻말) 문구 저장소
+        const customSignboards = {
+            0: "🏛️ 오아시스구 만남의 광장",
+            1: "👑 mskim0003 제1특구 본부",
+            2: "⚡ 제이의 초고압 발전소",
+            3: "🌱 보라의 무중력 유기농팜",
+            4: "🛒 0% 수수료 통합거래소",
+            18: "🏗️ 2단계 태양광 착공현장",
+            55: "🚩 제2특구 확장 관문명당"
+        };
+
+        // 🌐 필지별 aresterra.io 서브도메인 슬러그 저장소
+        const plotSlugs = {
+            0: "plaza",
+            1: "mskim0003",
+            2: "jay",
+            3: "bora",
+            4: "market",
+            12: "mining12",
+            18: "build18",
+            25: "ice25",
+            33: "green33",
+            55: "gate55"
+        };
+
+        // 🌐 프리미엄 aresterra.io 골드 서브도메인 분양 카탈로그
+        let premiumDomainsCatalog = [
+            { slug: "hq", tier: "👑 2글자 로얄등급", price: 3000, desc: "aresterra.io/hq · 본부·헤드쿼터 상징 초희귀 2글자 주소", bonusYield: 50 },
+            { slug: "vip", tier: "💎 3글자 다이아등급", price: 2000, desc: "aresterra.io/vip · VIP 클럽 및 최상위 랜드마크 전용 주소", bonusYield: 35 },
+            { slug: "gold", tier: "🌟 4글자 골드등급", price: 1500, desc: "aresterra.io/gold · 채굴장·거래소 황금 키워드 주소", bonusYield: 25 },
+            { slug: "oasis1", tier: "🚀 특구 대표등급", price: 1000, desc: "aresterra.io/oasis1 · 오아시스구 제1특구 공식 넘버링 주소", bonusYield: 20 }
+        ];
+
+        // 오아시스구 제2특구(#101~#500번지) 사전 청약 데이터
+        let presaleTotalApplicants = 1248;
+        let mskimVipTickets = [
+            { ticketNo: "VIP-0001", sector: "북부 제2특구 (#101~#200번지)", holder: "👑 mskim0003 (제1특구 원조 수도 본부장)", priority: "0순위 (최우선 지명권)" }
+        ];
+        const presaleSectors = [
+            { id: 'north', name: "북부 제2특구 (#101~#200번지)", desc: "십자(+) 북쪽 대로 직결 · 제이 에너지 특구 확장권", quota: 100, applicants: 412, competition: "4.1 : 1" },
+            { id: 'east',  name: "동부 제2특구 (#201~#300번지)", desc: "#055번지 경계선 접경 · 보라 바이오 스마트팜 확장권", quota: 100, applicants: 389, competition: "3.9 : 1" },
+            { id: 'south', name: "남부 제2특구 (#301~#400번지)", desc: "#004 통합마켓 물류 직결 · 상업 신도시 확장권", quota: 100, applicants: 275, competition: "2.8 : 1" },
+            { id: 'west',  name: "서부 제2특구 (#401~#500번지)", desc: "중장비·광물 시추 메가 클러스터 예정지", quota: 100, applicants: 172, competition: "1.7 : 1" }
+        ];
+
+        // 제이 & 보라의 24시간 자율 QA 테스트 로그
+        let qaTestLogs = [
+            {
+                id: 1,
+                finder: "👘 K-한복 아바타 스타일 봇",
+                issue: "[아바타 복장 점검] 가상세계이므로 답답한 우주복·우주헬멧을 없애고 한국식 지적도에 어울리는 한복 차림으로 자유롭게 걸어 다녀야 함",
+                fix: "✅ 우주복/헬멧 완전 제거! 황금 곤룡포·선비 갓 도포·궁중 당의·어사화 등 6종 한복 의상실 및 내 사진 캐리커처 합성기 탑재 완료!",
+                status: "자동반영 완료"
+            },
+            {
+                id: 2,
+                finder: "🌐 aresterra.io 도메인 연동 봇",
+                issue: "[공식 도메인 정합성 점검] 우리가 실제 분양받은 공식 도메인인 [aresterra.io] 체계로 전 필지 URL 및 등기권리증이 통일되어야 함",
+                fix: "✅ 전 필지 주소를 [https://aresterra.io/mskim0003] 공식 체계로 100% 전환 완료!",
+                status: "자동반영 완료"
+            },
+            {
+                id: 3,
+                finder: "💌 지인 초대 바이럴 점검봇",
+                issue: "[홈페이지 업로드 후 지인 초대 점검] aresterra.io에 올린 뒤 카톡·문자로 바로 복사해서 보낼 수 있는 초대장 템플릿이 필요함",
+                fix: "✅ 상단 [💌 지인 초대장] 모달을 통해 공식 도메인 링크 + 1만 $MARSM 바우처 코드 원클릭 복사 기능 탑재!",
+                status: "자동반영 완료"
+            },
+            {
+                id: 4,
+                finder: "🌱 보라(Bora) 모바일 UI 점검봇",
+                issue: "[모바일 가독성 점검] 스마트폰에서도 내 땅의 aresterra.io 주소와 한복 아바타, 등기권리증을 한 번에 관리할 수 있어야 함",
+                fix: "✅ 상단 및 우측 토지대장에 [👘 한복·캐리커처 변경] 및 [🌐 공식 도메인 주소] 바로가기 카드 배치 완료",
+                status: "자동반영 완료"
+            },
+            {
+                id: 5,
+                finder: "🚩 제2특구 청약 연동 시뮬레이터",
+                issue: "[1차 개척지 우대 점검] 2차 분양지(#101~#500) 오픈 시 기존 1차 100필지 원조 땅주인들의 희소성 가치가 보장되어야 함",
+                fix: "✅ 1차 특구 소유자(👑 mskim0003 등)에게 제2특구 '0순위 VIP 우선청약권' 및 지가 프리미엄 연동 완료",
+                status: "자동반영 완료"
+            }
+        ];
+
+        // #004번지 통합 마켓 자원 재고 및 시세 데이터
+        let resourceInventory = {
+            oxygen: { name: "🫧 고순도 액화산소 (1번지 본부)", stock: 340, unitPrice: 15, icon: "🫧" },
+            energy: { name: "⚡ 초고압 태양광 전력 (2번지 제이)", stock: 520, unitPrice: 12, icon: "⚡" },
+            crops:  { name: "🥬 무중력 유기농 상추 (3번지 보라)", stock: 280, unitPrice: 20, icon: "🥬" }
+        };
+
+        // #004번지 부동산 P2P 급매물 리스트
+        let realEstateListings = [
+            { lotId: 12, seller: "개척자_박씨", price: 14500, tag: "🔥 급매 (Lv.4 + aresterra.io/mining12 포함)", desc: "십자 대로변 인접 우량 채굴장! 인수 즉시 전용 도메인 주소와 일일 +320 $MARSM 수익 승계" },
+            { lotId: 18, seller: "개척자_김씨", price: 6200, tag: "🏗️ 공정 40% 공사현장 양도", desc: "2단계 태양광 어레이까지 설치된 알짜 공사장(aresterra.io/build18)입니다." },
+            { lotId: 55, seller: "개척자_정씨", price: 9800, tag: "🚩 2차 확장 경계선 코너 명당", desc: "동쪽 구획 끝 경계선 접경지(aresterra.io/gate55)! 본게임 오픈 시 최대 지가 상승 예상" }
+        ];
+
+        // 통상(상시) 자동 임장 투어 상태
+        let autoPatrolEnabled = true;
+        let patrolWaypoints = [1, 2, 0, 3, 18, 71, 55, 4, 12, 25];
+        let patrolIndex = 0;
+        let patrolIntervalId = null;
+
+        // 외부 한복 투자자 임장단 3팀 상태
+        const npcCrews = [
+            {
+                id: 1,
+                elId: 'npc-crew-1',
+                bubbleId: 'npc-bubble-1',
+                currentLot: 12,
+                route: [12, 2, 1, 11, 22, 4, 14],
+                stepIdx: 0,
+                comments: [
+                    "🎩 에헴! 1번지 aresterra.io/mskim0003 대감 댁 명당이로세!",
+                    "🪭 도포 자락 휘날리며 걷기에 도로가 참으로 반듯하구나!",
+                    "📐 한국식 지적도(1대·2장·3답)에 우리 한복이 찰떡일세!",
+                    "⚡ 2번지 제이 낭자의 발전소 옆 땅을 선점해야겠어!"
+                ]
+            },
+            {
+                id: 2,
+                elId: 'npc-crew-2',
+                bubbleId: 'npc-bubble-2',
+                currentLot: 33,
+                route: [33, 3, 25, 18, 7, 17, 27],
+                stepIdx: 0,
+                comments: [
+                    "🌺 어머! 당의 한복 입고 보라네 3번지 숲세권 걸으니 최고네!",
+                    "🎀 우주복 안 입고 고운 한복으로 산책하니 너무 편해요!",
+                    "🌐 내 이름으로 된 aresterra.io 전용 주소도 하나 장만하자!",
+                    "📋 맹지가 하나도 없어서 어디든 투자가치 특A급이네!"
+                ]
+            },
+            {
+                id: 3,
+                elId: 'npc-crew-3',
+                bubbleId: 'npc-bubble-3',
+                currentLot: 55,
+                route: [55, 71, 65, 85, 95, 45, 55],
+                stepIdx: 0,
+                comments: [
+                    "🏵️ 암행어사 출두요! 55번지(gate55)가 2차 확장 관문 명당!",
+                    "🪙 71번지(71임) 아직 빈땅이다! 마패 찍고 선점하자!",
+                    "🛣️ 동서남북 십자 대로가 제2특구까지 시원하게 뚫리는구나!",
+                    "💎 1차 개척지 원조 수도 땅은 부르는 게 값이 될 것이야!"
+                ]
+            }
+        ];
+
+        // 광장 임장노트(방명록) 데이터
+        let guestbookEntries = [
+            { author: "👑 mskim0003 (황금곤룡포)", time: "방금 전", text: "답답한 우주복 벗고 우리 한복 입은 아바타로 화성 오아시스구 100필지 임장 시작!" },
+            { author: "🎩 청학동_선비임장단", time: "2분 전", text: "한국식 지적도(1대·2장·3답) 위에 갓 쓰고 도포 입고 걸어 다니니 풍류가 절로 납니다!" },
+            { author: "⚡ 제이(Jay·홍색쾌자)", time: "5분 전", text: "오빠! 상단 [👘 한복 의상실·캐리커처]에서 오빠 사진도 올리고 6가지 한복도 골라 입을 수 있어!" },
+            { author: "🌱 보라(Bora·비취당의)", time: "9분 전", text: "가상세계니까 숨 막히는 헬멧 없이 고운 한복 자락 휘날리며 산책하니 유저들이 훨씬 좋아해요!" }
+        ];
+
+        // 100필지 데이터 생성
+        const plotsData = {};
+        function initPlotsData() {
+            plotsData[0] = {
+                id: 0,
+                jimokCode: "공",
+                jimokFull: "공 (중앙 만남의 광장 · 공원)",
+                owner: "오아시스구 공유지 (mskim0003 관할)",
+                level: 5,
+                grade: "S+등급 (절대중심)",
+                zoneName: "중앙 만남의 광장 코어",
+                dailyYield: 0,
+                desc: "100필지 정중앙에 위치한 네모반듯한 만남의 광장(aresterra.io/plaza)입니다. 한복 차림의 모든 임장 크루들이 모이는 중심지입니다."
+            };
+
+            const pioneerPlots = {
+                1:  { owner: "👑 mskim0003", level: 5, grade: "S+등급 (수도본부)", jimokCode: "대", jimokFull: "대 (본부 대지 · 완공)", desc: "mskim0003 오빠의 오아시스구 통합 본부 랜드마크(aresterra.io/mskim0003)입니다. 십자 대로 최중심 S+급 입지입니다." },
+                2:  { owner: "⚡ 제이(Jay)", level: 5, grade: "S등급 (에너지코어)", jimokCode: "장", jimokFull: "장 (발전·채굴 공장용지)", desc: "제이의 초고속 태양광 및 에너지 코어 특구(aresterra.io/jay)입니다. 주변 공장용지(장) 임장 1순위 기준점입니다." },
+                3:  { owner: "🌱 보라(Bora)", level: 5, grade: "S등급 (숲세권코어)", jimokCode: "답", jimokFull: "답 (스마트팜 농장·바이오)", desc: "보라의 무중력 유기농 스마트팜 & 보안 연구소(aresterra.io/bora)입니다. 한복 산책하기 가장 좋은 최상급 입지입니다." },
+                4:  { owner: "🛒 통합거래소", level: 5, grade: "S등급 (상업코어)", jimokCode: "대", jimokFull: "대 (상업 마켓 대지)", desc: "오아시스구 코인 & 부동산·도메인 P2P 거래소(aresterra.io/market)입니다." },
+                12: { owner: "개척자_박씨", level: 4, grade: "A+등급 (대로변)", jimokCode: "장", jimokFull: "장 (에너지 채굴장)", desc: "4단계까지 완공된 우량 채굴 단지(aresterra.io/mining12)입니다." },
+                18: { owner: "개척자_김씨", level: 2, grade: "A등급 (개발호재)", jimokCode: "건", jimokFull: "건 (사각 모듈 건설중 40%)", desc: "현재 AI 크레인이 사각 모듈 골조를 올리고 있는 공사 현장(aresterra.io/build18)입니다." },
+                25: { owner: "개척자_이씨", level: 3, grade: "A등급 (시추역세권)", jimokCode: "건", jimokFull: "건 (사각 모듈 건설중 60%)", desc: "지하 얼음 시추기가 설치되고 있는 알짜 건설 현장(aresterra.io/ice25)입니다." },
+                33: { owner: "우주길드_A", level: 4, grade: "A+등급 (바이오벨트)", jimokCode: "답", jimokFull: "답 (스마트팜 단지)", desc: "산소와 식량을 생산하는 사각 바이오 단지(aresterra.io/green33)입니다." },
+                55: { owner: "개척자_정씨", level: 2, grade: "S등급 (2차확장관문)", jimokCode: "건", jimokFull: "건 (2차 확장 경계선 공사중)", desc: "동쪽 구획 끝 경계선에 맞닿아 향후 2차 분양지(#101~) 확장 시 최대 수혜가 예상되는 임장 명당(aresterra.io/gate55)입니다." }
+            };
+
+            for (let i = 1; i <= 100; i++) {
+                let zoneName = "동부 상업·물류 특구";
+                let defaultGrade = "A등급 (정방형·맹지0%)";
+                if ([1, 2, 3, 4, 11, 12, 21, 22].includes(i)) {
+                    zoneName = "중앙 행정·상업 코어 특구";
+                    defaultGrade = "S등급 (중앙코어 인접)";
+                } else if (i % 10 === 0 || i % 10 === 1 || i <= 10 || i >= 91) {
+                    defaultGrade = "A+등급 (2차확장 경계호재)";
+                } else if (i <= 35) {
+                    zoneName = "북서 에너지·채굴 특구";
+                } else if (i <= 65) {
+                    zoneName = "북동 바이오·스마트팜 특구";
+                } else if (i <= 85) {
+                    zoneName = "남서 공업·중장비 특구";
+                }
+
+                if (pioneerPlots[i]) {
+                    const p = pioneerPlots[i];
+                    const stageObj = BUILDING_STAGES[p.level - 1];
+                    plotsData[i] = {
+                        id: i,
+                        jimokCode: p.jimokCode,
+                        jimokFull: p.jimokFull,
+                        owner: p.owner,
+                        level: p.level,
+                        grade: p.grade,
+                        zoneName: zoneName,
+                        dailyYield: stageObj ? stageObj.yield : 0,
+                        desc: p.desc
+                    };
+                } else {
+                    plotsData[i] = {
+                        id: i,
+                        jimokCode: "임",
+                        jimokFull: "임 (미개발 임야 · 빈땅)",
+                        owner: "분양대기(빈땅)",
+                        level: 0,
+                        grade: defaultGrade,
+                        zoneName: zoneName,
+                        dailyYield: 0,
+                        desc: `[한복 임장 총평] #${String(i).padStart(3, '0')}번지(${i}임)는 도로에 접한 맹지 0% 정방형 나대지입니다. 공식 도메인(aresterra.io/내이름)을 선점 등기하고 1단계 사각 모듈을 착공해 보세요!`
+                    };
+                }
+            }
+        }
+
+        function getPlotSlug(lotId) {
+            return plotSlugs[lotId] || `lot${String(lotId).padStart(3, '0')}`;
+        }
+
+        function getPlotDomain(lotId) {
+            return `${OFFICIAL_BASE_DOMAIN}/${getPlotSlug(lotId)}`;
+        }
+
+        // 👘 아바타 한복 및 캐리커처 외형 즉시 반영 함수
+        function applyAvatarVisuals() {
+            const outfit = HANBOK_OUTFITS[currentHanbokIndex] || HANBOK_OUTFITS[0];
+
+            const topHead = document.getElementById('actor-headgear-top');
+            const faceEmoji = document.getElementById('actor-face-emoji');
+            const faceImg = document.getElementById('actor-face-img');
+            const robeEl = document.getElementById('actor-hanbok-robe');
+            const propEl = document.getElementById('actor-hanbok-prop');
+            const badgeText = document.getElementById('actor-hanbok-badge-text');
+            const mainCard = document.getElementById('avatar-main-card');
+            const headerPreview = document.getElementById('header-avatar-preview');
+            const headerName = document.getElementById('header-hanbok-name');
+
+            if (topHead) topHead.innerText = outfit.headgear;
+            if (robeEl) robeEl.innerText = outfit.robe;
+            if (propEl) propEl.innerText = outfit.prop;
+            if (badgeText) badgeText.innerText = outfit.name;
+
+            if (mainCard) {
+                mainCard.className = `avatar-body-box flex flex-col items-center bg-gradient-to-b ${outfit.cardTheme} px-3.5 py-1.5 rounded-2xl border-2 shadow-[0_0_26px_rgba(251,191,36,0.85)]`;
+            }
+
+            if (uploadedCaricatureDataUrl) {
+                if (faceEmoji) faceEmoji.classList.add('hidden');
+                if (faceImg) {
+                    faceImg.src = uploadedCaricatureDataUrl;
+                    faceImg.classList.remove('hidden');
+                    faceImg.className = `w-full h-full object-cover ${caricatureFilterStyle === 'vivid' ? 'caricature-filter-vivid' : 'caricature-filter-warm'}`;
+                }
+            } else {
+                if (faceImg) faceImg.classList.add('hidden');
+                if (faceEmoji) {
+                    faceEmoji.innerText = currentFaceEmoji;
+                    faceEmoji.classList.remove('hidden');
+                }
+            }
+
+            if (headerPreview) headerPreview.innerText = `${outfit.headgear}${outfit.robe}`;
+            if (headerName) headerName.innerText = outfit.name;
+        }
+
+        function selectHanbokOutfit(idx) {
+            currentHanbokIndex = idx;
+            applyAvatarVisuals();
+            renderAvatarModalContent();
+            const outfit = HANBOK_OUTFITS[idx];
+            showToast(`👘 [${outfit.name}] 착용 완료! 우주복 없이 멋지게 한복 자락을 휘날리며 화성 땅을 걸어 다닙니다!`);
+        }
+
+        function selectCaricatureFace(emoji) {
+            uploadedCaricatureDataUrl = null;
+            currentFaceEmoji = emoji;
+            applyAvatarVisuals();
+            renderAvatarModalContent();
+            showToast(`😊 아바타 캐리커처 표정이 [${emoji}]로 변경되었습니다!`);
+        }
+
+        function handleAvatarPhotoUpload(event) {
+            const file = event.target.files && event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                uploadedCaricatureDataUrl = e.target.result;
+                applyAvatarVisuals();
+                renderAvatarModalContent();
+                showToast("📸 내 사진 캐리커처 변환 & 한복 합성 완료! 이제 내 얼굴로 화성 땅을 임장합니다!");
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function toggleCaricatureFilter() {
+            caricatureFilterStyle = caricatureFilterStyle === 'vivid' ? 'warm' : 'vivid';
+            applyAvatarVisuals();
+            renderAvatarModalContent();
+            showToast(`🎨 캐리커처 화풍 필터가 [${caricatureFilterStyle === 'vivid' ? '선명한 웹툰풍' : '따뜻한 한국화풍'}]으로 적용되었습니다!`);
+        }
+
+        // 11x11 슬롯 매핑
+        function getGridSlotInfo(r, c) {
+            if (r === 5 && c === 5) return { type: 'plaza', lotId: 0 };
+            if (r === 5) return { type: 'road-h', roadIndex: c };
+            if (c === 5) return { type: 'road-v', roadIndex: r };
+            const adjR = r < 5 ? r : r - 1;
+            const adjC = c < 5 ? c : c - 1;
+            const lotId = adjR * 10 + adjC + 1;
+            return { type: 'lot', lotId: lotId };
+        }
+
+        // 전체 100필지 지도 렌더링
+        function renderCadastralMap() {
+            const gridEl = document.getElementById('cadastral-map-grid');
+            if (!gridEl) return;
+
+            let html = '';
+            for (let r = 0; r < 11; r++) {
+                for (let c = 0; c < 11; c++) {
+                    const slot = getGridSlotInfo(r, c);
+                    if (slot.type === 'plaza') {
+                        const isSel = selectedLotId === 0 ? 'plot-selected' : '';
+                        html += `
+                            <div onclick="selectPlot(0)" ondblclick="enterFieldAt(0)"
+                                class="h-14 sm:h-16 rounded cursor-pointer flex flex-col items-center justify-center p-1 border-2 border-rose-400 bg-rose-950/90 text-rose-100 shadow ${isSel}">
+                                <span class="text-xs font-black">🏛️ 광장공</span>
+                                <span class="text-[9px] text-rose-200 font-bold">/plaza</span>
+                            </div>
+                        `;
+                    } else if (slot.type === 'road-h' || slot.type === 'road-v') {
+                        const showRoad = currentOverlayMode !== 'bare';
+                        html += `
+                            <div class="h-14 sm:h-16 rounded ${showRoad ? 'pipeline-road border border-cyan-500/40' : 'bg-[#35140b]/50'} flex items-center justify-center text-[9px] font-black text-cyan-300">
+                                ${showRoad ? '도(도로)' : ''}
+                            </div>
+                        `;
+                    } else {
+                        const lot = plotsData[slot.lotId];
+                        html += createMapPlotCellHtml(lot);
+                    }
+                }
+            }
+            gridEl.innerHTML = html;
+        }
+
+        function createMapPlotCellHtml(lot) {
+            const isSel = selectedLotId === lot.id ? 'plot-selected' : '';
+            const isStamped = stampedLots.has(lot.id);
+            const hasCustomSlug = Boolean(plotSlugs[lot.id]);
+            let buildingEmoji = '';
+            if (lot.id === 1) buildingEmoji = '👑';
+            else if (lot.id === 2) buildingEmoji = '⚡';
+            else if (lot.id === 3) buildingEmoji = '🌱';
+            else if (lot.id === 4) buildingEmoji = '🛒';
+            else if (lot.level >= 4) buildingEmoji = '🏢';
+            else if (lot.level >= 1) buildingEmoji = '🏗️';
+            else if (isStamped) buildingEmoji = '🚩';
+
+            if (currentOverlayMode === 'bare') {
+                const bareBg = lot.level >= 4 ? 'bg-[#4e2113]/90' : (lot.level >= 1 ? 'bg-[#461d10]/80' : 'bg-transparent hover:bg-orange-950/40');
+                return `
+                    <div onclick="selectPlot(${lot.id})" ondblclick="enterFieldAt(${lot.id})"
+                        class="h-14 sm:h-16 rounded cursor-pointer flex flex-col items-center justify-center p-1 transition ${bareBg} ${isSel}">
+                        <span class="text-base">${buildingEmoji}</span>
+                    </div>
+                `;
+            }
+
+            if (currentOverlayMode === 'cadastral') {
+                let borderStyle = 'border border-yellow-300/75 bg-stone-950/65 text-stone-200';
+                let jimokBadgeColor = 'text-stone-400';
+
+                if (lot.jimokCode === '대') {
+                    borderStyle = 'border-2 border-cyan-300 bg-cyan-950/80 text-cyan-100';
+                    jimokBadgeColor = 'text-cyan-300';
+                } else if (lot.jimokCode === '장') {
+                    borderStyle = 'border-2 border-amber-300 bg-amber-950/80 text-amber-100';
+                    jimokBadgeColor = 'text-amber-300';
+                } else if (lot.jimokCode === '답') {
+                    borderStyle = 'border-2 border-emerald-300 bg-emerald-950/80 text-emerald-100';
+                    jimokBadgeColor = 'text-emerald-300';
+                } else if (lot.jimokCode === '건') {
+                    borderStyle = 'border-2 border-dashed border-yellow-400 bg-yellow-950/70 text-yellow-100';
+                    jimokBadgeColor = 'text-yellow-300';
+                }
+
+                const bottomLabel = hasCustomSlug
+                    ? `🌐/${plotSlugs[lot.id]}`
+                    : (lot.owner === '분양대기(빈땅)' ? (isStamped ? '🚩임장찜' : '주소미분양') : lot.owner.replace('👑 ', '').slice(0, 6));
+                return `
+                    <div onclick="selectPlot(${lot.id})" ondblclick="enterFieldAt(${lot.id})"
+                        style="opacity: ${ Math.max(0.25, overlayOpacity) }"
+                        class="h-14 sm:h-16 rounded cursor-pointer flex flex-col justify-between p-1 transition hover:scale-105 ${borderStyle} ${isSel}">
+                        <div class="flex items-center justify-between w-full text-[10px] font-black leading-none">
+                            <span class="${jimokBadgeColor}">${lot.id}${lot.jimokCode}</span>
+                            <span>${buildingEmoji}</span>
+                        </div>
+                        <div class="text-[8.5px] font-bold truncate w-full text-right ${hasCustomSlug ? 'text-yellow-300' : 'opacity-85'}">${bottomLabel}</div>
+                    </div>
+                `;
+            }
+
+            let urbanStyle = 'border border-purple-400/70 bg-purple-950/70 text-purple-100';
+            if (lot.zoneName.includes('코어')) urbanStyle = 'border-2 border-amber-400 bg-amber-950/85 text-amber-100';
+            else if (lot.zoneName.includes('에너지')) urbanStyle = 'border border-cyan-400/80 bg-cyan-950/75 text-cyan-100';
+            else if (lot.zoneName.includes('바이오')) urbanStyle = 'border border-emerald-400/80 bg-emerald-950/75 text-emerald-100';
+
+            return `
+                <div onclick="selectPlot(${lot.id})" ondblclick="enterFieldAt(${lot.id})"
+                    style="opacity: ${ Math.max(0.25, overlayOpacity) }"
+                    class="h-14 sm:h-16 rounded cursor-pointer flex flex-col justify-between p-1 transition hover:scale-105 ${urbanStyle} ${isSel}">
+                    <div class="flex items-center justify-between w-full text-[10px] font-black leading-none">
+                        <span>#${String(lot.id).padStart(3, '0')}</span>
+                        <span>${buildingEmoji || '🪧'}</span>
+                    </div>
+                    <div class="text-[9px] font-bold text-right truncate">${hasCustomSlug ? '/' + plotSlugs[lot.id] : (lot.dailyYield > 0 ? '+' + lot.dailyYield : '입지A급')}</div>
+                </div>
+            `;
+        }
+
+        // 땅 내부 연속 현장 렌더링
+        let fieldGridInitialized = false;
+        let avatarWalkTimer = null;
+        let isDraggingViewport = false;
+        let dragMoved = false;
+
+        function renderFieldWorld(forceRebuild = false) {
+            const fieldGrid = document.getElementById('field-world-grid');
+            if (!fieldGrid) return;
+
+            if (!fieldGridInitialized || forceRebuild) {
+                let html = '';
+                for (let r = 0; r < 11; r++) {
+                    for (let c = 0; c < 11; c++) {
+                        const slot = getGridSlotInfo(r, c);
+
+                        if (slot.type === 'plaza') {
+                            const isSel = selectedLotId === 0 ? 'plot-selected' : '';
+                            html += `
+                                <div id="field-cell-0" data-lot-id="0" onclick="walkAvatarToLot(0, event)"
+                                    class="field-lot-tile h-24 rounded-lg cursor-pointer p-2 border-2 border-rose-400 bg-rose-950/85 flex flex-col justify-between text-rose-100 shadow-lg hover:scale-[1.02] transition ${isSel}">
+                                    <div class="flex justify-between items-center text-[10px] font-black">
+                                        <span>🏛️ 중앙광장(공)</span>
+                                        <span class="bg-rose-500 text-white px-1 rounded">aresterra.io/plaza</span>
+                                    </div>
+                                    <div class="text-center text-xs font-black">■ 사각 만남의 광장</div>
+                                    <div class="text-[9px] text-rose-200 text-right">한복 임장노트 가동중</div>
+                                </div>
+                            `;
+                        } else if (slot.type === 'road-h' || slot.type === 'road-v') {
+                            html += `
+                                <div class="h-24 rounded pipeline-road border border-cyan-500/40 flex flex-col items-center justify-center text-[10px] font-bold text-cyan-200 hover:border-yellow-300 cursor-pointer">
+                                    <span>🛣️ 십자(+) 대로</span>
+                                    <span class="text-[9px] text-orange-300">맹지 0% 도로망</span>
+                                </div>
+                            `;
+                        } else {
+                            const lot = plotsData[slot.lotId];
+                            const isSel = selectedLotId === lot.id ? 'plot-selected' : '';
+                            html += createFieldLotTileHtml(lot, isSel);
+                        }
+                    }
+                }
+                fieldGrid.innerHTML = html;
+                fieldGridInitialized = true;
+                setTimeout(() => {
+                    updateAvatarPositionOnField(false);
+                    updateAllNpcCrewPositions();
+                }, 60);
+            } else {
+                document.querySelectorAll('.field-lot-tile').forEach(el => {
+                    const idNum = Number(el.getAttribute('data-lot-id'));
+                    if (idNum === selectedLotId) el.classList.add('plot-selected');
+                    else el.classList.remove('plot-selected');
+                });
+                updateAvatarPositionOnField(true);
+            }
+        }
+
+        function createFieldLotTileHtml(lot, isSel) {
+            const isStamped = stampedLots.has(lot.id);
+            const slugStr = plotSlugs[lot.id];
+            const signText = customSignboards[lot.id];
+            let boxStyle = 'border border-stone-600/80 bg-[#2b120a]/80 text-stone-300';
+            let centerVisual = `<div class="text-[11px] font-bold text-stone-400">${isStamped ? '🚩 임장찜 빈땅' : '🪧 빈땅 (주소분양가능)'}</div>`;
+            let robotBadge = `<span class="text-[9px] text-amber-300/90 font-bold">${lot.grade.split(' ')[0]}</span>`;
+
+            if (lot.level >= 4) {
+                boxStyle = 'border-2 border-cyan-400 bg-cyan-950/75 text-white';
+                if (lot.jimokCode === '장') boxStyle = 'border-2 border-amber-400 bg-amber-950/75 text-white';
+                if (lot.jimokCode === '답') boxStyle = 'border-2 border-emerald-400 bg-emerald-950/75 text-white';
+                centerVisual = `<div class="text-[11px] font-black text-cyan-200">🏢 ■ 사각 스카이돔</div>`;
+                robotBadge = `<span class="text-[9px] text-emerald-300 font-bold"><span class="robot-patrol">🤖</span> +${lot.dailyYield}/일</span>`;
+            } else if (lot.level >= 1) {
+                boxStyle = 'border-2 border-dashed border-yellow-400 bg-yellow-950/65 text-yellow-100';
+                centerVisual = `<div class="text-[11px] font-black text-yellow-300">🏗️ 🚧 사각모듈 공사중</div>`;
+                robotBadge = `<span class="text-[9px] text-yellow-200 font-bold"><span class="robot-patrol">🤖</span> 공정 40%</span>`;
+            }
+
+            if (slugStr) {
+                centerVisual += `<div class="mt-0.5 px-1 py-0.2 rounded bg-cyan-950/90 border border-cyan-400/60 text-[9px] text-yellow-300 font-black truncate">🌐 aresterra.io/${slugStr}</div>`;
+            } else if (signText) {
+                centerVisual += `<div class="mt-0.5 px-1 py-0.2 rounded bg-black/75 border border-yellow-400/60 text-[9px] text-yellow-300 font-black truncate">${signText}</div>`;
+            }
+
+            const showCadastralLabel = currentOverlayMode !== 'bare';
+            const topHeader = showCadastralLabel
+                ? `<span>${lot.id}${lot.jimokCode} ${isStamped ? '🚩' : ''}</span><span class="truncate max-w-[60px]">${lot.id === 1 ? '👑mskim0003' : lot.owner.slice(0, 5)}</span>`
+                : `<span>${isStamped ? '🚩' : ''}</span><span></span>`;
+
+            return `
+                <div id="field-cell-${lot.id}" data-lot-id="${lot.id}" onclick="walkAvatarToLot(${lot.id}, event)"
+                    class="field-lot-tile h-24 rounded-lg cursor-pointer p-2 flex flex-col justify-between transition hover:border-yellow-300 hover:scale-[1.02] ${boxStyle} ${isSel}">
+                    <div class="flex justify-between items-center text-[10px] font-black">
+                        ${topHeader}
+                    </div>
+                    <div class="text-center my-auto">${centerVisual}</div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-[9px] opacity-75">Lv.${lot.level}</span>
+                        ${robotBadge}
+                    </div>
+                </div>
+            `;
+        }
+
+        function walkAvatarToLot(lotId, ev) {
+            if (ev) ev.stopPropagation();
+            if (dragMoved) return;
+            selectPlot(lotId);
+        }
+
+        function handleFieldWrapperClick(ev) {
+            if (dragMoved) return;
+            const wrapper = document.getElementById('field-world-wrapper');
+            if (!wrapper) return;
+            const rect = wrapper.getBoundingClientRect();
+            const clickX = ev.clientX - rect.left;
+            const clickY = ev.clientY - rect.top;
+            animateAvatarWalkToCoords(clickX, clickY, "👘 한복 자락 휘날리며 십자(+) 대로변 산책 임장중!");
+        }
+
+        function updateAvatarPositionOnField(animateWalk = true) {
+            const targetCell = document.getElementById(`field-cell-${selectedLotId}`);
+            if (!targetCell) return;
+
+            const destX = targetCell.offsetLeft + (targetCell.offsetWidth / 2);
+            const destY = targetCell.offsetTop + (targetCell.offsetHeight / 2);
+
+            const lot = plotsData[selectedLotId];
+            const dom = getPlotDomain(selectedLotId);
+            const outfit = HANBOK_OUTFITS[currentHanbokIndex] || HANBOK_OUTFITS[0];
+
+            let speechText = `👘 [${outfit.name}] 차림으로 #${String(selectedLotId).padStart(3, '0')} (${dom}) 임장중!`;
+            if (selectedLotId === 0) speechText = "🏛️ 중앙 만남의 광장(aresterra.io/plaza) 한복 행차중!";
+            else if (selectedLotId === 1) speechText = "👑 aresterra.io/mskim0003 본부(1대) 대장주 행차요!";
+            else if (selectedLotId === 2) speechText = "⚡ aresterra.io/jay 발전장(2장) 한복 임장 완료!";
+            else if (selectedLotId === 3) speechText = "🌱 aresterra.io/bora 스마트팜(3답) 꽃길 산책중!";
+            else if (selectedLotId === 55) speechText = "🚩 aresterra.io/gate55 2차 분양 경계선 명당 답사!";
+            else if (lot.level === 0) speechText = `🔍 #${lot.id}번지(${dom}) 명당 빈땅 풍수지리 분석중!`;
+
+            animateAvatarWalkToCoords(destX, destY, speechText, animateWalk, targetCell);
+        }
+
+        function animateAvatarWalkToCoords(destX, destY, arrivalText, animateWalk = true, targetCell = null) {
+            const actor = document.getElementById('field-avatar-actor');
+            const marker = document.getElementById('field-target-marker');
+            const walkLine = document.getElementById('field-walk-line');
+            const bubble = document.getElementById('avatar-speech-bubble');
+            const footLabel = document.getElementById('avatar-footstep-label');
+            const walkBadge = document.getElementById('walk-state-badge');
+            if (!actor) return;
+
+            const startX = parseFloat(actor.style.left) || destX;
+            const startY = parseFloat(actor.style.top) || destY;
+
+            if (animateWalk) {
+                actor.classList.add('avatar-moving-active');
+                if (marker) {
+                    marker.style.left = `${destX}px`;
+                    marker.style.top = `${destY}px`;
+                    marker.classList.remove('hidden');
+                }
+                if (walkLine) {
+                    walkLine.setAttribute('x1', startX);
+                    walkLine.setAttribute('y1', startY);
+                    walkLine.setAttribute('x2', destX);
+                    walkLine.setAttribute('y2', destY);
+                    walkLine.classList.remove('hidden');
+                }
+                if (bubble) bubble.innerText = `👘 한복 자락 휘날리며 다음 필지로 걸어가는 중...`;
+                if (footLabel) footLabel.innerText = `👞 태사혜·꽃신 발걸음으로 명당 입지 살피는 중!`;
+                if (walkBadge) {
+                    walkBadge.innerText = '👘 한복 보행중';
+                    walkBadge.className = 'px-2 py-0.5 rounded bg-yellow-400 text-slate-950 font-black text-[10px]';
+                }
+            }
+
+            actor.style.left = `${destX}px`;
+            actor.style.top = `${destY}px`;
+
+            if (targetCell && !isDraggingViewport) {
+                targetCell.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+            }
+
+            if (avatarWalkTimer) clearTimeout(avatarWalkTimer);
+            avatarWalkTimer = setTimeout(() => {
+                actor.classList.remove('avatar-moving-active');
+                if (marker) marker.classList.add('hidden');
+                if (walkLine) walkLine.classList.add('hidden');
+                if (bubble) bubble.innerText = arrivalText;
+                if (footLabel) {
+                    footLabel.innerText = autoPatrolEnabled
+                        ? `👑 mskim0003 한복 임장단 (연속 풍수답사 ON)`
+                        : `👑 mskim0003 한복 임장단 (선택 필지 집중분석)`;
+                }
+                if (walkBadge) {
+                    walkBadge.innerText = autoPatrolEnabled ? '👘 상시 한복임장' : '📋 정밀 분석중';
+                    walkBadge.className = 'px-2 py-0.5 rounded bg-emerald-400 text-slate-950 font-black text-[10px]';
+                }
+            }, animateWalk ? 2200 : 50);
+        }
+
+        function updateAllNpcCrewPositions() {
+            npcCrews.forEach(crew => {
+                const actorEl = document.getElementById(crew.elId);
+                const bubbleEl = document.getElementById(crew.bubbleId);
+                if (!actorEl) return;
+
+                if (!npcCrewsVisible) {
+                    actorEl.classList.add('hidden');
+                    return;
+                }
+                actorEl.classList.remove('hidden');
+
+                const targetLotId = crew.route[crew.stepIdx % crew.route.length];
+                const cell = document.getElementById(`field-cell-${targetLotId}`);
+                if (cell) {
+                    const x = cell.offsetLeft + (cell.offsetWidth / 2);
+                    const y = cell.offsetTop + (cell.offsetHeight / 2);
+                    actorEl.style.left = `${x}px`;
+                    actorEl.style.top = `${y}px`;
+                }
+                if (bubbleEl) {
+                    const comment = crew.comments[crew.stepIdx % crew.comments.length];
+                    bubbleEl.innerText = `(#${String(targetLotId).padStart(3, '0')}) ${comment}`;
+                }
+            });
+
+            const plazaCell = document.getElementById('field-cell-0');
+            const vetNpc = document.getElementById('veteran-commander-npc');
+            if (plazaCell && vetNpc) {
+                vetNpc.style.left = `${plazaCell.offsetLeft + plazaCell.offsetWidth / 2}px`;
+                vetNpc.style.top = `${plazaCell.offsetTop + 14}px`;
+            }
+        }
+
+        function toggleNpcCrews() {
+            npcCrewsVisible = !npcCrewsVisible;
+            const btn = document.getElementById('btn-npc-crew-toggle');
+            if (npcCrewsVisible) {
+                btn.innerText = "🎎 한복 임장단 3팀: 활동중";
+                showToast("🎎 선비 도포단·궁중 당의 마님단·암행어사단 3팀이 한복 차림으로 땅을 답사합니다!");
+            } else {
+                btn.innerText = "🎎 외부 한복단: 숨김";
+                showToast("👑 mskim0003 본부 한복 임장단만 화면에 표시합니다.");
+            }
+            updateAllNpcCrewPositions();
+        }
+
+        function startContinuousPatrolLoop() {
+            if (patrolIntervalId) clearInterval(patrolIntervalId);
+            patrolIntervalId = setInterval(() => {
+                if (currentViewMode === 'field' && !isDraggingViewport) {
+                    npcCrews.forEach(c => { c.stepIdx = (c.stepIdx + 1) % c.route.length; });
+                    updateAllNpcCrewPositions();
+
+                    if (autoPatrolEnabled) {
+                        patrolIndex = (patrolIndex + 1) % patrolWaypoints.length;
+                        const nextLotId = patrolWaypoints[patrolIndex];
+                        selectPlot(nextLotId, true);
+                    }
+                }
+            }, 3400);
+        }
+
+        function toggleAutoPatrol() {
+            autoPatrolEnabled = !autoPatrolEnabled;
+            const btn = document.getElementById('btn-auto-patrol');
+            if (autoPatrolEnabled) {
+                btn.innerText = "🔄 자동 임장 투어: ON (유망필지 연속답사)";
+                btn.className = "px-3 py-1.5 rounded-lg bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs shadow border border-white";
+                showToast("👘 자동 한복 임장 투어 ON! 유망 필지들을 멈추지 않고 연속 답사합니다.");
+            } else {
+                btn.innerText = "⏸️ 자동 임장 투어: OFF (클릭한 땅만 답사)";
+                btn.className = "px-3 py-1.5 rounded-lg bg-stone-800 hover:bg-stone-700 text-stone-300 font-bold text-xs border border-stone-600";
+                showToast("⏸️ 수동 임장 모드! 마우스로 클릭한 땅으로만 걸어가서 정밀 분석합니다.");
+            }
+        }
+
+        function toggleImjangStamp() {
+            if (selectedLotId === 0) {
+                showToast("🏛️ 중앙 만남의 광장은 전체 공유지입니다!");
+                return;
+            }
+            if (stampedLots.has(selectedLotId)) {
+                stampedLots.delete(selectedLotId);
+                showToast(`📌 #${String(selectedLotId).padStart(3, '0')}번지 임장 찜(도장)을 해제했습니다.`);
+            } else {
+                stampedLots.add(selectedLotId);
+                showToast(`🚩 #${String(selectedLotId).padStart(3, '0')}번지를 [임장 유망 관심필지]로 찜했습니다!`);
+            }
+            fieldGridInitialized = false;
+            selectPlot(selectedLotId);
+        }
+
+        function initFieldDragScroll() {
+            const vp = document.getElementById('field-world-viewport');
+            if (!vp) return;
+            let startX = 0, startY = 0, scrollL = 0, scrollT = 0;
+
+            vp.addEventListener('mousedown', (e) => {
+                isDraggingViewport = true;
+                dragMoved = false;
+                startX = e.pageX - vp.offsetLeft;
+                startY = e.pageY - vp.offsetTop;
+                scrollL = vp.scrollLeft;
+                scrollT = vp.scrollTop;
+            });
+
+            window.addEventListener('mouseup', () => {
+                isDraggingViewport = false;
+                setTimeout(() => { dragMoved = false; }, 50);
+            });
+
+            vp.addEventListener('mousemove', (e) => {
+                if (!isDraggingViewport) return;
+                const x = e.pageX - vp.offsetLeft;
+                const y = e.pageY - vp.offsetTop;
+                const walkX = (x - startX);
+                const walkY = (y - startY);
+                if (Math.abs(walkX) > 6 || Math.abs(walkY) > 6) {
+                    dragMoved = true;
+                    vp.scrollLeft = scrollL - walkX;
+                    vp.scrollTop = scrollT - walkY;
+                }
+            });
+        }
+
+        // 🌐 상단 aresterra.io 주소창 검색 및 직행 기능
+        function navigateByDomainBar() {
+            const bar = document.getElementById('top-domain-bar-input');
+            if (!bar || !bar.value.trim()) return;
+            let raw = bar.value.trim().toLowerCase()
+                .replace(/^https?:\/\//, '')
+                .replace(/^aresterra\.io\//, '')
+                .replace(/\.aresterra\.io$/, '')
+                .replace(/\/$/, '');
+
+            let foundLotId = null;
+            for (const [idStr, slug] of Object.entries(plotSlugs)) {
+                if (slug.toLowerCase() === raw) {
+                    foundLotId = Number(idStr);
+                    break;
+                }
+            }
+
+            if (foundLotId === null) {
+                const numMatch = raw.match(/(\d+)/);
+                if (numMatch) {
+                    const n = Number(numMatch[1]);
+                    if (n >= 0 && n <= 100) foundLotId = n;
+                }
+            }
+
+            if (foundLotId !== null) {
+                selectPlot(foundLotId);
+                showToast(`🌐 [https://${ getPlotDomain(foundLotId) }] 공식 도메인 주소로 즉시 이동했습니다!`);
+            } else {
+                openModal('domain');
+                showToast(`✨ [aresterra.io/${raw}] 주소는 아직 미분양 상태입니다! 지금 바로 선점 등기하세요!`);
+            }
+        }
+
+        function copyCurrentLotDomainUrl() {
+            const fullUrl = `https://${getPlotDomain(selectedLotId)}`;
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(fullUrl).catch(() => {});
+            }
+            showToast(`📋 내 땅 공식 주소 [${fullUrl}] 복사 완료! 홈페이지나 카톡에 바로 붙여넣으세요!`);
+        }
+
+        function registerCustomDomain(fromModalInputId = null) {
+            const inputEl = document.getElementById(fromModalInputId || 'quick-domain-input');
+            if (!inputEl || !inputEl.value.trim()) {
+                showToast("🌐 등기할 aresterra.io 서브주소 이름을 먼저 입력해 주세요! (예: king, oasis, mskim)");
+                return;
+            }
+
+            let rawSlug = inputEl.value.trim().toLowerCase()
+                .replace(/^aresterra\.io\//i, '')
+                .replace(/\.aresterra\.io$/i, '')
+                .replace(/[^a-z0-9가-힣_-]/g, '');
+
+            if (!rawSlug) {
+                showToast("⚠️ 유효한 주소 문자를 입력해 주세요!");
+                return;
+            }
+
+            for (const [idStr, existingSlug] of Object.entries(plotSlugs)) {
+                if (existingSlug.toLowerCase() === rawSlug && Number(idStr) !== selectedLotId) {
+                    showToast(`❌ [aresterra.io/${rawSlug}] 주소는 이미 #${String(idStr).padStart(3, '0')}번지에 등기되어 있습니다!`);
+                    return;
+                }
+            }
+
+            const regCost = 500;
+            if (walletBalance < regCost) {
+                showToast("❌ 주소 등기 비용(500 $MARSM)이 부족합니다!");
+                return;
+            }
+
+            walletBalance -= regCost;
+            document.getElementById('wallet-balance').innerText = walletBalance.toLocaleString();
+
+            plotSlugs[selectedLotId] = rawSlug;
+            const lot = plotsData[selectedLotId];
+            if (lot) {
+                if (lot.owner === "분양대기(빈땅)") lot.owner = "👑 mskim0003";
+                lot.dailyYield += 15;
+            }
+
+            fieldGridInitialized = false;
+            selectPlot(selectedLotId);
+            if (fromModalInputId) renderDomainModalContent();
+            showToast(`🌐 축하합니다! #${String(selectedLotId).padStart(3, '0')}번지 공식 웹 주소가 [https://aresterra.io/${rawSlug}]로 영구 등기되었습니다! (일일채굴 +15 보너스)`);
+        }
+
+        function buyPremiumDomain(idx) {
+            const item = premiumDomainsCatalog[idx];
+            if (!item) return;
+
+            if (walletBalance < item.price) {
+                showToast("❌ 보유 $MARSM이 부족합니다! 착공 지원금을 먼저 수령해 주세요.");
+                return;
+            }
+
+            walletBalance -= item.price;
+            document.getElementById('wallet-balance').innerText = walletBalance.toLocaleString();
+
+            plotSlugs[selectedLotId] = item.slug;
+            const lot = plotsData[selectedLotId];
+            if (lot) {
+                if (lot.owner === "분양대기(빈땅)") lot.owner = "👑 mskim0003";
+                lot.dailyYield += item.bonusYield;
+            }
+
+            premiumDomainsCatalog.splice(idx, 1);
+            fieldGridInitialized = false;
+            selectPlot(selectedLotId);
+            renderDomainModalContent();
+            showToast(`👑 로얄 골드 주소 [https://aresterra.io/${item.slug}] 낙찰 완료! #${String(selectedLotId).padStart(3, '0')}번지에 연결되었습니다! (일일 +${item.bonusYield} $MARSM 추가)`);
+        }
+
+        function selectPlot(lotId, fromAutoPatrol = false) {
+            selectedLotId = lotId;
+            const lot = plotsData[lotId];
+            if (!lot) return;
+
+            const slug = getPlotSlug(lotId);
+            const dom = getPlotDomain(lotId);
+            const topBar = document.getElementById('top-domain-bar-input');
+            if (topBar) topBar.value = slug;
+
+            const domDisp = document.getElementById('deed-domain-display');
+            if (domDisp) domDisp.innerText = `https://${dom}`;
+
+            const domInput = document.getElementById('quick-domain-input');
+            if (domInput) domInput.value = plotSlugs[lotId] ? plotSlugs[lotId] : '';
+
+            const enterText = lotId === 0
+                ? "🏛️ 중앙 만남의 광장(aresterra.io/plaza) 한복 임장 ▶"
+                : `👘 #${String(lotId).padStart(3, '0')} (${dom}) 한복 입고 현장 임장하기 ▶`;
+            const qBtn = document.getElementById('quick-enter-btn-label');
+            if (qBtn) qBtn.innerText = enterText;
+
+            document.getElementById('deed-jimok-badge').innerText = `지목: ${lot.jimokFull}`;
+            document.getElementById('deed-lot-title').innerText = lotId === 0
+                ? `오아시스구 중앙 만남의 광장 (aresterra.io/plaza)`
+                : `오아시스구 #${String(lotId).padStart(3, '0')}번지 (${lot.id}${lot.jimokCode} · /${slug})`;
+            document.getElementById('deed-lot-level').innerText = `★ ${lot.grade.split(' ')[0]} (Lv.${lot.level})`;
+            document.getElementById('deed-owner').innerText = lot.owner;
+            document.getElementById('deed-daily-yield').innerText = `+${lot.dailyYield} $MARSM/일`;
+            document.getElementById('deed-zone-name').innerText = lot.zoneName;
+            document.getElementById('deed-description').innerText = lot.desc;
+
+            const signDisp = document.getElementById('deed-signboard-display');
+            const signInput = document.getElementById('quick-signboard-input');
+            const currentSign = customSignboards[lotId] || (lot.level > 0 ? `${lot.owner}의 개척기지` : `미설치 (간판을 달아보세요!)`);
+            if (signDisp) signDisp.innerText = `🪧 간판: "${currentSign}"`;
+            if (signInput) signInput.value = customSignboards[lotId] ? customSignboards[lotId].replace(/^[^\s]+\s/, '') : '';
+
+            const stampBtn = document.getElementById('btn-stamp-lot');
+            if (stampBtn) {
+                const isStamped = stampedLots.has(lotId);
+                stampBtn.innerText = isStamped ? "✅ 임장 찜 완료 (해제)" : "🚩 임장 찜하기";
+                stampBtn.className = isStamped
+                    ? "px-2 py-0.5 rounded bg-emerald-500 text-slate-950 font-black text-[10px] shadow"
+                    : "px-2 py-0.5 rounded bg-rose-600 hover:bg-rose-500 text-white font-black text-[10px] shadow";
+            }
+
+            let stageHtml = '';
+            BUILDING_STAGES.forEach(st => {
+                const done = lot.level >= st.level;
+                stageHtml += `
+                    <div class="flex items-center justify-between px-2.5 py-1.5 rounded border ${done ? 'bg-emerald-950/60 border-emerald-500/50 text-emerald-200' : 'bg-black/40 border-stone-800 text-stone-400'}">
+                        <span class="font-bold">${done ? '✅' : '⬜'} ${st.name}</span>
+                        <span class="font-black">${done ? '+' + st.yield + '/일' : st.cost.toLocaleString() + ' $MARSM'}</span>
+                    </div>
+                `;
+            });
+            document.getElementById('deed-stage-list').innerHTML = stageHtml;
+
+            const upBtn = document.getElementById('btn-upgrade-lot');
+            if (lotId === 0) {
+                upBtn.innerText = "🏛️ 중앙 만남의 광장 임장노트 열기";
+                upBtn.onclick = () => openModal('guestbook');
+            } else if (lotId === 4) {
+                upBtn.innerText = "🛒 #004 통합 마켓 & 부동산 P2P 거래소 열기";
+                upBtn.onclick = () => openModal('market');
+            } else if (lot.level >= 5) {
+                upBtn.innerText = "👑 5단계 최종 사각 스카이돔 완공 필지";
+                upBtn.onclick = () => showToast("이미 최고 단계(Lv.5)까지 완공된 랜드마크입니다!");
+            } else {
+                const nextSt = BUILDING_STAGES[lot.level];
+                upBtn.innerText = `🔨 ${nextSt.name} 착공 (${nextSt.cost.toLocaleString()} $MARSM)`;
+                upBtn.onclick = upgradeCurrentLot;
+            }
+
+            const dialogueEl = document.getElementById('field-live-dialogue');
+            const gradePill = document.getElementById('imjang-grade-pill');
+            const headerTitle = document.getElementById('field-header-title');
+            const outfit = HANBOK_OUTFITS[currentHanbokIndex] || HANBOK_OUTFITS[0];
+
+            if (headerTitle) {
+                headerTitle.innerText = lotId === 0
+                    ? `🏛️ 중앙 만남의 광장 (aresterra.io/plaza) 및 K-한복 실시간 임장 현장`
+                    : `#${String(lotId).padStart(3, '0')} ${dom} (${lot.id}${lot.jimokCode}) 및 K-한복 실시간 임장 현장`;
+            }
+            if (gradePill) {
+                gradePill.innerText = `입지: ${lot.grade.split(' ')[0]} · 👘 ${outfit.name}`;
+            }
+            if (dialogueEl) {
+                if (lotId === 1) dialogueEl.innerText = `"👑 [본부 한복 임장] 황금 곤룡포 차림으로 mskim0003 오빠의 1번지 본부(aresterra.io/mskim0003)를 거니니 진짜 왕궁 같아요!"`;
+                else if (lotId === 2) dialogueEl.innerText = `"⚡ [제이의 한복 브리핑] 홍색 쾌자 한복 입고 제 2번지 발전장(aresterra.io/jay)을 점검했어요! 에너지 효율 100%예요!"`;
+                else if (lotId === 3) dialogueEl.innerText = `"🌱 [보라의 한복 브리핑] 비취 당의 한복 입고 걷기 딱 좋은 3번지 스마트팜(aresterra.io/bora) 숲세권 명당이에요!"`;
+                else if (lotId === 55) dialogueEl.innerText = `"🚩 [2차 확장 접경지] 암행어사 임장단도 극찬한 #055번지(aresterra.io/gate55)! 제2특구 열리면 대박 날 자리예요!"`;
+                else if (lot.level === 0) dialogueEl.innerText = `"🔍 [빈땅 풍수 브리핑] #${lot.id}번지(${lot.id}임)는 네모반듯한 정방형 명당이에요! 내 한복 아바타의 별장으로 착공해 보세요!"`;
+                else dialogueEl.innerText = `"🏗️ [공사현장 브리핑] #${lot.id}번지(${dom})는 현재 Lv.${lot.level} 가동 중이며 일일 +${lot.dailyYield} $MARSM 수익이 나오고 있어요!"`;
+            }
+
+            renderCadastralMap();
+            if (currentViewMode === 'field') renderFieldWorld(false);
+        }
+
+        function setOverlayMode(mode) {
+            currentOverlayMode = mode;
+            const btnBare = document.getElementById('btn-mode-bare');
+            const btnCad = document.getElementById('btn-mode-cadastral');
+            const btnUrb = document.getElementById('btn-mode-urban');
+
+            const baseClass = "px-2.5 py-1 rounded-lg text-xs font-black border border-stone-600 bg-stone-800 text-stone-200 hover:bg-stone-700";
+            btnBare.className = baseClass;
+            btnCad.className = baseClass;
+            btnUrb.className = baseClass;
+
+            const badge = document.getElementById('current-mode-badge');
+            const northBanner = document.getElementById('boundary-banner-north');
+            const southBanner = document.getElementById('boundary-banner-south');
+
+            if (mode === 'bare') {
+                btnBare.className = "px-2.5 py-1 rounded-lg text-xs font-black border-2 border-orange-300 bg-orange-500 text-slate-950 shadow";
+                badge.innerText = "🏜️ 1. 순수 화성 빈땅 모드 (도면 OFF)";
+                northBanner.classList.add('hidden');
+                southBanner.classList.add('hidden');
+            } else if (mode === 'cadastral') {
+                btnCad.className = "px-2.5 py-1 rounded-lg text-xs font-black border-2 border-yellow-300 bg-amber-500 text-slate-950 shadow";
+                badge.innerText = "📐 2. 한국식 지적도 + aresterra.io 오버랩";
+                northBanner.classList.remove('hidden');
+                southBanner.classList.remove('hidden');
+            } else {
+                btnUrb.className = "px-2.5 py-1 rounded-lg text-xs font-black border-2 border-cyan-300 bg-cyan-400 text-slate-950 shadow";
+                badge.innerText = "🗺️ 3. 도시계획도 오버랩 모드";
+                northBanner.classList.remove('hidden');
+                southBanner.classList.remove('hidden');
+            }
+
+            renderCadastralMap();
+            if (currentViewMode === 'field') renderFieldWorld(true);
+        }
+
+        function changeOverlayOpacity(val) {
+            overlayOpacity = Number(val) / 100;
+            document.getElementById('overlay-opacity-text').innerText = `${val}%`;
+            if (Number(val) === 0) setOverlayMode('bare');
+            else {
+                if (currentOverlayMode === 'bare') currentOverlayMode = 'cadastral';
+                renderCadastralMap();
+                if (currentViewMode === 'field') renderFieldWorld(true);
+            }
+        }
+
+        function switchViewMode(mode) {
+            currentViewMode = mode;
+            const mapSec = document.getElementById('section-map-view');
+            const fieldSec = document.getElementById('section-field-view');
+            const tabMap = document.getElementById('tab-btn-map');
+            const tabField = document.getElementById('tab-btn-field');
+
+            if (mode === 'map') {
+                mapSec.classList.remove('hidden');
+                fieldSec.classList.add('hidden');
+                tabMap.className = "px-3 py-1 rounded-lg text-xs font-black bg-orange-600 text-white shadow";
+                tabField.className = "px-3 py-1 rounded-lg text-xs font-black bg-stone-800 text-orange-200 hover:bg-stone-700";
+                renderCadastralMap();
+            } else {
+                mapSec.classList.add('hidden');
+                fieldSec.classList.remove('hidden');
+                tabField.className = "px-3 py-1 rounded-lg text-xs font-black bg-cyan-500 text-slate-950 shadow";
+                tabMap.className = "px-3 py-1 rounded-lg text-xs font-black bg-stone-800 text-orange-200 hover:bg-stone-700";
+                renderFieldWorld(false);
+            }
+        }
+
+        function switchMainView(mode) {
+            switchViewMode(mode === 'inside' ? 'field' : mode);
+        }
+
+        function enterFieldAt(lotId) {
+            selectPlot(lotId);
+            switchViewMode('field');
+        }
+
+        function quickJumpToLot(lotId) {
+            selectPlot(lotId);
+            switchViewMode('field');
+        }
+
+        function moveAvatarByStep(dx, dy) {
+            let nextId = selectedLotId;
+            if (selectedLotId === 0) nextId = 1;
+            else {
+                const row = Math.floor((selectedLotId - 1) / 10);
+                const col = (selectedLotId - 1) % 10;
+                const newRow = Math.max(0, Math.min(9, row + dy));
+                const newCol = Math.max(0, Math.min(9, col + dx));
+                nextId = newRow * 10 + newCol + 1;
+            }
+            selectPlot(nextId);
+        }
+
+        function toggleCompanions() {
+            companionsActive = !companionsActive;
+            document.getElementById('avatar-bora-icon').classList.toggle('hidden', !companionsActive);
+            document.getElementById('avatar-jay-icon').classList.toggle('hidden', !companionsActive);
+            document.getElementById('btn-companion-toggle').innerText = companionsActive ? "👯 제이·보라 한복동행: ON" : "🕺 mskim0003 단독 한복임장";
+        }
+
+        function triggerMarsJump() {
+            const actor = document.getElementById('field-avatar-actor');
+            if (!actor) return;
+            actor.classList.remove('mars-jumping');
+            void actor.offsetWidth;
+            actor.classList.add('mars-jumping');
+            showToast("👘 화성 0.38G 저중력 한복 슈퍼 점프로 주변 100필지 조망!");
+        }
+
+        function upgradeCurrentLot() {
+            const lot = plotsData[selectedLotId];
+            if (!lot || selectedLotId === 0 || lot.level >= 5) return;
+
+            const nextStage = BUILDING_STAGES[lot.level];
+            if (walletBalance < nextStage.cost) {
+                showToast("❌ 보유 $MARSM 자금이 부족합니다! 상단 금고에서 수확해 주세요.");
+                return;
+            }
+
+            walletBalance -= nextStage.cost;
+            document.getElementById('wallet-balance').innerText = walletBalance.toLocaleString();
+
+            lot.level += 1;
+            lot.dailyYield = nextStage.yield;
+            if (lot.owner === "분양대기(빈땅)") lot.owner = "👑 mskim0003";
+
+            if (lot.level >= 4) {
+                lot.jimokCode = "대";
+                lot.jimokFull = "대 (사각 스카이돔 완공 대지)";
+            } else {
+                lot.jimokCode = "건";
+                lot.jimokFull = `건 (사각 모듈 건설중 Lv.${lot.level})`;
+            }
+
+            if (!customSignboards[selectedLotId]) {
+                customSignboards[selectedLotId] = `👑 mskim0003 제${selectedLotId}호 기지`;
+            }
+            if (!plotSlugs[selectedLotId]) {
+                plotSlugs[selectedLotId] = `mskim${selectedLotId}`;
+            }
+
+            fieldGridInitialized = false;
+            selectPlot(selectedLotId);
+            showToast(`🎉 #${String(selectedLotId).padStart(3, '0')}번지 [${nextStage.name}] 착공 & [aresterra.io/${plotSlugs[selectedLotId]}] 도메인 연결 완료!`);
+        }
+
+        function saveCustomSignboard(fromModalInputId = null) {
+            const inputEl = document.getElementById(fromModalInputId || 'quick-signboard-input');
+            if (!inputEl || !inputEl.value.trim()) {
+                showToast("🪧 간판에 새길 문구를 먼저 입력해 주세요!");
+                return;
+            }
+            const cleanText = inputEl.value.trim().slice(0, 18);
+            customSignboards[selectedLotId] = `🪧 ${cleanText}`;
+
+            const lot = plotsData[selectedLotId];
+            if (lot && lot.owner === "분양대기(빈땅)") {
+                lot.owner = "👑 mskim0003 (간판선점)";
+            }
+
+            fieldGridInitialized = false;
+            selectPlot(selectedLotId);
+            if (fromModalInputId) renderCertificateModalContent();
+            showToast(`🪧 #${String(selectedLotId).padStart(3, '0')}번지에 [${cleanText}] 간판이 멋지게 세워졌습니다!`);
+        }
+
+        function harvestVault() {
+            if (vaultPending <= 0) return;
+            const amount = Math.floor(vaultPending);
+            walletBalance += amount;
+            vaultPending = 0;
+            document.getElementById('wallet-balance').innerText = walletBalance.toLocaleString();
+            document.getElementById('vault-pending').innerText = "0.0";
+            showToast(`💰 24시간 자동 채굴 금고에서 +${amount.toLocaleString()} $MARSM 수확 완료!`);
+        }
+
+        function openModal(type) {
+            const backdrop = document.getElementById('common-modal-backdrop');
+            const title = document.getElementById('modal-title');
+            backdrop.classList.remove('hidden');
+
+            if (type === 'avatar') {
+                title.innerText = "👘 ARESTERRA.IO K-한복 의상실 & 내 사진 캐리커처 아바타 생성기";
+                renderAvatarModalContent();
+            } else if (type === 'invite') {
+                title.innerText = "💌 ARESTERRA.IO 지인 VIP 입주 초대장 & 1만 코인 바우처 복사기";
+                renderInviteModalContent();
+            } else if (type === 'domain') {
+                title.innerText = "🌐 ARESTERRA.IO 공식 서브도메인 주소 분양·경매 센터";
+                renderDomainModalContent();
+            } else if (type === 'guestbook') {
+                title.innerText = "🏛️ 오아시스구 중앙 만남의 광장 실시간 임장노트";
+                renderGuestbookModalContent();
+            } else if (type === 'presale') {
+                title.innerText = "🚩 오아시스구 제2특구(#101~#500번지) 2차 분양 사전 청약 센터";
+                renderPresaleModalContent();
+            } else if (type === 'market') {
+                title.innerText = "🛒 #004번지 오아시스구 통합 마켓 & 부동산 P2P 거래소";
+                renderMarketModalContent();
+            } else if (type === 'certificate') {
+                title.innerText = "📜 ARESTERRA.IO 공식 등기권리증 & 도메인·간판 관리소";
+                renderCertificateModalContent();
+            } else if (type === 'qa') {
+                title.innerText = "🛠️ 제이·보라의 24시간 자율 테스트 & 밸런스 자동 보정 리포트";
+                renderQaModalContent();
+            } else if (type === 'airdrop') {
+                title.innerText = "🪙 $MARSM 테스트 코인 발행 & 30일 에어드랍 풀 관제소";
+                renderAirdropModalContent();
+            } else if (type === 'briefing') {
+                title.innerText = "🤖 호출형 AI 로봇 비서 · mskim0003 전용 3분 요약 브리핑";
+                renderBriefingModalContent();
+            } else if (type === 'security') {
+                title.innerText = "🔐 보라(Bora)의 무스트레스 원클릭 접속 & 3중 서명 금고";
+                renderSecurityModalContent();
+            }
+        }
+
+        // 👘 K-한복 의상실 & 내 사진 캐리커처 아바타 모달 렌더링
+        function renderAvatarModalContent() {
+            const content = document.getElementById('modal-content');
+            const activeOutfit = HANBOK_OUTFITS[currentHanbokIndex] || HANBOK_OUTFITS[0];
+
+            const outfitsHtml = HANBOK_OUTFITS.map((item, idx) => {
+                const isSel = idx === currentHanbokIndex;
+                return `
+                    <div onclick="selectHanbokOutfit(${idx})" class="cursor-pointer p-2.5 rounded-xl border-2 transition ${isSel ? 'bg-amber-950/90 border-yellow-300 shadow-lg scale-[1.01]' : 'bg-black/60 border-stone-800 hover:border-amber-500/50'}">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <span class="text-xl">${item.headgear}${item.robe}${item.prop}</span>
+                                <div>
+                                    <div class="font-black text-white text-xs">${item.name}</div>
+                                    <div class="text-[10px] text-stone-300 mt-0.5">${item.desc}</div>
+                                </div>
+                            </div>
+                            <span class="px-2 py-1 rounded text-[10px] font-black shrink-0 ${isSel ? 'bg-yellow-400 text-slate-950' : 'bg-stone-800 text-stone-300'}">
+                                ${isSel ? '✅ 착용중' : '입어보기'}
+                            </span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            const facePresetsHtml = CARICATURE_FACES.map(em => {
+                const isFaceSel = !uploadedCaricatureDataUrl && currentFaceEmoji === em;
+                return `
+                    <button onclick="selectCaricatureFace('${em}')" class="w-9 h-9 rounded-xl border ${isFaceSel ? 'bg-amber-400 border-white scale-110' : 'bg-black/70 border-stone-700 hover:border-amber-400'} text-lg flex items-center justify-center transition">
+                        ${em}
+                    </button>
+                `;
+            }).join('');
+
+            content.innerHTML = `
+                <!-- 현재 한복 아바타 실시간 미리보기 카드 -->
+                <div class="p-4 rounded-2xl bg-gradient-to-br from-amber-950/90 via-slate-950 to-rose-950/90 border-2 border-amber-400 shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div class="flex items-center gap-3.5">
+                        <div class="flex flex-col items-center bg-black/80 px-4 py-2.5 rounded-2xl border-2 border-yellow-300 shadow-lg">
+                            <span class="text-base leading-none">${activeOutfit.headgear}</span>
+                            <div class="w-12 h-12 rounded-full bg-amber-900/60 border-2 border-amber-300 flex items-center justify-center overflow-hidden my-0.5">
+                                ${uploadedCaricatureDataUrl
+                                    ? `<img src="${uploadedCaricatureDataUrl}" class="w-full h-full object-cover ${caricatureFilterStyle === 'vivid' ? 'caricature-filter-vivid' : 'caricature-filter-warm'}" />`
+                                    : `<span class="text-2xl">${currentFaceEmoji}</span>`
+                                }
+                            </div>
+                            <div class="flex items-center gap-1 -mt-1">
+                                <span class="text-2xl leading-none">${activeOutfit.robe}</span>
+                                <span class="text-sm leading-none">${activeOutfit.prop}</span>
+                            </div>
+                            <span class="text-[9px] text-amber-300 font-black mt-1">${activeOutfit.shoes} 자유보행</span>
+                        </div>
+                        <div>
+                            <span class="px-2 py-0.5 rounded bg-amber-400 text-slate-950 font-black text-[10px]">우주복 OFF · K-한복 아바타</span>
+                            <div class="text-sm font-black text-white mt-1">👑 mskim0003 (${activeOutfit.name})</div>
+                            <p class="text-[11px] text-amber-200/90 mt-0.5">
+                                답답한 우주 헬멧 없이 한국식 지적도(1대·2장·3답) 대지 위를 한복 자락 휘날리며 당당하게 걸어 다닙니다!
+                            </p>
+                        </div>
+                    </div>
+                    <button onclick="closeModal(); switchViewMode('field');" class="shrink-0 px-3.5 py-2 rounded-xl bg-emerald-400 hover:bg-emerald-300 text-slate-950 font-black text-xs shadow-lg">
+                        👘 이 한복 입고 임장 나가기 ▶
+                    </button>
+                </div>
+
+                <!-- 1. 내 사진 올려서 캐리커처 얼굴 합성하기 & 기본 표정 프리셋 -->
+                <div class="p-3 rounded-xl bg-stone-900/95 border border-pink-400/50 space-y-2.5">
+                    <div class="flex items-center justify-between">
+                        <span class="font-black text-pink-300 text-xs">📸 1. 내 사진 캐리커처 아바타 얼굴 등록 (선택사항)</span>
+                        <button onclick="toggleCaricatureFilter()" class="px-2 py-0.5 rounded bg-pink-500/20 border border-pink-400 text-pink-200 font-bold text-[10px]">
+                            🎨 화풍 필터 변경 (${caricatureFilterStyle === 'vivid' ? '선명한 웹툰풍' : '따뜻한 한국화풍'})
+                        </button>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <label class="cursor-pointer px-3 py-2 rounded-lg bg-gradient-to-r from-pink-500 to-amber-400 hover:opacity-95 text-slate-950 font-black text-xs shadow inline-flex items-center gap-1.5">
+                            <span>📷 내 사진 / 캐리커처 올리기</span>
+                            <input type="file" accept="image/*" onchange="handleAvatarPhotoUpload(event)" class="hidden" />
+                        </label>
+                        <span class="text-[11px] text-stone-400">또는 1초 기본 캐릭터 표정 선택:</span>
+                        <div class="flex flex-wrap gap-1">${facePresetsHtml}</div>
+                    </div>
+                </div>
+
+                <!-- 2. K-한복 컬렉션 6종 선택 -->
+                <div class="space-y-1.5">
+                    <div class="font-black text-amber-300 text-xs">👘 2. 화성 노바테라주 전통 & 퓨전 한복 컬렉션 (클릭 시 즉시 환복)</div>
+                    <div class="space-y-1.5">${outfitsHtml}</div>
+                </div>
+            `;
+        }
+
+        // 💌 지인 VIP 초대장 & 카톡·문자 원클릭 복사 모달
+        function renderInviteModalContent() {
+            const content = document.getElementById('modal-content');
+            const lot = plotsData[selectedLotId] || plotsData[1];
+            const dom = getPlotDomain(lot.id);
+            const outfit = HANBOK_OUTFITS[currentHanbokIndex] || HANBOK_OUTFITS[0];
+
+            const inviteText = `[🪐 ARESTERRA.IO 화성 오아시스구 제1특구 VIP 초대장]
+발송인: 👑 mskim0003 (${outfit.name} 착용 · #001번지 본부 땅주인)
+
+"지구에 내 땅 없던 설움, 화성 제1특구에서 한국식 지적도(1대·2장·3답)로 등기된 내 땅으로 풀자! 답답한 우주복 대신 멋진 한복 아바타로 내 땅을 걸어 다녀 봐!"
+
+📍 내 본부 구경하기: https://aresterra.io/mskim0003
+📍 추천 유망 필지: #${String(lot.id).padStart(3, '0')}번지 (https://${dom})
+🎁 지인 전용 10,000 $MARSM 무료 착공 바우처 코드: [ ARES-MSKIM-VIP ]
+
+지금 바로 접속해서 한복 아바타로 실시간 임장도 돌고, 내 이름으로 된 aresterra.io 전용 땅 주소도 선점해 보세요!`;
+
+            content.innerHTML = `
+                <div class="p-3.5 rounded-2xl bg-gradient-to-br from-pink-950/90 via-slate-950 to-amber-950/90 border-2 border-pink-400 shadow-lg space-y-2">
+                    <div class="flex items-center justify-between">
+                        <span class="px-2 py-0.5 rounded bg-pink-400 text-slate-950 font-black text-[10px]">카톡 · 문자 원클릭 초대</span>
+                        <span class="text-xs font-black text-amber-300">바우처 코드: ARES-MSKIM-VIP</span>
+                    </div>
+                    <div class="font-black text-white text-sm">
+                        "홈페이지(aresterra.io)에 파일을 올린 뒤, 아래 초대장을 복사해서 지인 단톡방에 보내보세요!"
+                    </div>
+                </div>
+
+                <div class="p-3 rounded-xl bg-black/80 border border-stone-700">
+                    <div class="text-[10px] text-stone-400 mb-1">📋 카톡·문자 발송용 초대장 미리보기</div>
+                    <textarea id="invite-card-textarea" readonly rows="8" class="w-full bg-transparent text-xs text-amber-200 font-bold focus:outline-none leading-relaxed resize-none">${inviteText}</textarea>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <button onclick="copyInviteMessage()" class="py-2.5 px-4 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-300 hover:opacity-95 text-slate-950 font-black text-xs shadow-lg">
+                        📋 카톡·문자용 초대장 전체 복사하기
+                    </button>
+                    <button onclick="copyCurrentLotDomainUrl()" class="py-2.5 px-4 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-black text-xs shadow-lg">
+                        🌐 https://${dom} 링크만 복사
+                    </button>
+                </div>
+            `;
+        }
+
+        function copyInviteMessage() {
+            const area = document.getElementById('invite-card-textarea');
+            if (!area) return;
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(area.value).catch(() => {});
+            }
+            showToast("💌 지인 초대장 문구와 [https://aresterra.io] 링크가 복사되었습니다! 카톡에 바로 붙여넣으세요!");
+        }
+
+        // 🌐 공식 도메인 aresterra.io 서브주소 분양 및 골드 주소 경매소 모달
+        function renderDomainModalContent() {
+            const content = document.getElementById('modal-content');
+            const lot = plotsData[selectedLotId] || plotsData[1];
+            const currentDom = getPlotDomain(selectedLotId);
+
+            const registeredList = Object.entries(plotSlugs).map(([idStr, slug]) => `
+                <button onclick="selectPlot(${Number(idStr)}); renderDomainModalContent();" class="px-2.5 py-1 rounded-lg border ${Number(idStr) === selectedLotId ? 'bg-cyan-400 text-slate-950 border-white font-black' : 'bg-black/60 text-cyan-200 border-cyan-500/40 font-bold'} text-[11px]">
+                    🌐 aresterra.io/${slug} (#${String(idStr).padStart(3, '0')})
+                </button>
+            `).join('');
+
+            const premiumHtml = premiumDomainsCatalog.length === 0
+                ? `<div class="p-3 rounded-lg bg-black/50 text-center text-stone-400">모든 로얄 골드 주소가 분양 완료되었습니다! 🎉</div>`
+                : premiumDomainsCatalog.map((item, idx) => `
+                    <div class="p-2.5 rounded-xl bg-black/70 border border-amber-500/40 flex items-center justify-between gap-2">
+                        <div>
+                            <div class="flex items-center gap-1.5">
+                                <span class="px-2 py-0.5 rounded bg-amber-400 text-slate-950 font-black text-[10px]">${item.tier}</span>
+                                <span class="font-black text-yellow-300 text-xs">🌐 aresterra.io/${item.slug}</span>
+                                <span class="text-[10px] text-emerald-300 font-bold">일일 +${item.bonusYield} $MARSM 보너스</span>
+                            </div>
+                            <div class="text-[11px] text-stone-300 mt-0.5">${item.desc}</div>
+                        </div>
+                        <button onclick="buyPremiumDomain(${idx})" class="shrink-0 px-3 py-1.5 rounded-lg bg-gradient-to-r from-amber-500 to-yellow-400 hover:opacity-95 text-slate-950 font-black text-xs shadow">
+                            💎 ${item.price.toLocaleString()} $MARSM 분양
+                        </button>
+                    </div>
+                `).join('');
+
+            content.innerHTML = `
+                <div class="p-3.5 rounded-2xl bg-gradient-to-br from-cyan-950/90 via-slate-950 to-blue-950/90 border-2 border-cyan-400 shadow-lg space-y-1.5">
+                    <div class="flex items-center justify-between">
+                        <span class="px-2 py-0.5 rounded bg-cyan-400 text-slate-950 font-black text-[10px]">공식 분양 도메인: ARESTERRA.IO</span>
+                        <span class="text-xs font-black text-amber-300">보유 자금: ${walletBalance.toLocaleString()} $MARSM</span>
+                    </div>
+                    <div class="font-black text-white text-sm">
+                        "우리가 분양받은 공식 도메인 [aresterra.io] 아래 내 땅만의 전용 웹 주소를 등기하세요!"
+                    </div>
+                </div>
+
+                <div class="p-3 rounded-xl bg-stone-900/95 border border-cyan-500/50 space-y-2">
+                    <div class="flex items-center justify-between">
+                        <span class="font-black text-cyan-300 text-xs">🎯 현재 선택 필지: #${String(lot.id).padStart(3, '0')}번지 (${lot.id}${lot.jimokCode})</span>
+                        <span class="text-[11px] font-black text-yellow-300">현재 URL: https://${currentDom}</span>
+                    </div>
+                    <div class="flex gap-1.5">
+                        <span class="flex items-center text-cyan-300 font-black text-xs px-1">aresterra.io/</span>
+                        <input id="modal-domain-input" type="text" maxlength="16" placeholder="원하는 이름 입력 (예: mskim, 777, star)" class="flex-1 bg-black border border-stone-700 rounded-lg px-3 py-2 text-xs text-white font-bold">
+                        <button onclick="registerCustomDomain('modal-domain-input')" class="px-3.5 py-2 rounded-lg bg-gradient-to-r from-cyan-400 to-emerald-400 text-slate-950 font-black text-xs shadow">
+                            🌐 500 $MARSM 등기
+                        </button>
+                    </div>
+                </div>
+
+                <div class="space-y-1.5">
+                    <div class="font-black text-amber-300 text-xs">👑 초희귀 로얄 골드 서브도메인 특별 분양 (#${String(lot.id).padStart(3, '0')}번지에 즉시 연결)</div>
+                    <div class="space-y-1.5">${premiumHtml}</div>
+                </div>
+
+                <div class="p-3 rounded-xl bg-black/60 border border-stone-800 space-y-1.5">
+                    <div class="font-black text-stone-300 text-xs">📖 ARESTERRA.IO 등기 완료 주소 디렉토리 (클릭 시 이동)</div>
+                    <div class="flex flex-wrap gap-1.5">${registeredList}</div>
+                </div>
+            `;
+        }
+
+        function renderPresaleModalContent() {
+            const content = document.getElementById('modal-content');
+            let devCount = 0;
+            let myLotCount = 0;
+            for (let i = 1; i <= 100; i++) {
+                if (plotsData[i].level > 0) devCount++;
+                if (plotsData[i].owner.includes('mskim0003')) myLotCount++;
+            }
+            const originPremiumPct = 180 + Math.floor(presaleTotalApplicants / 10);
+
+            const ticketsHtml = mskimVipTickets.map(t => `
+                <div class="p-2.5 rounded-xl bg-gradient-to-r from-amber-950/90 to-yellow-900/60 border border-yellow-400 flex items-center justify-between">
+                    <div>
+                        <span class="px-2 py-0.5 rounded bg-yellow-400 text-slate-950 font-black text-[10px]">${t.ticketNo}</span>
+                        <span class="font-black text-white text-xs ml-1">${t.sector}</span>
+                        <div class="text-[10px] text-yellow-200 mt-0.5">소유자: ${t.holder}</div>
+                    </div>
+                    <span class="text-[10px] font-black text-emerald-300 bg-black/60 px-2 py-1 rounded border border-emerald-400/50">${t.priority}</span>
+                </div>
+            `).join('');
+
+            const sectorsHtml = presaleSectors.map((sec, idx) => `
+                <div class="p-3 rounded-xl bg-black/65 border border-stone-700 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div>
+                        <div class="flex items-center gap-1.5">
+                            <span class="font-black text-amber-300 text-xs">🚩 ${sec.name}</span>
+                            <span class="px-2 py-0.5 rounded bg-rose-600/30 border border-rose-400 text-rose-200 font-black text-[10px]">경쟁률 ${sec.competition}</span>
+                        </div>
+                        <div class="text-[11px] text-stone-300 mt-0.5">${sec.desc}</div>
+                        <div class="text-[10px] text-stone-400 mt-0.5">배정 물량: ${sec.quota}필지 · 현재 청약 대기: <b class="text-white">${sec.applicants}명</b></div>
+                    </div>
+                    <button onclick="applyPresaleSector(${idx})" class="shrink-0 px-3 py-2 rounded-lg bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-slate-950 font-black text-xs shadow">
+                        🎟️ 0순위 VIP 청약접수
+                    </button>
+                </div>
+            `).join('');
+
+            content.innerHTML = `
+                <div class="p-3.5 rounded-2xl bg-gradient-to-br from-rose-950/90 via-stone-950 to-amber-950/90 border-2 border-amber-400 shadow-lg space-y-2">
+                    <div class="flex items-center justify-between">
+                        <span class="px-2 py-0.5 rounded bg-amber-400 text-slate-950 font-black text-[10px]">ARESTERRA.IO 본게임 확장 로드맵</span>
+                        <span class="text-xs font-black text-rose-300 animate-pulse">🔥 현재 총 청약 대기자: ${presaleTotalApplicants.toLocaleString()}명</span>
+                    </div>
+                    <div class="font-black text-white text-sm">
+                        "제1특구(100필지)는 영원한 원조 수도! 구획 끝 너머 제2특구(#101~#500)가 열릴수록 1차 땅값과 aresterra.io 초기 주소 가치는 폭등합니다!"
+                    </div>
+                    <div class="grid grid-cols-3 gap-2 text-center pt-1">
+                        <div class="p-2 rounded-lg bg-black/60 border border-stone-800">
+                            <div class="text-[10px] text-stone-400">제1특구 착공 현황</div>
+                            <div class="text-xs font-black text-cyan-300 mt-0.5">${devCount} / 100필지</div>
+                        </div>
+                        <div class="p-2 rounded-lg bg-black/60 border border-stone-800">
+                            <div class="text-[10px] text-stone-400">mskim0003 보유필지</div>
+                            <div class="text-xs font-black text-amber-300 mt-0.5">👑 ${myLotCount}개 필지</div>
+                        </div>
+                        <div class="p-2 rounded-lg bg-black/60 border border-stone-800">
+                            <div class="text-[10px] text-stone-400">원조 수도 지가상승률</div>
+                            <div class="text-xs font-black text-emerald-400 mt-0.5">▲ +${originPremiumPct}% 프리미엄</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-1.5">
+                    <div class="font-black text-yellow-300 text-xs">👑 mskim0003 오빠의 제2특구 0순위 VIP 우선청약권 (${mskimVipTickets.length}매 보유)</div>
+                    <div class="space-y-1.5">${ticketsHtml}</div>
+                </div>
+
+                <div class="space-y-2">
+                    <div class="flex items-center justify-between">
+                        <span class="font-black text-cyan-300 text-xs">🗺️ 구획 경계선 너머 제2특구(#101~#500) 권역별 사전청약</span>
+                        <span class="text-[10px] text-stone-400">보증금 없이 0순위 대기번호 즉시 발급</span>
+                    </div>
+                    <div class="space-y-2">${sectorsHtml}</div>
+                </div>
+
+                <button onclick="simulatePresaleRush()" class="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-rose-600 via-orange-500 to-amber-400 hover:opacity-95 text-slate-950 font-black text-xs shadow-lg">
+                    🚀 외부 투자자 사전청약 열기 부스트 (+100명 대기열 유입 & 1차 원조 수도 땅값 상승 확인)
+                </button>
+            `;
+        }
+
+        function applyPresaleSector(sectorIdx) {
+            const sec = presaleSectors[sectorIdx];
+            if (!sec) return;
+
+            sec.applicants += 1;
+            presaleTotalApplicants += 1;
+            sec.competition = ((sec.applicants / sec.quota)).toFixed(1) + " : 1";
+
+            const newTicketNo = `VIP-000${mskimVipTickets.length + 1}`;
+            mskimVipTickets.unshift({
+                ticketNo: newTicketNo,
+                sector: sec.name,
+                holder: "👑 mskim0003 (1차 원조 수도 지주 특권)",
+                priority: "0순위 확정 (접경지 코너 배정)"
+            });
+
+            renderPresaleModalContent();
+            showToast(`🎟️ [${sec.name}] 0순위 VIP 사전청약 필증(${newTicketNo})이 발급되었습니다!`);
+        }
+
+        function simulatePresaleRush() {
+            presaleTotalApplicants += 115;
+            presaleSectors.forEach((sec, idx) => {
+                const add = 20 + (idx * 7);
+                sec.applicants += add;
+                sec.competition = (sec.applicants / sec.quota).toFixed(1) + " : 1";
+            });
+
+            renderPresaleModalContent();
+            showToast(`🔥 제2특구 사전청약 대기자 ${presaleTotalApplicants.toLocaleString()}명 돌파! 1차 개척지 원조 수도 프리미엄이 동반 상승합니다!`);
+        }
+
+        function renderMarketModalContent() {
+            const content = document.getElementById('modal-content');
+
+            const oxyVal = resourceInventory.oxygen.stock * resourceInventory.oxygen.unitPrice;
+            const engVal = resourceInventory.energy.stock * resourceInventory.energy.unitPrice;
+            const crpVal = resourceInventory.crops.stock * resourceInventory.crops.unitPrice;
+            const totalResVal = oxyVal + engVal + crpVal;
+
+            const listingsHtml = realEstateListings.length === 0
+                ? `<div class="p-3 rounded-lg bg-black/50 border border-stone-800 text-center text-stone-400">현재 등록된 급매물을 모두 인수하셨습니다! 🎉</div>`
+                : realEstateListings.map((item, idx) => {
+                    const lot = plotsData[item.lotId];
+                    return `
+                        <div class="p-3 rounded-xl bg-black/65 border border-purple-500/40 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                            <div>
+                                <div class="flex items-center gap-1.5">
+                                    <span class="px-2 py-0.5 rounded bg-purple-500 text-slate-950 font-black text-[10px]">${item.tag}</span>
+                                    <span class="font-black text-white text-xs">#${String(item.lotId).padStart(3, '0')}번지 (${ getPlotDomain(item.lotId) })</span>
+                                    <span class="text-[10px] text-amber-300 font-bold">일일 +${lot.dailyYield} $MARSM</span>
+                                </div>
+                                <p class="text-[11px] text-stone-300 mt-1">${item.desc} <span class="text-stone-500">(매도자: ${item.seller})</span></p>
+                            </div>
+                            <button onclick="buyListedLot(${idx})" class="shrink-0 px-3 py-2 rounded-lg bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-slate-950 font-black text-xs shadow">
+                                🔑 ${item.price.toLocaleString()} $MARSM 즉시인수
+                            </button>
+                        </div>
+                    `;
+                }).join('');
+
+            const selLot = plotsData[selectedLotId];
+            const canSellSelected = selectedLotId > 4 && selLot && selLot.owner.includes('mskim0003');
+            const estSalePrice = selLot ? (selLot.level * 3500 + 2500) : 0;
+
+            content.innerHTML = `
+                <div class="p-3 rounded-xl bg-purple-950/50 border border-purple-400/50 flex items-center justify-between">
+                    <div>
+                        <div class="font-black text-purple-200 text-xs">🛒 #004번지 통합 상업 코어 (aresterra.io/market · 수수료 0%)</div>
+                        <div class="text-[11px] text-stone-300 mt-0.5">생산된 자원을 $MARSM으로 즉시 환전하거나 유망 필지를 P2P로 사고팝니다.</div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-[10px] text-stone-400">내 보유 자금</div>
+                        <div class="text-sm font-black text-amber-400">${walletBalance.toLocaleString()} $MARSM</div>
+                    </div>
+                </div>
+
+                <div class="p-3 rounded-xl bg-stone-900/95 border border-emerald-500/40 space-y-2">
+                    <div class="flex items-center justify-between">
+                        <span class="font-black text-emerald-300 text-xs">📦 1. 특구 생산 자원 현금화 (산소·전력·상추 매도)</span>
+                        <span class="text-[10px] text-emerald-200 font-bold">24시간 로봇 자동 비축분</span>
+                    </div>
+                    <div class="grid grid-cols-3 gap-2 text-center text-[11px]">
+                        <div class="p-2 rounded-lg bg-black/60 border border-stone-800">
+                            <div class="font-bold text-cyan-300">🫧 액화산소</div>
+                            <div class="text-white font-black mt-0.5">${resourceInventory.oxygen.stock}톤</div>
+                            <div class="text-[10px] text-amber-300">+${oxyVal.toLocaleString()} $MARSM</div>
+                        </div>
+                        <div class="p-2 rounded-lg bg-black/60 border border-stone-800">
+                            <div class="font-bold text-amber-300">⚡ 태양광전력</div>
+                            <div class="text-white font-black mt-0.5">${resourceInventory.energy.stock}MWh</div>
+                            <div class="text-[10px] text-amber-300">+${engVal.toLocaleString()} $MARSM</div>
+                        </div>
+                        <div class="p-2 rounded-lg bg-black/60 border border-stone-800">
+                            <div class="font-bold text-emerald-300">🥬 유기농상추</div>
+                            <div class="text-white font-black mt-0.5">${resourceInventory.crops.stock}박스</div>
+                            <div class="text-[10px] text-amber-300">+${crpVal.toLocaleString()} $MARSM</div>
+                        </div>
+                    </div>
+                    <button onclick="sellAllResources()" class="w-full py-2 px-3 rounded-lg bg-gradient-to-r from-emerald-500 to-teal-400 hover:opacity-95 text-slate-950 font-black text-xs shadow">
+                        💰 비축 자원 전량 시장가 매도 (+${totalResVal.toLocaleString()} $MARSM 즉시 입금)
+                    </button>
+                </div>
+
+                <div class="p-3 rounded-xl bg-stone-900/95 border border-amber-500/40 space-y-2">
+                    <div class="flex items-center justify-between">
+                        <span class="font-black text-amber-300 text-xs">🏠 2. 부동산 P2P 급매물 장터 (인수 즉시 👑 mskim0003 명의 이전)</span>
+                        <span class="text-[10px] text-stone-400">한복 임장단 추천 매물</span>
+                    </div>
+                    <div class="space-y-2">${listingsHtml}</div>
+                </div>
+
+                <div class="p-3 rounded-xl bg-stone-900/95 border border-cyan-500/40 space-y-2">
+                    <div class="font-black text-cyan-300 text-xs">📈 3. 내 개발 필지 투자자 크루에게 프리미엄 매각</div>
+                    ${canSellSelected ? `
+                        <div class="flex items-center justify-between text-[11px] bg-black/60 p-2.5 rounded-lg border border-stone-800">
+                            <div>
+                                <div class="font-black text-white">현재 선택: #${String(selectedLotId).padStart(3, '0')}번지 (${getPlotDomain(selectedLotId)})</div>
+                                <div class="text-stone-400 text-[10px]">선비 도포 임장단 매수 희망가: <b class="text-amber-300">${estSalePrice.toLocaleString()} $MARSM</b></div>
+                            </div>
+                            <button onclick="sellMySelectedLot(${estSalePrice})" class="px-3 py-1.5 rounded-lg bg-cyan-400 hover:bg-cyan-300 text-slate-950 font-black text-xs">
+                                🤝 즉시 매각 (차익실현)
+                            </button>
+                        </div>
+                    ` : `
+                        <p class="text-[11px] text-stone-400">
+                            💡 지도에서 <b>👑 mskim0003</b> 오빠가 분양·착공한 일반 필지(#005~#100번지)를 선택한 뒤 이 창을 열면, 외부 임장단에게 프리미엄을 받고 즉시 매각할 수 있습니다!
+                        </p>
+                    `}
+                </div>
+            `;
+        }
+
+        function sellAllResources() {
+            const oxyVal = resourceInventory.oxygen.stock * resourceInventory.oxygen.unitPrice;
+            const engVal = resourceInventory.energy.stock * resourceInventory.energy.unitPrice;
+            const crpVal = resourceInventory.crops.stock * resourceInventory.crops.unitPrice;
+            const total = oxyVal + engVal + crpVal;
+
+            if (total <= 0) {
+                showToast("📦 현재 매도할 비축 자원이 없습니다! 잠시 후 로봇들이 다시 채워놓습니다.");
+                return;
+            }
+
+            walletBalance += total;
+            document.getElementById('wallet-balance').innerText = walletBalance.toLocaleString();
+
+            resourceInventory.oxygen.stock = 40;
+            resourceInventory.energy.stock = 60;
+            resourceInventory.crops.stock = 30;
+
+            renderMarketModalContent();
+            showToast(`🛒 산소·전력·상추 전량 매도 완료! +${total.toLocaleString()} $MARSM이 지갑에 입금되었습니다!`);
+        }
+
+        function buyListedLot(idx) {
+            const item = realEstateListings[idx];
+            if (!item) return;
+
+            if (walletBalance < item.price) {
+                showToast("❌ 보유 $MARSM이 부족합니다! 위쪽 비축 자원을 매도하거나 착공 지원금을 받아보세요.");
+                return;
+            }
+
+            walletBalance -= item.price;
+            document.getElementById('wallet-balance').innerText = walletBalance.toLocaleString();
+
+            const lot = plotsData[item.lotId];
+            lot.owner = "👑 mskim0003";
+            lot.desc = `[P2P 거래소 인수 완료] 👑 mskim0003 오빠가 #004번지 부동산 거래소를 통해 공식 주소(${getPlotDomain(item.lotId)})와 함께 정식 인수한 우량 필지입니다.`;
+
+            realEstateListings.splice(idx, 1);
+            fieldGridInitialized = false;
+            selectPlot(item.lotId);
+            renderMarketModalContent();
+            showToast(`🎉 #${String(item.lotId).padStart(3, '0')}번지 인수 완료! 등기 소유자가 [👑 mskim0003]으로 즉시 변경되었습니다!`);
+        }
+
+        function sellMySelectedLot(salePrice) {
+            const lot = plotsData[selectedLotId];
+            if (!lot || selectedLotId <= 4) return;
+
+            walletBalance += salePrice;
+            document.getElementById('wallet-balance').innerText = walletBalance.toLocaleString();
+
+            lot.owner = "청학동_선비임장단";
+            fieldGridInitialized = false;
+            selectPlot(selectedLotId);
+            renderMarketModalContent();
+            showToast(`💰 #${String(selectedLotId).padStart(3, '0')}번지 프리미엄 매각 성사! +${salePrice.toLocaleString()} $MARSM 차익 실현 완료!`);
+        }
+
+        function renderCertificateModalContent() {
+            const content = document.getElementById('modal-content');
+            const lot = plotsData[selectedLotId] || plotsData[1];
+            const certNo = `ARESTERRA-2026-${String(lot.id).padStart(4, '0')}`;
+            const signText = customSignboards[lot.id] || `👑 ${lot.owner}의 정방형 대지`;
+            const domainStr = getPlotDomain(lot.id);
+
+            const myLots = [];
+            for (let i = 1; i <= 100; i++) {
+                if (plotsData[i].owner.includes('mskim0003')) myLots.push(plotsData[i]);
+            }
+
+            const myLotsBadges = myLots.map(l => `
+                <button onclick="selectPlot(${l.id}); renderCertificateModalContent();" class="px-2.5 py-1 rounded-lg border ${l.id === selectedLotId ? 'bg-amber-400 text-slate-950 border-white font-black' : 'bg-black/60 text-amber-200 border-amber-500/40 font-bold'} text-[11px]">
+                    #${String(l.id).padStart(3, '0')} (${getPlotDomain(l.id)})
+                </button>
+            `).join('');
+
+            content.innerHTML = `
+                <div class="p-2.5 rounded-xl bg-black/60 border border-stone-800">
+                    <div class="text-[11px] font-black text-cyan-300 mb-1.5">👑 mskim0003 명의 등기 필지 & aresterra.io 주소 목록 (총 ${myLots.length}필지)</div>
+                    <div class="flex flex-wrap gap-1.5">${myLotsBadges}</div>
+                </div>
+
+                <div class="p-4 rounded-2xl bg-gradient-to-br from-[#2b1d03] via-[#1a1105] to-[#2e1c04] border-2 border-yellow-400 shadow-[0_0_30px_rgba(250,204,21,0.25)] space-y-3 relative overflow-hidden">
+                    <div class="flex items-center justify-between border-b border-yellow-500/40 pb-2">
+                        <div>
+                            <div class="text-[10px] font-black text-yellow-400 tracking-widest">ARESTERRA.IO OFFICIAL LAND & DOMAIN DEED</div>
+                            <h4 class="text-base font-black text-white mt-0.5">📜 화성 노바테라주 토지 & aresterra.io 공식 등기권리증</h4>
+                        </div>
+                        <div class="px-2.5 py-1 rounded-lg bg-yellow-400 text-slate-950 font-black text-[10px] shadow">
+                            등기번호: ${certNo}
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2 text-[11px] bg-black/50 p-3 rounded-xl border border-yellow-500/30">
+                        <div>
+                            <span class="text-stone-400">소재지 (지번·지목):</span>
+                            <div class="font-black text-yellow-300 text-xs mt-0.5">오아시스구 제1특구 #${String(lot.id).padStart(3, '0')}번지 (${lot.id}${lot.jimokCode})</div>
+                        </div>
+                        <div>
+                            <span class="text-stone-400">공식 웹 도메인 주소:</span>
+                            <div class="font-black text-cyan-300 text-xs mt-0.5">🌐 https://${domainStr}</div>
+                        </div>
+                        <div>
+                            <span class="text-stone-400">공식 등기 소유자:</span>
+                            <div class="font-bold text-white mt-0.5">${lot.owner}</div>
+                        </div>
+                        <div>
+                            <span class="text-stone-400">설치 시설물 & 일일수익:</span>
+                            <div class="font-bold text-amber-300 mt-0.5">사각 모듈 Lv.${lot.level} (+${lot.dailyYield} $MARSM/일)</div>
+                        </div>
+                    </div>
+
+                    <div class="px-3 py-2 rounded-xl bg-yellow-950/40 border border-yellow-400/50 flex items-center justify-between">
+                        <div>
+                            <div class="text-[10px] text-yellow-200/80">현재 필지 위에 세워진 공식 간판(팻말)</div>
+                            <div class="font-black text-yellow-300 text-xs mt-0.5">${signText}</div>
+                        </div>
+                        <div class="text-right">
+                            <span class="inline-block px-2.5 py-1 rounded border-2 border-rose-500 text-rose-400 font-black text-[10px] rotate-[-4deg] bg-rose-950/40">
+                                🪐 ARESTERRA.IO 등기소 직인 [인]
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-3 rounded-xl bg-stone-900/95 border border-amber-500/40 space-y-2">
+                    <div class="font-black text-amber-300 text-xs">🪧 이 땅의 간판(팻말) 문구 새로 달기 / 수정하기</div>
+                    <div class="flex gap-2">
+                        <input id="modal-signboard-input" type="text" maxlength="18" placeholder="예: mskim0003의 제1호 한옥별장, 대박채굴장 등" class="flex-1 bg-black border border-stone-700 rounded-lg px-3 py-2 text-xs text-white">
+                        <button onclick="saveCustomSignboard('modal-signboard-input')" class="px-3.5 py-2 rounded-lg bg-gradient-to-r from-amber-500 to-yellow-400 text-slate-950 font-black text-xs shadow">
+                            🪧 간판 즉시 적용
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderQaModalContent() {
+            const content = document.getElementById('modal-content');
+            const logsHtml = qaTestLogs.map(item => `
+                <div class="p-3 rounded-xl bg-black/65 border border-teal-500/40 space-y-1">
+                    <div class="flex items-center justify-between">
+                        <span class="font-black text-teal-300 text-xs">${item.finder}</span>
+                        <span class="px-2 py-0.5 rounded bg-emerald-500/20 border border-emerald-400/50 text-emerald-300 font-black text-[10px]">${item.status}</span>
+                    </div>
+                    <div class="text-[11px] text-stone-300">${item.issue}</div>
+                    <div class="text-[11px] text-amber-300 font-bold pt-0.5">${item.fix}</div>
+                </div>
+            `).join('');
+
+            content.innerHTML = `
+                <div class="p-3 rounded-xl bg-teal-950/60 border border-teal-400/50 flex items-start gap-2.5">
+                    <span class="text-2xl">👘🎎</span>
+                    <div class="leading-relaxed">
+                        <div class="font-black text-teal-200 text-xs">👑 mskim0003 오빠! 제이 & 보라가 24시간 현장을 테스트 중입니다!</div>
+                        <p class="text-[11px] text-stone-200 mt-0.5">
+                            우주복 없는 K-한복 아바타 임장 시스템, 내 사진 캐리커처 필터, 공식 도메인(aresterra.io) 연동을 실시간 점검하고 있습니다.
+                        </p>
+                    </div>
+                </div>
+
+                <button onclick="runInstantQaSimulation()" class="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-teal-400 via-emerald-400 to-cyan-400 hover:opacity-95 text-slate-950 font-black text-xs shadow-lg">
+                    🔍 제이·보라 정밀 밸런스 시뮬레이션 1회 즉시 실행 (불합리점 자동 탐색)
+                </button>
+
+                <div class="space-y-2">${logsHtml}</div>
+            `;
+        }
+
+        function runInstantQaSimulation() {
+            const newScenarios = [
+                {
+                    finder: "👘 한복 의상실 렌더링 봇",
+                    issue: "[한복 환복 즉시성 점검] 의상실에서 곤룡포·선비도포·당의를 골랐을 때 상단 바 및 필드 아바타에 0.1초 만에 즉시 반영되어야 함",
+                    fix: "✅ 6종 K-한복 선택 즉시 아바타 관모(👑/🎩/🌺)·도포(👘)·소품(🪭/📜/🪙) 실시간 동기화 확인 완료!",
+                    status: "실시간 패치완료"
+                },
+                {
+                    finder: "📸 캐리커처 사진 합성 봇",
+                    issue: "[유저 사진 업로드 점검] 서버 업로드 없이도 브라우저에서 즉시 내 사진이 웹툰/한국화풍 캐리커처 필터로 한복 위에 합성되어야 함",
+                    fix: "✅ FileReader 기반 즉시 캐리커처 합성 및 화풍 전환 필터 정상 작동 확인!",
+                    status: "점검 정상"
+                }
+            ];
+            const picked = newScenarios[qaTestLogs.length % newScenarios.length];
+            qaTestLogs.unshift({
+                id: qaTestLogs.length + 1,
+                finder: picked.finder,
+                issue: picked.issue,
+                fix: picked.fix,
+                status: picked.status
+            });
+            const cntEl = document.getElementById('qa-fix-count');
+            if (cntEl) cntEl.innerText = qaTestLogs.length;
+            renderQaModalContent();
+            showToast("🛠️ 제이·보라 24H QA 봇이 K-한복 아바타 및 현장 밸런스를 점검하고 리포트를 추가했습니다!");
+        }
+
+        function renderAirdropModalContent() {
+            const content = document.getElementById('modal-content');
+            const logsHtml = airdropLogs.slice(0, 6).map(item => `
+                <div class="flex items-center justify-between p-2 rounded bg-black/60 border border-stone-800 text-[11px]">
+                    <div>
+                        <span class="font-black text-cyan-300">${item.target}</span>
+                        <span class="text-stone-400 ml-1">(${item.type})</span>
+                    </div>
+                    <div class="font-black text-amber-400">+${item.amount.toLocaleString()} $MARSM</div>
+                </div>
+            `).join('');
+
+            content.innerHTML = `
+                <div class="grid grid-cols-2 gap-2">
+                    <div class="p-3 rounded-xl bg-black/60 border border-amber-500/40">
+                        <div class="text-[10px] text-stone-400">총 테스트 발행량 (Genesis Supply)</div>
+                        <div class="text-sm font-black text-amber-400 mt-0.5">${totalMintedSupply.toLocaleString()} $MARSM</div>
+                    </div>
+                    <div class="p-3 rounded-xl bg-black/60 border border-cyan-500/40">
+                        <div class="text-[10px] text-stone-400">30일 에어드랍 풀 잔여량</div>
+                        <div class="text-sm font-black text-cyan-300 mt-0.5">${airdropPoolRemaining.toLocaleString()} $MARSM</div>
+                    </div>
+                </div>
+
+                <div class="p-3 rounded-xl bg-stone-900/90 border border-emerald-500/40 space-y-2">
+                    <div class="font-black text-emerald-300 text-xs">🪂 1. 신규 유저 & 내 지갑 테스트 착공·도메인 지원금 수령</div>
+                    <div class="grid grid-cols-2 gap-2 pt-1">
+                        <button onclick="claimStarterAirdrop()" class="py-2 px-3 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs shadow">
+                            🎁 내 지갑에 +10,000 $MARSM 수령
+                        </button>
+                        <button onclick="distributeCrewAirdrop()" class="py-2 px-3 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-black text-xs shadow">
+                            🎎 제이·보라·한복임장단에 일괄 에어드랍
+                        </button>
+                    </div>
+                </div>
+
+                <div class="p-3 rounded-xl bg-stone-900/90 border border-amber-500/40 space-y-2">
+                    <div class="font-black text-amber-300 text-xs">🏦 2. 👑 mskim0003 권한: 테스트 코인 추가 발행 (Mint)</div>
+                    <button onclick="mintMoreTestCoins()" class="w-full py-2 px-3 rounded-lg bg-gradient-to-r from-amber-500 to-orange-500 hover:opacity-95 text-slate-950 font-black text-xs shadow">
+                        ⚡ 에어드랍 풀에 +500,000 $MARSM 추가 발행하기
+                    </button>
+                </div>
+
+                <div>
+                    <div class="font-black text-stone-300 text-xs mb-1.5">📜 실시간 에어드랍 & 코인 분배 장부</div>
+                    <div class="space-y-1.5">${logsHtml}</div>
+                </div>
+            `;
+        }
+
+        function claimStarterAirdrop() {
+            const grant = 10000;
+            if (airdropPoolRemaining < grant) {
+                showToast("⚠️ 에어드랍 풀 잔액이 부족합니다! 추가 발행을 눌러주세요.");
+                return;
+            }
+            airdropPoolRemaining -= grant;
+            walletBalance += grant;
+            dailyFaucetCount += 1;
+            document.getElementById('wallet-balance').innerText = walletBalance.toLocaleString();
+            airdropLogs.unshift({
+                target: "👑 mskim0003",
+                amount: grant,
+                type: `${dailyFaucetCount}차 테스트 착공 지원금`,
+                time: "방금 전"
+            });
+            if (!document.getElementById('common-modal-backdrop').classList.contains('hidden') &&
+                document.getElementById('modal-title').innerText.includes('에어드랍')) {
+                renderAirdropModalContent();
+            }
+            showToast("🪂 테스트 에어드랍 풀에서 +10,000 $MARSM이 즉시 입금되었습니다!");
+        }
+
+        function distributeCrewAirdrop() {
+            const totalGrant = 50000;
+            if (airdropPoolRemaining < totalGrant) {
+                showToast("⚠️ 에어드랍 풀 잔액이 부족합니다!");
+                return;
+            }
+            airdropPoolRemaining -= totalGrant;
+
+            const emptyCandidates = [14, 27, 45, 71];
+            const targetId = emptyCandidates.find(id => plotsData[id] && plotsData[id].level === 0) || 71;
+            if (plotsData[targetId] && plotsData[targetId].level === 0) {
+                plotsData[targetId].level = 1;
+                plotsData[targetId].dailyYield = BUILDING_STAGES[0].yield;
+                plotsData[targetId].jimokCode = "건";
+                plotsData[targetId].jimokFull = "건 (에어드랍 지원 착공 Lv.1)";
+                plotsData[targetId].owner = "한복임장단_신규개척자";
+                plotSlugs[targetId] = `hanbok${targetId}`;
+                fieldGridInitialized = false;
+                selectPlot(targetId);
+            }
+
+            airdropLogs.unshift({
+                target: `🎎 한복 임장단 (#${String(targetId).padStart(3, '0')} 착공)`,
+                amount: totalGrant,
+                type: "신규 개척자 에어드랍 배치",
+                time: "방금 전"
+            });
+            renderAirdropModalContent();
+            showToast(`🎉 한복 임장단에게 50,000 $MARSM 에어드랍 완료! #${String(targetId).padStart(3, '0')}번지가 즉시 착공(건)되었습니다!`);
+        }
+
+        function mintMoreTestCoins() {
+            const mintAmount = 500000;
+            totalMintedSupply += mintAmount;
+            airdropPoolRemaining += mintAmount;
+            airdropLogs.unshift({
+                target: "🏦 에어드랍 풀 (Mint)",
+                amount: mintAmount,
+                type: "👑 mskim0003 추가 발행",
+                time: "방금 전"
+            });
+            renderAirdropModalContent();
+            showToast("⚡ 테스트 코인 +500,000 $MARSM이 에어드랍 풀에 추가 발행되었습니다!");
+        }
+
+        function renderBriefingModalContent() {
+            const content = document.getElementById('modal-content');
+            let developedCount = 0;
+            let totalDailyYield = 0;
+            for (let i = 1; i <= 100; i++) {
+                if (plotsData[i].level > 0) developedCount++;
+                totalDailyYield += plotsData[i].dailyYield;
+            }
+            const domainCount = Object.keys(plotSlugs).length;
+            const outfit = HANBOK_OUTFITS[currentHanbokIndex] || HANBOK_OUTFITS[0];
+
+            content.innerHTML = `
+                <div class="p-3 rounded-xl bg-indigo-950/60 border border-indigo-400/50 flex items-start gap-3">
+                    <div class="text-2xl">🤖</div>
+                    <div class="leading-relaxed">
+                        <div class="font-black text-indigo-300 text-xs">호출형 AI 로봇 비서 (평소엔 조용히 대기 · 호출 시 즉시 보고)</div>
+                        <p class="text-[11px] text-stone-200 mt-0.5">
+                            "충성! <b>${outfit.name}</b> 차림이 정말 멋지십니다, <b>👑 mskim0003</b> 오빠! 현재 공식 도메인 <b>ARESTERRA.IO</b> 기반 오아시스구 100필지 건설과 K-한복 임장 투어가 순조롭게 돌아가고 있습니다!"
+                        </p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-3 gap-2 text-center">
+                    <div class="p-2.5 rounded-xl bg-black/60 border border-stone-800">
+                        <div class="text-[10px] text-stone-400">착공·완공 필지</div>
+                        <div class="text-sm font-black text-cyan-300 mt-0.5">${developedCount} / 100필지</div>
+                    </div>
+                    <div class="p-2.5 rounded-xl bg-black/60 border border-stone-800">
+                        <div class="text-[10px] text-stone-400">특구 전체 일일산출</div>
+                        <div class="text-sm font-black text-emerald-400 mt-0.5">+${totalDailyYield.toLocaleString()} /일</div>
+                    </div>
+                    <div class="p-2.5 rounded-xl bg-black/60 border border-stone-800">
+                        <div class="text-[10px] text-stone-400">aresterra.io 주소등기</div>
+                        <div class="text-sm font-black text-amber-400 mt-0.5">🌐 ${domainCount}개</div>
+                    </div>
+                </div>
+
+                <div class="p-3 rounded-xl bg-emerald-950/40 border border-emerald-500/50 space-y-2">
+                    <div class="font-black text-emerald-300 text-xs">✍️ mskim0003 오빠의 원클릭 일괄 결재</div>
+                    <button onclick="executeOneClickApproval()" class="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-400 text-slate-950 font-black text-xs shadow-lg">
+                        ✅ [3분 일괄 결재] 채굴금 수확 + 유망 빈땅 자동 착공 & aresterra.io 주소 등기 승인!
+                    </button>
+                </div>
+            `;
+        }
+
+        function executeOneClickApproval() {
+            harvestVault();
+            const targetEmpty = [11, 21, 14, 27, 71].find(id => plotsData[id] && plotsData[id].level === 0);
+            if (targetEmpty && walletBalance >= 1000) {
+                selectedLotId = targetEmpty;
+                upgradeCurrentLot();
+            }
+            renderBriefingModalContent();
+            showToast("🤖 AI 비서: mskim0003 오빠의 일괄 결재(채굴 수확 및 신규 착공·aresterra.io 주소 등기)가 완벽히 처리되었습니다!");
+        }
+
+        let multiSigApprovals = { mskim: true, jay: true, bora: false };
+        function renderSecurityModalContent() {
+            const content = document.getElementById('modal-content');
+            const allSigned = multiSigApprovals.mskim && multiSigApprovals.jay && multiSigApprovals.bora;
+
+            content.innerHTML = `
+                <div class="p-3 rounded-xl bg-emerald-950/50 border border-emerald-500/50 space-y-1">
+                    <div class="font-black text-emerald-300 text-xs">🌱 보라의 2단계 보안 원칙 (평소엔 편하게, 출금할 때만 철통같이!)</div>
+                    <p class="text-[11px] text-stone-200">
+                        1단계(평소 구경·임장): 복잡한 지갑 연결 없이 <b>👑 mskim0003 원클릭 안전접속</b> 유지 중!<br>
+                        2단계(외부 출금 시): 해커가 절대 건드리지 못하도록 <b>오빠·제이·보라 3인 다중 서명(Multi-sig)</b>이 모여야 금고가 열립니다.
+                    </p>
+                </div>
+
+                <div class="p-3 rounded-xl bg-black/60 border border-stone-800 space-y-2">
+                    <div class="font-black text-amber-300 text-xs">🔐 3인 다중 서명(Multi-sig) 금고 승인 현황</div>
+                    <div class="grid grid-cols-3 gap-2 text-center text-[11px]">
+                        <div class="p-2 rounded-lg border ${multiSigApprovals.mskim ? 'bg-cyan-950/80 border-cyan-400 text-cyan-200' : 'bg-stone-900 border-stone-700 text-stone-400'}">
+                            <div class="font-black">👑 mskim0003</div>
+                            <div class="text-[10px] mt-1">${multiSigApprovals.mskim ? '✅ 서명 완료' : '⏳ 대기중'}</div>
+                        </div>
+                        <div class="p-2 rounded-lg border ${multiSigApprovals.jay ? 'bg-amber-950/80 border-amber-400 text-amber-200' : 'bg-stone-900 border-stone-700 text-stone-400'}">
+                            <div class="font-black">⚡ 제이(Jay)</div>
+                            <div class="text-[10px] mt-1">${multiSigApprovals.jay ? '✅ 서명 완료' : '⏳ 대기중'}</div>
+                        </div>
+                        <div class="p-2 rounded-lg border ${multiSigApprovals.bora ? 'bg-emerald-950/80 border-emerald-400 text-emerald-200' : 'bg-stone-900 border-stone-700 text-stone-400'}">
+                            <div class="font-black">🌱 보라(Bora)</div>
+                            <div class="text-[10px] mt-1">${multiSigApprovals.bora ? '✅ 서명 완료' : '🔒 최종검증 대기'}</div>
+                        </div>
+                    </div>
+                    <button onclick="toggleBoraFinalSignature()" class="w-full py-2 px-3 rounded-lg ${allSigned ? 'bg-emerald-500 text-slate-950' : 'bg-amber-500 text-slate-950'} font-black text-xs shadow">
+                        ${allSigned ? '🔓 3인 서명 완료! 안전 출금 테스트 실행 (+5,000 $MARSM 보너스)' : '🌱 보라(Bora) 보안관 최종 서명 요청하기'}
+                    </button>
+                </div>
+            `;
+        }
+
+        function toggleBoraFinalSignature() {
+            if (!multiSigApprovals.bora) {
+                multiSigApprovals.bora = true;
+                renderSecurityModalContent();
+                showToast("🌱 보라(Bora): 본인 확인 완료! 3중 서명 금고 잠금이 해제되었습니다!");
+            } else {
+                walletBalance += 5000;
+                document.getElementById('wallet-balance').innerText = walletBalance.toLocaleString();
+                multiSigApprovals.bora = false;
+                renderSecurityModalContent();
+                showToast("🔐 3중 서명 금고 테스트 출금 성공! +5,000 $MARSM 안전 지급 후 금고가 다시 잠겼습니다.");
+            }
+        }
+
+        function renderGuestbookModalContent() {
+            const content = document.getElementById('modal-content');
+            const listHtml = guestbookEntries.map(item => `
+                <div class="p-2.5 rounded-lg bg-black/50 border border-stone-800">
+                    <div class="flex items-center justify-between text-[11px] text-amber-300 font-bold mb-1">
+                        <span>${item.author}</span>
+                        <span class="text-stone-500">${item.time}</span>
+                    </div>
+                    <p class="text-stone-200 text-xs">${item.text}</p>
+                </div>
+            `).join('');
+
+            content.innerHTML = `
+                <div class="flex gap-2 mb-3">
+                    <input id="guestbook-input" type="text" placeholder="👑 mskim0003 이름으로 한복 임장평 남기기..." class="flex-1 bg-black border border-stone-700 rounded-lg px-3 py-2 text-xs text-white">
+                    <button onclick="addGuestbookEntry()" class="px-3 py-2 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-black text-xs">등록</button>
+                </div>
+                <div class="space-y-2">${listHtml}</div>
+            `;
+        }
+
+        function addGuestbookEntry() {
+            const input = document.getElementById('guestbook-input');
+            if (!input || !input.value.trim()) return;
+            const outfit = HANBOK_OUTFITS[currentHanbokIndex] || HANBOK_OUTFITS[0];
+            guestbookEntries.unshift({
+                author: `👑 mskim0003 (${outfit.name})`,
+                time: "방금 전",
+                text: input.value.trim()
+            });
+            renderGuestbookModalContent();
+            showToast("💬 중앙 만남의 광장 임장노트에 한줄평이 등록되었습니다!");
+        }
+
+        function closeModal() {
+            document.getElementById('common-modal-backdrop').classList.add('hidden');
+        }
+
+        function showToast(msg) {
+            const box = document.getElementById('toast-box');
+            box.innerText = msg;
+            box.classList.remove('hidden');
+            setTimeout(() => box.classList.add('hidden'), 2800);
+        }
+
+        window.addEventListener('keydown', (e) => {
+            if (currentViewMode !== 'field') return;
+            if (['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
+            if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') moveAvatarByStep(-1, 0);
+            else if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') moveAvatarByStep(1, 0);
+            else if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') moveAvatarByStep(0, -1);
+            else if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') moveAvatarByStep(0, 1);
+            else if (e.code === 'Space') {
+                e.preventDefault();
+                triggerMarsJump();
+            }
+        });
+
+        window.onload = function() {
+            initPlotsData();
+            applyAvatarVisuals();
+            selectPlot(1);
+            initFieldDragScroll();
+            startContinuousPatrolLoop();
+            setInterval(() => {
+                vaultPending = +(vaultPending + 0.4).toFixed(1);
+                const vEl = document.getElementById('vault-pending');
+                if (vEl) vEl.innerText = vaultPending.toFixed(1);
+            }, 1500);
+        };
+    </script>
+</body>
+</html>
