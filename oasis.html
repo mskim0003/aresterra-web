@@ -2881,7 +2881,10 @@
         applyAvatarVisuals();
         selectPlot(1);
         initFieldDragScroll();
+        // 자동 돌아다니기 기능은 끄고, 처음엔 아바타를 숨겨서 깔끔하게 시작!
         // startContinuousPatrolLoop();
+        window.avatarVisible = false;
+        setTimeout(() => toggleAvatars(false), 300);
 
         // 2. 창을 꺼둔 시간만큼 24시간 오프라인 자동 채굴 계산
         const savedVault = parseFloat(localStorage.getItem('mars_vault_pending'));
@@ -2915,6 +2918,27 @@
           }
         }, 1500);
       };
+
+      // 👘 아바타 필요할 때만 부르고 숨기는 스위치 함수
+      function toggleAvatars(forceState) {
+        window.avatarVisible = (typeof forceState === 'boolean') ? forceState : !window.avatarVisible;
+        const targets = document.querySelectorAll('[id*="avatar"], [id*="visitor"], [id*="npc"], [class*="avatar"], [class*="visitor"]');
+        targets.forEach(el => {
+          if (!el.id.includes('modal') && !el.id.includes('btn')) {
+            el.style.display = window.avatarVisible ? '' : 'none';
+          }
+        });
+        const btn = document.getElementById('avatar-toggle-btn');
+        if (btn) {
+          btn.innerHTML = window.avatarVisible ? '🙈 아바타 숨기기 (지도만 보기)' : '👘 한복 아바타 부르기 (ON)';
+          btn.style.background = window.avatarVisible ? '#334155' : 'linear-gradient(135deg, #10b981, #059669)';
+        }
+      }
     </script>
+
+    <!-- 우측 하단 아바타 ON/OFF 리모컨 버튼 -->
+    <button id="avatar-toggle-btn" onclick="toggleAvatars()" style="position: fixed; bottom: 24px; right: 24px; z-index: 9999; background: linear-gradient(135deg, #10b981, #059669); color: white; padding: 12px 22px; border-radius: 9999px; font-weight: 800; font-size: 14px; border: 2px solid #a7f3d0; box-shadow: 0 8px 20px rgba(0,0,0,0.5); cursor: pointer;">
+      👘 한복 아바타 부르기 (ON)
+    </button>
   </body>
 </html>
