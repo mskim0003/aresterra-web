@@ -3598,5 +3598,158 @@ window.copyInviteText = function() {
     reader.readAsDataURL(file);
   };
 </script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+<script>
+  // 1. 기존 네모 상자 로봇을 계속 만들던 타이머 완전 중지!
+  window.forceRobloxBody = function() {};
+  window.rebuildToRobloxAvatar = function() {};
+
+  // 2. 진짜 8등신 3D 인간형 모델(.glb) 소환 엔진
+  let glbMixer = null;
+  let glbActions = {};
+  let glbModel = null;
+  let glbHeadBone = null;
+  let glbLoaded = false;
+
+  function loadRealGLBAvatar() {
+    if (glbLoaded || typeof scene3d === 'undefined' || !scene3d) return;
+    glbLoaded = true;
+
+    // 기존 네모 상자 로봇 영구 숨김
+    if (typeof mainAvatar3d !== 'undefined' && mainAvatar3d) {
+      mainAvatar3d.visible = false;
+    }
+
+    const loader = new THREE.GLTFLoader();
+    loader.load('https://threejs.org/examples/models/gltf/Xbot.glb', function(gltf) {
+      glbModel = gltf.scene;
+      glbModel.scale.set(1.55, 1.55, 1.55);
+      glbModel.position.set(0, 0, 0);
+
+      glbModel.traverse(function(child) {
+        if (child.isMesh) {
+          child.material = child.material.clone();
+          child.material.color.set('#eab308');
+          child.material.metalness = 0.35;
+          child.material.roughness = 0.35;
+        }
+        if (child.isBone && (child.name.includes('Head') || child.name.includes('head'))) {
+          glbHeadBone = child;
+        }
+      });
+
+      // 머리 뼈대에 전통 갓 장착
+      if (glbHeadBone) {
+        const hat = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.32, 0.32, 0.02, 32),
+          new THREE.MeshStandardMaterial({ color: 0x111111, transparent: true, opacity: 0.9 })
+        );
+        hat.position.set(0, 0.22, 0);
+        glbHeadBone.add(hat);
+
+        const hatTop = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.14, 0.15, 0.18, 32),
+          new THREE.MeshStandardMaterial({ color: 0x111111 })
+        );
+        hatTop.position.set(0, 0.31, 0);
+        glbHeadBone.add(hatTop);
+      }
+
+      scene3d.add(glbModel);
+
+      glbMixer = new THREE.AnimationMixer(glbModel);
+      gltf.animations.forEach(clip => {
+        glbActions[clip.name.toLowerCase()] = glbMixer.clipAction(clip);
+      });
+      playGLBAnim('walk');
+
+      const saved = localStorage.getItem('mars_selfie_3d');
+      if (saved) attachSelfieToGLB(saved);
+    });
+  }
+
+  function playGLBAnim(mode) {
+    if (!glbMixer) return;
+    Object.values(glbActions).forEach(act => act.stop());
+    if (mode === 'walk' && glbActions['walk']) {
+      glbActions['walk'].play();
+    } else if (mode === 'dance' && (glbActions['run'] || glbActions['agree'])) {
+      (glbActions['run'] || glbActions['agree']).play();
+    } else if (glbActions['idle']) {
+      glbActions['idle'].play();
+    }
+  }
+
+  function attachSelfieToGLB(imgData) {
+    if (!glbModel) return;
+    const img = new Image();
+    img.onload = function() {
+      const c = document.createElement('canvas');
+      c.width = 512; c.height = 512;
+      const ctx = c.getContext('2d');
+
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(256, 256, 240, 0, Math.PI * 2);
+      ctx.clip();
+      const min = Math.min(img.width, img.height);
+      ctx.drawImage(img, (img.width - min) / 2, (img.height - min) / 2, min, min, 0, 0, 512, 512);
+      ctx.restore();
+
+      ctx.beginPath();
+      ctx.arc(256, 256, 240, 0, Math.PI * 2);
+      ctx.lineWidth = 18;
+      ctx.strokeStyle = '#fde047';
+      ctx.stroke();
+
+      const tex = new THREE.CanvasTexture(c);
+      const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex }));
+
+      if (glbHeadBone) {
+        if (glbHeadBone.userData.faceSprite) glbHeadBone.remove(glbHeadBone.userData.faceSprite);
+        sprite.scale.set(0.32, 0.32, 1);
+        sprite.position.set(0, 0.08, 0.14);
+        glbHeadBone.add(sprite);
+        glbHeadBone.userData.faceSprite = sprite;
+      }
+    };
+    img.src = imgData;
+  }
+
+  window.change3DHanbokColor = function(hexStr) {
+    if (!glbModel) return;
+    glbModel.traverse(child => {
+      if (child.isMesh) child.material.color.set(hexStr);
+    });
+  };
+
+  window.set3DAnimMode = function(mode) {
+    animMode3d = mode;
+    playGLBAnim(mode);
+  };
+
+  window.applySelfieTo3D = function(event) {
+    const file = event.target.files && event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      localStorage.setItem('mars_selfie_3d', e.target.result);
+      attachSelfieToGLB(e.target.result);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const glbClock = new THREE.Clock();
+  function updateGLBLoop() {
+    requestAnimationFrame(updateGLBLoop);
+    if (typeof mainAvatar3d !== 'undefined' && mainAvatar3d) mainAvatar3d.visible = false;
+    if (!glbLoaded && typeof scene3d !== 'undefined' && scene3d) loadRealGLBAvatar();
+    if (glbMixer) glbMixer.update(glbClock.getDelta());
+    if (glbModel && animMode3d === 'dance') {
+      glbModel.rotation.y += 0.03;
+    }
+  }
+  updateGLBLoop();
+</script>
   </body>
 </html>
