@@ -3375,31 +3375,120 @@ window.copyInviteText = function() {
     }
   };
 
-  // 📸 셀카 올리면 즉시 아바타 머리 위치에 황금 원형 액자로 선명하게 표시
+  // 🎮 [로블록스 스타일 패치] 둥근 원기둥을 로블록스 6관절 블록 체형으로 바꾸고 얼굴을 머리 앞면에 일체화!
+  window.createHumanoid3D = function(coatColor, isMain) {
+    const group = new THREE.Group();
+
+    // 1. 로블록스 스타일 각진 입체 머리 (정면에만 셀카가 딱 붙는 구조)
+    const skinMat = new THREE.MeshStandardMaterial({ color: 0xffdcb1, roughness: 0.5 });
+    const headMats = [skinMat, skinMat, skinMat, skinMat, skinMat.clone(), skinMat];
+    const head = new THREE.Mesh(new THREE.BoxGeometry(0.78, 0.78, 0.78), headMats);
+    head.position.y = 2.35;
+    group.add(head);
+
+    // 전통 갓 (로블록스 머리 위에 배치)
+    const hatBrim = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.75, 0.75, 0.05, 32),
+      new THREE.MeshStandardMaterial({ color: 0x111111, transparent: true, opacity: 0.9 })
+    );
+    hatBrim.position.y = 2.78;
+    group.add(hatBrim);
+
+    const hatTop = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.32, 0.35, 0.38, 32),
+      new THREE.MeshStandardMaterial({ color: 0x111111 })
+    );
+    hatTop.position.y = 2.98;
+    group.add(hatTop);
+
+    // 2. 로블록스 스타일 직사각형 몸통 (한복 곤룡포/도포 블록)
+    const torsoMat = new THREE.MeshStandardMaterial({ color: coatColor, roughness: 0.4 });
+    const torso = new THREE.Mesh(new THREE.BoxGeometry(1.05, 1.25, 0.52), torsoMat);
+    torso.position.y = 1.32;
+    group.add(torso);
+
+    // 가슴 정면 황금 용문양 흉배
+    const badge = new THREE.Mesh(
+      new THREE.CircleGeometry(0.24, 24),
+      new THREE.MeshStandardMaterial({ color: 0xfde047, metalness: 0.7, roughness: 0.2 })
+    );
+    badge.position.set(0, 1.42, 0.27);
+    group.add(badge);
+
+    // 3. 로블록스 스타일 각진 양팔 (어깨 관절 회전)
+    const armGeo = new THREE.BoxGeometry(0.36, 1.1, 0.38);
+    armGeo.translate(0, -0.45, 0);
+    const leftArm = new THREE.Mesh(armGeo, torsoMat);
+    leftArm.position.set(-0.74, 1.85, 0);
+    group.add(leftArm);
+
+    const rightArm = new THREE.Mesh(armGeo, torsoMat);
+    rightArm.position.set(0.74, 1.85, 0);
+    group.add(rightArm);
+
+    // 4. 로블록스 스타일 각진 양다리 (골반 관절 회전)
+    const legGeo = new THREE.BoxGeometry(0.46, 1.0, 0.48);
+    legGeo.translate(0, -0.45, 0);
+    const legMat = new THREE.MeshStandardMaterial({ color: 0x1e293b });
+    const leftLeg = new THREE.Mesh(legGeo, legMat);
+    leftLeg.position.set(-0.26, 0.7, 0);
+    group.add(leftLeg);
+
+    const rightLeg = new THREE.Mesh(legGeo, legMat);
+    rightLeg.position.set(0.26, 0.7, 0);
+    group.add(rightLeg);
+
+    group.userData = { head, torso, leftArm, rightArm, leftLeg, rightLeg };
+    return group;
+  };
+
+  function rebuildToRobloxAvatar() {
+    if (!scene3d) return;
+    if (mainAvatar3d) scene3d.remove(mainAvatar3d);
+    mainAvatar3d = window.createHumanoid3D(0xeab308, true);
+    scene3d.add(mainAvatar3d);
+
+    const oldBadge = document.getElementById('selfie-html-badge');
+    if (oldBadge) oldBadge.remove();
+
+    const saved = localStorage.getItem('mars_selfie_3d');
+    if (saved) applyTextureToRobloxHead(saved);
+  }
+
+  function applyTextureToRobloxHead(imgData) {
+    if (!mainAvatar3d) return;
+    const img = new Image();
+    img.onload = function() {
+      const c = document.createElement('canvas');
+      c.width = 512; c.height = 512;
+      const ctx = c.getContext('2d');
+      ctx.fillStyle = '#ffdcb1';
+      ctx.fillRect(0, 0, 512, 512);
+
+      const min = Math.min(img.width, img.height);
+      ctx.drawImage(img, (img.width - min) / 2, (img.height - min) / 2, min, min, 24, 24, 464, 464);
+
+      const tex = new THREE.CanvasTexture(c);
+      const frontMat = new THREE.MeshBasicMaterial({ map: tex });
+      mainAvatar3d.userData.head.material[4] = frontMat;
+      mainAvatar3d.userData.head.material.needsUpdate = true;
+    };
+    img.src = imgData;
+  }
+
+  const prevOpenStudio = window.open3DAvatarStudio;
+  window.open3DAvatarStudio = function() {
+    if (typeof prevOpenStudio === 'function') prevOpenStudio();
+    setTimeout(rebuildToRobloxAvatar, 100);
+  };
+
   window.applySelfieTo3D = function(event) {
     const file = event.target.files && event.target.files[0];
     if (!file) return;
-    forceShow3DStage();
-
     const reader = new FileReader();
     reader.onload = function(e) {
-      const imgData = e.target.result;
-      const wrap = document.getElementById('plaza-3d-stage') || document.getElementById('avatar3d-canvas-wrap');
-      if (wrap) {
-        let badge = document.getElementById('selfie-html-badge');
-        if (!badge) {
-          badge = document.createElement('img');
-          badge.id = 'selfie-html-badge';
-          badge.style.cssText = 'position: absolute; top: 24%; left: 50%; transform: translate(-50%, -50%); width: 92px; height: 92px; border-radius: 50%; object-fit: cover; border: 3px solid #fde047; box-shadow: 0 0 20px rgba(253,224,71,0.95); z-index: 50; pointer-events: none;';
-          wrap.appendChild(badge);
-        }
-        badge.src = imgData;
-      }
-      if (typeof mainAvatar3d !== 'undefined' && mainAvatar3d && mainAvatar3d.userData) {
-        mainAvatar3d.userData.head.visible = false;
-        mainAvatar3d.userData.torso.scale.set(0.82, 1.05, 0.65);
-      }
-      localStorage.setItem('mars_selfie_3d', imgData);
+      localStorage.setItem('mars_selfie_3d', e.target.result);
+      applyTextureToRobloxHead(e.target.result);
     };
     reader.readAsDataURL(file);
   };
