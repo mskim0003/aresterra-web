@@ -3282,65 +3282,62 @@ window.copyInviteText = function() {
     });
   });
 
- // 📸 오빠 얼굴이 왜곡 없이 황금 테두리 액자에 정면으로 선명하게 뜨도록 교정!
+// 📸 어떤 사진이든 100% 선명하게 아바타 머리 위치에 바로 띄워주는 무실패 코드!
   window.applySelfieTo3D = function(event) {
-    const file = event.target.files[0];
-    if (!file || !mainAvatar3d) return;
+    const file = event.target.files && event.target.files[0];
+    if (!file) return;
+
     const reader = new FileReader();
     reader.onload = function(e) {
-      const img = new Image();
-      img.onload = function() {
-        const size = 512;
-        const canvas = document.createElement('canvas');
-        canvas.width = size;
-        canvas.height = size;
-        const ctx = canvas.getContext('2d');
+      const imgData = e.target.result;
 
-        ctx.save();
-        ctx.beginPath();
-        ctx.arc(size / 2, size / 2, size / 2 - 14, 0, Math.PI * 2);
-        ctx.closePath();
-        ctx.clip();
-
-        const minSide = Math.min(img.width, img.height);
-        const sx = (img.width - minSide) / 2;
-        const sy = (img.height - minSide) / 2;
-        ctx.drawImage(img, sx, sy, minSide, minSide, 0, 0, size, size);
-        ctx.restore();
-
-        ctx.beginPath();
-        ctx.arc(size / 2, size / 2, size / 2 - 14, 0, Math.PI * 2);
-        ctx.lineWidth = 20;
-        ctx.strokeStyle = '#fde047';
-        ctx.stroke();
-
-        const tex = new THREE.CanvasTexture(canvas);
-        const p = mainAvatar3d.userData;
-
-        p.head.material.transparent = true;
-        p.head.material.opacity = 0;
-
-        if (p.faceBadge) mainAvatar3d.remove(p.faceBadge);
-        const faceMat = new THREE.SpriteMaterial({ map: tex });
-        const faceSprite = new THREE.Sprite(faceMat);
-        faceSprite.scale.set(0.95, 0.95, 1);
-        faceSprite.position.set(0, 2.32, 0.1);
-        mainAvatar3d.add(faceSprite);
-        p.faceBadge = faceSprite;
-
-        p.torso.scale.set(0.82, 1.05, 0.65);
-
-        if (typeof avatarState !== 'undefined') {
-          avatarState.photoUrl = e.target.result;
-          localStorage.setItem('mars_avatar_state', JSON.stringify(avatarState));
-          if (typeof applyAvatarVisuals === 'function') applyAvatarVisuals();
+      // 1. 3D 창 중앙(아바타 머리 위)에 선명한 황금 원형 사진 액자 직접 띄우기
+      const wrap = document.getElementById('avatar3d-canvas-wrap');
+      if (wrap) {
+        let badge = document.getElementById('selfie-html-badge');
+        if (!badge) {
+          badge = document.createElement('img');
+          badge.id = 'selfie-html-badge';
+          badge.style.cssText = 'position: absolute; top: 23%; left: 50%; transform: translate(-50%, -50%); width: 88px; height: 88px; border-radius: 50%; object-fit: cover; border: 3px solid #fde047; box-shadow: 0 0 18px rgba(253,224,71,0.9); z-index: 50; pointer-events: none;';
+          wrap.appendChild(badge);
         }
-        alert('📸 오빠 셀카가 황금 액자 한복 아바타에 멋지게 적용되었어!');
-      };
-      img.src = e.target.result;
+        badge.src = imgData;
+      }
+
+      // 2. 기존 3D 노란 공 머리는 사진 뒤에서 안 보이게 숨김 처리
+      if (typeof mainAvatar3d !== 'undefined' && mainAvatar3d && mainAvatar3d.userData && mainAvatar3d.userData.head) {
+        mainAvatar3d.userData.head.visible = false;
+        mainAvatar3d.userData.torso.scale.set(0.82, 1.05, 0.65);
+      }
+
+      // 3. 내 기기에 사진 자동 저장 (다음에 들어와도 유지!)
+      localStorage.setItem('mars_selfie_3d', imgData);
+      if (typeof avatarState !== 'undefined') {
+        avatarState.photoUrl = imgData;
+        localStorage.setItem('mars_avatar_state', JSON.stringify(avatarState));
+        if (typeof applyAvatarVisuals === 'function') applyAvatarVisuals();
+      }
+      alert('📸 오빠 셀카가 황금 원형 액자에 선명하게 올라갔어!');
     };
     reader.readAsDataURL(file);
   };
+
+  // 페이지 열릴 때 이전에 올렸던 셀카가 있으면 자동으로 불러오기
+  window.addEventListener('load', () => {
+    const savedSelfie = localStorage.getItem('mars_selfie_3d');
+    if (savedSelfie) {
+      setTimeout(() => {
+        const wrap = document.getElementById('avatar3d-canvas-wrap');
+        if (wrap && !document.getElementById('selfie-html-badge')) {
+          const badge = document.createElement('img');
+          badge.id = 'selfie-html-badge';
+          badge.src = savedSelfie;
+          badge.style.cssText = 'position: absolute; top: 23%; left: 50%; transform: translate(-50%, -50%); width: 88px; height: 88px; border-radius: 50%; object-fit: cover; border: 3px solid #fde047; box-shadow: 0 0 18px rgba(253,224,71,0.9); z-index: 50; pointer-events: none;';
+          wrap.appendChild(badge);
+        }
+      }, 800);
+    }
+  });
 </script>
   </body>
 </html>
