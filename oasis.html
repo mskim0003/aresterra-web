@@ -2947,5 +2947,303 @@ window.copyInviteText = function() {
     <button id="avatar-toggle-btn" onclick="toggleAvatars()" style="position: fixed; bottom: 24px; right: 24px; z-index: 9999; background: linear-gradient(135deg, #10b981, #059669); color: white; padding: 12px 22px; border-radius: 9999px; font-weight: 800; font-size: 14px; border: 2px solid #a7f3d0; box-shadow: 0 8px 20px rgba(0,0,0,0.5); cursor: pointer;">
       👘 한복 아바타 부르기 (ON)
     </button>
+    <!-- 🕺 셀카 3D 입체 관절 아바타 & 메타버스 콘서트 무대 버튼 -->
+<button onclick="open3DAvatarStudio()" style="position: fixed; bottom: 76px; right: 24px; z-index: 9999; background: linear-gradient(135deg, #ec4899, #8b5cf6); color: white; padding: 12px 22px; border-radius: 9999px; font-weight: 800; font-size: 14px; border: 2px solid #f9a8d4; box-shadow: 0 8px 25px rgba(236,72,153,0.6); cursor: pointer;">
+  🕺 셀카 3D 입체 아바타 & 콘서트 무대
+</button>
+
+<!-- 🪐 3D 아바타 스튜디오 모달 창 -->
+<div id="avatar3d-modal" style="display: none; position: fixed; inset: 0; z-index: 10000; background: rgba(5, 8, 20, 0.92); backdrop-filter: blur(8px); align-items: center; justify-content: center; padding: 16px;">
+  <div style="width: 100%; max-width: 900px; background: #0f172a; border: 2px solid #ec4899; border-radius: 20px; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.8); display: flex; flex-direction: column;">
+    
+    <!-- 상단 헤더 -->
+    <div style="padding: 14px 20px; background: linear-gradient(90deg, #831843, #311042); display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f472b6;">
+      <div style="font-weight: 900; font-size: 16px; color: #fdf2f8;">
+        ✨ 화성 제1특구 3D 휴머노이드 아바타 & 메타버스 입학식·콘서트 홀
+      </div>
+      <button onclick="close3DAvatarStudio()" style="background: #ef4444; color: white; border: none; padding: 6px 14px; border-radius: 8px; font-weight: 800; cursor: pointer;">✕ 닫기</button>
+    </div>
+
+    <!-- 메인 3D 캔버스 화면 -->
+    <div id="avatar3d-canvas-wrap" style="width: 100%; height: 460px; position: relative; background: radial-gradient(circle at center, #1e1b4b 0%, #020617 100%);">
+      <div style="position: absolute; top: 12px; left: 12px; z-index: 10; background: rgba(0,0,0,0.65); padding: 8px 12px; border-radius: 10px; border: 1px solid #38bdf8; color: #e0f2fe; font-size: 12px;">
+        💡 마우스 드래그: 360도 회전 | 휠: 확대·축소 | 내 셀카를 올리면 3D 얼굴에 즉시 적용됩니다!
+      </div>
+    </div>
+
+    <!-- 하단 컨트롤 바 (셀카 업로드 & 춤·입학식 동작 선택) -->
+    <div style="padding: 16px 20px; background: #1e293b; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between;">
+      <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+        <label style="background: #f59e0b; color: #000; padding: 10px 16px; border-radius: 10px; font-weight: 900; font-size: 13px; cursor: pointer; display: inline-block;">
+          📸 내 셀카 사진 올리기
+          <input type="file" accept="image/*" onchange="applySelfieTo3D(event)" style="display: none;">
+        </label>
+        <button onclick="change3DHanbokColor('#eab308')" style="background: #eab308; color: #000; border: none; padding: 10px 12px; border-radius: 10px; font-weight: 800; font-size: 12px; cursor: pointer;">👑 황금 곤룡포</button>
+        <button onclick="change3DHanbokColor('#38bdf8')" style="background: #38bdf8; color: #000; border: none; padding: 10px 12px; border-radius: 10px; font-weight: 800; font-size: 12px; cursor: pointer;">👘 푸른 선비도포</button>
+        <button onclick="change3DHanbokColor('#ec4899')" style="background: #ec4899; color: #fff; border: none; padding: 10px 12px; border-radius: 10px; font-weight: 800; font-size: 12px; cursor: pointer;">🌸 핑크 무대의상</button>
+      </div>
+
+      <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+        <button onclick="set3DAnimMode('walk')" style="background: #10b981; color: white; border: none; padding: 10px 14px; border-radius: 10px; font-weight: 800; font-size: 13px; cursor: pointer;">🚶 당당히 걷기</button>
+        <button onclick="set3DAnimMode('dance')" style="background: #ec4899; color: white; border: none; padding: 10px 14px; border-radius: 10px; font-weight: 800; font-size: 13px; cursor: pointer;">🎵 K-팝 콘서트 댄스</button>
+        <button onclick="set3DAnimMode('ceremony')" style="background: #6366f1; color: white; border: none; padding: 10px 14px; border-radius: 10px; font-weight: 800; font-size: 13px; cursor: pointer;">🎓 입학식 대표 선서</button>
+        <button onclick="toggleCrowd3D()" style="background: #334155; color: #fde047; border: 1px solid #fde047; padding: 10px 14px; border-radius: 10px; font-weight: 800; font-size: 13px; cursor: pointer;">👥 입학식·콘서트 군중 소환</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+  let scene3d, camera3d, renderer3d, mainAvatar3d, crowdGroup3d;
+  let animMode3d = 'walk';
+  let clock3d = new THREE.Clock();
+  let is3dInitialized = false;
+  let spotLight1, spotLight2;
+
+  function open3DAvatarStudio() {
+    document.getElementById('avatar3d-modal').style.display = 'flex';
+    if (!is3dInitialized) {
+      init3DAvatarScene();
+      is3dInitialized = true;
+    }
+  }
+
+  function close3DAvatarStudio() {
+    document.getElementById('avatar3d-modal').style.display = 'none';
+  }
+
+  // 사람 비율의 3D 관절 아바타 생성 함수
+  function createHumanoid3D(coatColor, isMain) {
+    const group = new THREE.Group();
+
+    // 1. 입체 얼굴 (셀카 텍스처 매핑용 구형 헤드)
+    const headGeo = new THREE.SphereGeometry(0.42, 32, 32);
+    const headMat = new THREE.MeshStandardMaterial({ color: 0xffdcb1, roughness: 0.4 });
+    const head = new THREE.Mesh(headGeo, headMat);
+    head.position.y = 2.35;
+    head.rotation.y = -Math.PI / 2;
+    group.add(head);
+
+    // 전통 갓 / 익선관 모자
+    const hatBrim = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.7, 0.7, 0.04, 32),
+      new THREE.MeshStandardMaterial({ color: 0x111111, transparent: true, opacity: 0.85 })
+    );
+    hatBrim.position.y = 2.68;
+    group.add(hatBrim);
+
+    const hatTop = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.28, 0.32, 0.35, 32),
+      new THREE.MeshStandardMaterial({ color: 0x111111 })
+    );
+    hatTop.position.y = 2.86;
+    group.add(hatTop);
+
+    // 2. 몸통 (한복 두루마기 / 곤룡포 입체 실루엣)
+    const torsoGeo = new THREE.CylinderGeometry(0.38, 0.58, 1.35, 24);
+    const torsoMat = new THREE.MeshStandardMaterial({ color: coatColor, roughness: 0.3, metalness: 0.2 });
+    const torso = new THREE.Mesh(torsoGeo, torsoMat);
+    torso.position.y = 1.35;
+    group.add(torso);
+
+    // 가슴 황금 흉배 (용문양 심볼)
+    const badge = new THREE.Mesh(
+      new THREE.CircleGeometry(0.22, 24),
+      new THREE.MeshStandardMaterial({ color: 0xfde047, metalness: 0.8, roughness: 0.2 })
+    );
+    badge.position.set(0, 1.55, 0.44);
+    group.add(badge);
+
+    // 3. 양팔 (어깨 관절 기준 회전)
+    const armGeo = new THREE.CylinderGeometry(0.13, 0.16, 0.95, 16);
+    armGeo.translate(0, -0.4, 0); // 어깨를 축으로 회전하게 설정
+
+    const leftArm = new THREE.Mesh(armGeo, torsoMat);
+    leftArm.position.set(-0.52, 1.9, 0);
+    group.add(leftArm);
+
+    const rightArm = new THREE.Mesh(armGeo, torsoMat);
+    rightArm.position.set(0.52, 1.9, 0);
+    group.add(rightArm);
+
+    // 양손 (응원봉/손 구체)
+    const handGeo = new THREE.SphereGeometry(0.13, 16, 16);
+    const handMat = new THREE.MeshStandardMaterial({ color: isMain ? 0xf472b6 : 0xffdcb1, emissive: isMain ? 0xec4899 : 0x000000, emissiveIntensity: 0.5 });
+    const leftHand = new THREE.Mesh(handGeo, handMat);
+    leftHand.position.y = -0.85;
+    leftArm.add(leftHand);
+
+    const rightHand = new THREE.Mesh(handGeo, handMat);
+    rightHand.position.y = -0.85;
+    rightArm.add(rightHand);
+
+    // 4. 양다리 (고관절 기준 회전)
+    const legGeo = new THREE.CylinderGeometry(0.16, 0.13, 0.9, 16);
+    legGeo.translate(0, -0.4, 0);
+    const legMat = new THREE.MeshStandardMaterial({ color: 0xf8fafc });
+
+    const leftLeg = new THREE.Mesh(legGeo, legMat);
+    leftLeg.position.set(-0.22, 0.75, 0);
+    group.add(leftLeg);
+
+    const rightLeg = new THREE.Mesh(legGeo, legMat);
+    rightLeg.position.set(0.22, 0.75, 0);
+    group.add(rightLeg);
+
+    group.userData = { head, torso, leftArm, rightArm, leftLeg, rightLeg };
+    return group;
+  }
+
+  function init3DAvatarScene() {
+    const wrap = document.getElementById('avatar3d-canvas-wrap');
+    scene3d = new THREE.Scene();
+
+    camera3d = new THREE.PerspectiveCamera(45, wrap.clientWidth / wrap.clientHeight, 0.1, 100);
+    camera3d.position.set(0, 2.3, 6.2);
+    camera3d.lookAt(0, 1.5, 0);
+
+    renderer3d = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer3d.setSize(wrap.clientWidth, wrap.clientHeight);
+    wrap.appendChild(renderer3d.domElement);
+
+    // 조명 및 블랙핑크 콘서트 스타일 네온 스포트라이트
+    scene3d.add(new THREE.AmbientLight(0xffffff, 0.8));
+    const dirLight = new THREE.DirectionalLight(0xffffff, 0.9);
+    dirLight.position.set(3, 8, 5);
+    scene3d.add(dirLight);
+
+    spotLight1 = new THREE.PointLight(0xec4899, 2.5, 12);
+    spotLight1.position.set(-3, 4, 2);
+    scene3d.add(spotLight1);
+
+    spotLight2 = new THREE.PointLight(0x38bdf8, 2.5, 12);
+    spotLight2.position.set(3, 4, 2);
+    scene3d.add(spotLight2);
+
+    // 화성 메타버스 홀로그램 원형 무대 바닥
+    const stageGeo = new THREE.CylinderGeometry(3.8, 4.2, 0.2, 48);
+    const stageMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, metalness: 0.7, roughness: 0.2 });
+    const stage = new THREE.Mesh(stageGeo, stageMat);
+    stage.position.y = -0.1;
+    scene3d.add(stage);
+
+    const ringGeo = new THREE.RingGeometry(3.6, 3.8, 48);
+    const ringMat = new THREE.MeshBasicMaterial({ color: 0xec4899, side: THREE.DoubleSide });
+    const ring = new THREE.Mesh(ringGeo, ringMat);
+    ring.rotation.x = Math.PI / 2;
+    ring.position.y = 0.02;
+    scene3d.add(ring);
+
+    // 주인공 오빠(mskim0003) 3D 아바타 배치
+    mainAvatar3d = createHumanoid3D(0xeab308, true);
+    scene3d.add(mainAvatar3d);
+
+    // 대학 입학식 / 콘서트 백댄서 군중 그룹 (처음엔 숨김)
+    crowdGroup3d = new THREE.Group();
+    crowdGroup3d.visible = false;
+    const colors = [0x38bdf8, 0xec4899, 0x10b981, 0xa855f7, 0xf97316, 0x14b8a6];
+    for (let i = 0; i < 6; i++) {
+      const npc = createHumanoid3D(colors[i], false);
+      const angle = (i / 6) * Math.PI - Math.PI / 2;
+      npc.position.set(Math.sin(angle) * 2.5, 0, -Math.cos(angle) * 1.8 - 0.8);
+      npc.scale.set(0.85, 0.85, 0.85);
+      crowdGroup3d.add(npc);
+    }
+    scene3d.add(crowdGroup3d);
+
+    // 마우스 드래그로 360도 돌려보기
+    let isDragging = false, prevX = 0;
+    wrap.addEventListener('mousedown', e => { isDragging = true; prevX = e.clientX; });
+    window.addEventListener('mouseup', () => isDragging = false);
+    window.addEventListener('mousemove', e => {
+      if (!isDragging) return;
+      mainAvatar3d.rotation.y += (e.clientX - prevX) * 0.01;
+      prevX = e.clientX;
+    });
+
+    animate3DAvatar();
+  }
+
+  function animateAvatarParts(av, t, offset) {
+    const p = av.userData;
+    const time = t + offset;
+    if (animMode3d === 'walk') {
+      // 팔다리 교차 워킹
+      p.leftLeg.rotation.x = Math.sin(time * 5) * 0.55;
+      p.rightLeg.rotation.x = -Math.sin(time * 5) * 0.55;
+      p.leftArm.rotation.x = -Math.sin(time * 5) * 0.45;
+      p.rightArm.rotation.x = Math.sin(time * 5) * 0.45;
+      p.leftArm.rotation.z = 0;
+      p.rightArm.rotation.z = 0;
+      av.position.y = Math.abs(Math.sin(time * 5)) * 0.08;
+    } else if (animMode3d === 'dance') {
+      // K-팝 콘서트 댄스 (양팔 흔들며 리듬 점프)
+      av.position.y = Math.abs(Math.sin(time * 8)) * 0.22;
+      av.rotation.y = Math.sin(time * 2) * 0.4;
+      p.leftArm.rotation.z = Math.PI * 0.65 + Math.sin(time * 8) * 0.35;
+      p.rightArm.rotation.z = -Math.PI * 0.65 - Math.cos(time * 8) * 0.35;
+      p.leftLeg.rotation.x = Math.sin(time * 8) * 0.35;
+      p.rightLeg.rotation.x = -Math.sin(time * 8) * 0.35;
+    } else if (animMode3d === 'ceremony') {
+      // 입학식 대표 선서 / 거수경례
+      av.position.y = 0;
+      av.rotation.y = 0;
+      p.rightArm.rotation.x = -Math.PI * 0.75;
+      p.rightArm.rotation.z = -0.2 + Math.sin(time * 4) * 0.08;
+      p.leftArm.rotation.x = 0;
+      p.leftArm.rotation.z = 0;
+      p.leftLeg.rotation.x = 0;
+      p.rightLeg.rotation.x = 0;
+    }
+  }
+
+  function animate3DAvatar() {
+    requestAnimationFrame(animate3DAvatar);
+    const t = clock3d.getElapsedTime();
+    if (mainAvatar3d) animateAvatarParts(mainAvatar3d, t, 0);
+    if (crowdGroup3d && crowdGroup3d.visible) {
+      crowdGroup3d.children.forEach((npc, idx) => animateAvatarParts(npc, t, idx * 0.4));
+    }
+    // 콘서트 조명 회전 연출
+    if (spotLight1 && spotLight2) {
+      spotLight1.position.x = Math.sin(t * 3) * 4;
+      spotLight2.position.x = Math.cos(t * 3) * 4;
+    }
+    renderer3d.render(scene3d, camera3d);
+  }
+
+  // 📸 내 셀카 사진을 3D 입체 헤드에 즉시 매핑
+  function applySelfieTo3D(event) {
+    const file = event.target.files[0];
+    if (!file || !mainAvatar3d) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const texLoader = new THREE.TextureLoader();
+      texLoader.load(e.target.result, function(texture) {
+        mainAvatar3d.userData.head.material.map = texture;
+        mainAvatar3d.userData.head.material.color.setHex(0xffffff);
+        mainAvatar3d.userData.head.material.needsUpdate = true;
+      });
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function change3DHanbokColor(hexStr) {
+    if (!mainAvatar3d) return;
+    mainAvatar3d.userData.torso.material.color.set(hexStr);
+    mainAvatar3d.userData.leftArm.material.color.set(hexStr);
+    mainAvatar3d.userData.rightArm.material.color.set(hexStr);
+  }
+
+  function set3DAnimMode(mode) {
+    animMode3d = mode;
+  }
+
+  function toggleCrowd3D() {
+    if (!crowdGroup3d) return;
+    crowdGroup3d.visible = !crowdGroup3d.visible;
+  }
+</script>
   </body>
 </html>
