@@ -4372,6 +4372,78 @@ window.change3DHanbokColor = function(hexStr) {
 };
 
 setInterval(upgradeCleanHanbokFit, 400);
+    // ✨ [한복 슬림 어깨 & 무릎 뚫림 완전 차단 패치]
+function perfectHanbokSilhouette() {
+  if (!glbModel || !glbHanbokOutfit) return;
+  if (glbHanbokOutfit.userData.isSilhouetteFixed) return;
+  glbHanbokOutfit.userData.isSilhouetteFixed = true;
+
+  // 기존 도포 파츠 비우기
+  while (glbHanbokOutfit.children.length > 0) {
+    glbHanbokOutfit.remove(glbHanbokOutfit.children[0]);
+  }
+
+  const coatMat = new THREE.MeshStandardMaterial({
+    color: currentHanbokColor,
+    roughness: 0.4,
+    metalness: 0.1
+  });
+
+  // 1. 상의: 뭉툭한 원통 느낌을 없애고 어깨선이 자연스럽게 떨어지도록 슬림하게 조정
+  const upperCoat = new THREE.Mesh(new THREE.CylinderGeometry(0.19, 0.23, 0.50, 32), coatMat);
+  upperCoat.scale.set(1.15, 1, 0.88);
+  upperCoat.position.set(0, 0.06, 0.02);
+  glbHanbokOutfit.add(upperCoat);
+
+  // 2. 하의 도포 자락: 앞뒤 폭(Z축 1.35배)을 풍성하게 넓히고 살짝 앞으로 배치해 무릎 돌출 100% 차단!
+  const lowerSkirt = new THREE.Mesh(new THREE.CylinderGeometry(0.23, 0.56, 1.08, 32), coatMat);
+  lowerSkirt.scale.set(1.12, 1, 1.35);
+  lowerSkirt.position.set(0, -0.68, 0.06);
+  glbHanbokOutfit.add(lowerSkirt);
+
+  // 3. 목 부분 하얀 동정 깃
+  const collarMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.3 });
+  const collar = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.17, 0.12, 24), collarMat);
+  collar.position.set(0, 0.31, 0.02);
+  glbHanbokOutfit.add(collar);
+
+  // 4. 가슴 정면 황금 용문양 흉배 (선명하게 빛나도록 자체 발광 효과 추가)
+  const badgeMat = new THREE.MeshBasicMaterial({ color: 0xfde047 });
+  const frontBadge = new THREE.Mesh(new THREE.CircleGeometry(0.11, 32), badgeMat);
+  frontBadge.position.set(0, 0.12, 0.24);
+  glbHanbokOutfit.add(frontBadge);
+
+  // 5. 왕의 붉은 각대(허리띠)
+  const beltMat = new THREE.MeshStandardMaterial({ color: 0xdc2626, roughness: 0.3 });
+  const belt = new THREE.Mesh(new THREE.CylinderGeometry(0.235, 0.235, 0.065, 32), beltMat);
+  belt.scale.set(1.16, 1, 0.95);
+  belt.position.set(0, -0.14, 0.03);
+  glbHanbokOutfit.add(belt);
+
+  // 6. 혹시라도 관절 색상이 튀지 않게 관절(joint)까지 전부 한복 도포 색상으로 통일!
+  glbModel.traverse(child => {
+    if (child.isMesh) {
+      child.material.color.set(currentHanbokColor);
+    }
+  });
+
+  glbHanbokOutfit.userData.coatMeshes = [upperCoat, lowerSkirt];
+}
+
+// 옷 색상 변경 버튼을 누를 때 관절까지 모두 한복 색으로 깔끔하게 통일
+window.change3DHanbokColor = function(hexStr) {
+  currentHanbokColor = hexStr;
+  if (glbHanbokOutfit && glbHanbokOutfit.userData.coatMeshes) {
+    glbHanbokOutfit.userData.coatMeshes.forEach(m => m.material.color.set(hexStr));
+  }
+  if (glbModel) {
+    glbModel.traverse(child => {
+      if (child.isMesh) child.material.color.set(hexStr);
+    });
+  }
+};
+
+setInterval(perfectHanbokSilhouette, 400);
 </script>
   </body>
 </html>
