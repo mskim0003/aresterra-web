@@ -3338,49 +3338,53 @@ window.copyInviteText = function() {
       }, 800);
     }
   });
-        // 🛠️ [긴급 복구 패치] 아바타 숨기기 스위치가 3D 광장 화면을 숨기지 못하도록 강제 복구!
-  function fix3DPlazaDisplay() {
-    const wrap = document.getElementById('avatar3d-canvas-wrap');
+// 🛠️ [완전 해결 패치] 아바타 숨기기 스위치가 절대 건드리지 못하게 이름 변경 & 강제 펼침!
+  function forceShow3DStage() {
+    const wrap = document.getElementById('avatar3d-canvas-wrap') || document.getElementById('plaza-3d-stage');
     if (wrap) {
+      wrap.id = 'plaza-3d-stage'; // 'avatar' 글자를 없애서 숨기기 스위치 표적에서 완전히 제외!
       wrap.style.setProperty('display', 'block', 'important');
       wrap.style.setProperty('height', '460px', 'important');
+      wrap.style.setProperty('width', '100%', 'important');
     }
   }
 
-  // 기존 열기 함수에 화면 강제 복구 및 리사이즈 연결
+  // 0.3초 뒤 실행되는 숨기기 타이머까지 완벽히 이기도록 반복 보호
+  setInterval(forceShow3DStage, 300);
+
   window.open3DAvatarStudio = function() {
+    forceShow3DStage();
     const modal = document.getElementById('avatar3d-modal');
     if (modal) modal.style.setProperty('display', 'flex', 'important');
-    fix3DPlazaDisplay();
 
-    if (!is3dInitialized) {
+    const wrap = document.getElementById('plaza-3d-stage');
+    if (!is3dInitialized && wrap) {
+      // Three.js가 바뀐 아이디에서도 캔버스를 찾도록 연결
+      wrap.id = 'avatar3d-canvas-wrap';
       init3DAvatarScene();
+      wrap.id = 'plaza-3d-stage';
       is3dInitialized = true;
-    } else if (renderer3d && camera3d) {
-      const wrap = document.getElementById('avatar3d-canvas-wrap');
-      camera3d.aspect = wrap.clientWidth / 460;
-      camera3d.updateProjectionMatrix();
-      renderer3d.setSize(wrap.clientWidth, 460);
     }
-  };
-
-  // 아바타 숨기기 버튼을 눌러도 3D 광장 창은 절대 사라지지 않게 보호
-  const origToggle = window.toggleAvatars;
-  window.toggleAvatars = function(forceState) {
-    if (typeof origToggle === 'function') origToggle(forceState);
-    fix3DPlazaDisplay();
+    if (renderer3d && camera3d && wrap) {
+      setTimeout(() => {
+        const w = wrap.clientWidth || 860;
+        camera3d.aspect = w / 460;
+        camera3d.updateProjectionMatrix();
+        renderer3d.setSize(w, 460);
+      }, 50);
+    }
   };
 
   // 📸 셀카 올리면 즉시 아바타 머리 위치에 황금 원형 액자로 선명하게 표시
   window.applySelfieTo3D = function(event) {
     const file = event.target.files && event.target.files[0];
     if (!file) return;
-    fix3DPlazaDisplay();
+    forceShow3DStage();
 
     const reader = new FileReader();
     reader.onload = function(e) {
       const imgData = e.target.result;
-      const wrap = document.getElementById('avatar3d-canvas-wrap');
+      const wrap = document.getElementById('plaza-3d-stage') || document.getElementById('avatar3d-canvas-wrap');
       if (wrap) {
         let badge = document.getElementById('selfie-html-badge');
         if (!badge) {
