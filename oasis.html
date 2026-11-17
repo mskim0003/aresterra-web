@@ -3338,6 +3338,67 @@ window.copyInviteText = function() {
       }, 800);
     }
   });
+        // 🛠️ [긴급 복구 패치] 아바타 숨기기 스위치가 3D 광장 화면을 숨기지 못하도록 강제 복구!
+  function fix3DPlazaDisplay() {
+    const wrap = document.getElementById('avatar3d-canvas-wrap');
+    if (wrap) {
+      wrap.style.setProperty('display', 'block', 'important');
+      wrap.style.setProperty('height', '460px', 'important');
+    }
+  }
+
+  // 기존 열기 함수에 화면 강제 복구 및 리사이즈 연결
+  window.open3DAvatarStudio = function() {
+    const modal = document.getElementById('avatar3d-modal');
+    if (modal) modal.style.setProperty('display', 'flex', 'important');
+    fix3DPlazaDisplay();
+
+    if (!is3dInitialized) {
+      init3DAvatarScene();
+      is3dInitialized = true;
+    } else if (renderer3d && camera3d) {
+      const wrap = document.getElementById('avatar3d-canvas-wrap');
+      camera3d.aspect = wrap.clientWidth / 460;
+      camera3d.updateProjectionMatrix();
+      renderer3d.setSize(wrap.clientWidth, 460);
+    }
+  };
+
+  // 아바타 숨기기 버튼을 눌러도 3D 광장 창은 절대 사라지지 않게 보호
+  const origToggle = window.toggleAvatars;
+  window.toggleAvatars = function(forceState) {
+    if (typeof origToggle === 'function') origToggle(forceState);
+    fix3DPlazaDisplay();
+  };
+
+  // 📸 셀카 올리면 즉시 아바타 머리 위치에 황금 원형 액자로 선명하게 표시
+  window.applySelfieTo3D = function(event) {
+    const file = event.target.files && event.target.files[0];
+    if (!file) return;
+    fix3DPlazaDisplay();
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const imgData = e.target.result;
+      const wrap = document.getElementById('avatar3d-canvas-wrap');
+      if (wrap) {
+        let badge = document.getElementById('selfie-html-badge');
+        if (!badge) {
+          badge = document.createElement('img');
+          badge.id = 'selfie-html-badge';
+          badge.style.cssText = 'position: absolute; top: 24%; left: 50%; transform: translate(-50%, -50%); width: 92px; height: 92px; border-radius: 50%; object-fit: cover; border: 3px solid #fde047; box-shadow: 0 0 20px rgba(253,224,71,0.95); z-index: 50; pointer-events: none;';
+          wrap.appendChild(badge);
+        }
+        badge.src = imgData;
+      }
+      if (typeof mainAvatar3d !== 'undefined' && mainAvatar3d && mainAvatar3d.userData) {
+        mainAvatar3d.userData.head.visible = false;
+        mainAvatar3d.userData.torso.scale.set(0.82, 1.05, 0.65);
+      }
+      localStorage.setItem('mars_selfie_3d', imgData);
+    };
+    reader.readAsDataURL(file);
+  };
 </script>
   </body>
 </html>
