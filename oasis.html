@@ -3492,6 +3492,111 @@ window.copyInviteText = function() {
     };
     reader.readAsDataURL(file);
   };
+        // 🎮 [강제 고정 패치] 옛날 원기둥 몸통과 동그란 스티커를 완전히 없애고 로블록스 6관절 블록으로 즉시 교체!
+  function forceRobloxBody() {
+    // 1. 화면에 따로 떠 있는 동그란 사진 스티커(selfie-html-badge) 즉시 삭제
+    const oldBadge = document.getElementById('selfie-html-badge');
+    if (oldBadge) oldBadge.remove();
+
+    // 2. 아직 원기둥 몸통이면 즉시 로블록스 각진 블록 체형으로 교체
+    if (typeof scene3d !== 'undefined' && scene3d && typeof mainAvatar3d !== 'undefined' && mainAvatar3d) {
+      if (!mainAvatar3d.userData.isRoblox) {
+        scene3d.remove(mainAvatar3d);
+
+        const group = new THREE.Group();
+        const skinMat = new THREE.MeshStandardMaterial({ color: 0xffdcb1, roughness: 0.5 });
+        const headMats = [skinMat, skinMat, skinMat, skinMat, skinMat.clone(), skinMat];
+        
+        // 로블록스 네모 머리
+        const head = new THREE.Mesh(new THREE.BoxGeometry(0.82, 0.82, 0.82), headMats);
+        head.position.y = 2.35;
+        group.add(head);
+
+        // 전통 갓
+        const hatBrim = new THREE.Mesh(new THREE.CylinderGeometry(0.78, 0.78, 0.05, 32), new THREE.MeshStandardMaterial({ color: 0x111111 }));
+        hatBrim.position.y = 2.8;
+        group.add(hatBrim);
+        const hatTop = new THREE.Mesh(new THREE.CylinderGeometry(0.34, 0.36, 0.4, 32), new THREE.MeshStandardMaterial({ color: 0x111111 }));
+        hatTop.position.y = 3.0;
+        group.add(hatTop);
+
+        // 로블록스 직사각형 한복 몸통 & 황금 흉배
+        const torsoMat = new THREE.MeshStandardMaterial({ color: 0xeab308, roughness: 0.4 });
+        const torso = new THREE.Mesh(new THREE.BoxGeometry(1.08, 1.25, 0.54), torsoMat);
+        torso.position.y = 1.32;
+        group.add(torso);
+
+        const badge = new THREE.Mesh(new THREE.CircleGeometry(0.24, 24), new THREE.MeshStandardMaterial({ color: 0xfde047, metalness: 0.5 }));
+        badge.position.set(0, 1.42, 0.28);
+        group.add(badge);
+
+        // 로블록스 각진 양팔
+        const armGeo = new THREE.BoxGeometry(0.38, 1.1, 0.4);
+        armGeo.translate(0, -0.45, 0);
+        const leftArm = new THREE.Mesh(armGeo, torsoMat);
+        leftArm.position.set(-0.76, 1.85, 0);
+        group.add(leftArm);
+
+        const rightArm = new THREE.Mesh(armGeo, torsoMat);
+        rightArm.position.set(0.76, 1.85, 0);
+        group.add(rightArm);
+
+        // 로블록스 각진 양다리
+        const legGeo = new THREE.BoxGeometry(0.48, 1.0, 0.5);
+        legGeo.translate(0, -0.45, 0);
+        const legMat = new THREE.MeshStandardMaterial({ color: 0xf8fafc });
+        const leftLeg = new THREE.Mesh(legGeo, legMat);
+        leftLeg.position.set(-0.27, 0.7, 0);
+        group.add(leftLeg);
+
+        const rightLeg = new THREE.Mesh(legGeo, legMat);
+        rightLeg.position.set(0.27, 0.7, 0);
+        group.add(rightLeg);
+
+        group.userData = { head, torso, leftArm, rightArm, leftLeg, rightLeg, isRoblox: true };
+        mainAvatar3d = group;
+        scene3d.add(mainAvatar3d);
+
+        // 저장된 오빠 셀카를 로블록스 네모 머리 앞면에 꽉 차게 인쇄
+        const saved = localStorage.getItem('mars_selfie_3d');
+        if (saved) paintFaceOnRobloxBox(saved);
+      }
+    }
+  }
+
+  function paintFaceOnRobloxBox(imgData) {
+    if (!mainAvatar3d || !mainAvatar3d.userData.isRoblox) return;
+    const img = new Image();
+    img.onload = function() {
+      const c = document.createElement('canvas');
+      c.width = 512; c.height = 512;
+      const ctx = c.getContext('2d');
+      ctx.fillStyle = '#ffdcb1';
+      ctx.fillRect(0, 0, 512, 512);
+      const min = Math.min(img.width, img.height);
+      ctx.drawImage(img, (img.width - min) / 2, (img.height - min) / 2, min, min, 16, 16, 480, 480);
+
+      const tex = new THREE.CanvasTexture(c);
+      mainAvatar3d.userData.head.material[4] = new THREE.MeshBasicMaterial({ map: tex });
+      mainAvatar3d.userData.head.material.needsUpdate = true;
+    };
+    img.src = imgData;
+  }
+
+  // 0.4초마다 체크해서 옛날 원기둥이나 동그란 스티커가 절대 못 나오게 강제 고정!
+  setInterval(forceRobloxBody, 400);
+
+  window.applySelfieTo3D = function(event) {
+    const file = event.target.files && event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      localStorage.setItem('mars_selfie_3d', e.target.result);
+      forceRobloxBody();
+      paintFaceOnRobloxBox(e.target.result);
+    };
+    reader.readAsDataURL(file);
+  };
 </script>
   </body>
 </html>
