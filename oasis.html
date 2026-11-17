@@ -3375,249 +3375,38 @@ window.copyInviteText = function() {
     }
   };
 
-  // 🎮 [로블록스 스타일 패치] 둥근 원기둥을 로블록스 6관절 블록 체형으로 바꾸고 얼굴을 머리 앞면에 일체화!
-  window.createHumanoid3D = function(coatColor, isMain) {
-    const group = new THREE.Group();
-
-    // 1. 로블록스 스타일 각진 입체 머리 (정면에만 셀카가 딱 붙는 구조)
-    const skinMat = new THREE.MeshStandardMaterial({ color: 0xffdcb1, roughness: 0.5 });
-    const headMats = [skinMat, skinMat, skinMat, skinMat, skinMat.clone(), skinMat];
-    const head = new THREE.Mesh(new THREE.BoxGeometry(0.78, 0.78, 0.78), headMats);
-    head.position.y = 2.35;
-    group.add(head);
-
-    // 전통 갓 (로블록스 머리 위에 배치)
-    const hatBrim = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.75, 0.75, 0.05, 32),
-      new THREE.MeshStandardMaterial({ color: 0x111111, transparent: true, opacity: 0.9 })
-    );
-    hatBrim.position.y = 2.78;
-    group.add(hatBrim);
-
-    const hatTop = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.32, 0.35, 0.38, 32),
-      new THREE.MeshStandardMaterial({ color: 0x111111 })
-    );
-    hatTop.position.y = 2.98;
-    group.add(hatTop);
-
-    // 2. 로블록스 스타일 직사각형 몸통 (한복 곤룡포/도포 블록)
-    const torsoMat = new THREE.MeshStandardMaterial({ color: coatColor, roughness: 0.4 });
-    const torso = new THREE.Mesh(new THREE.BoxGeometry(1.05, 1.25, 0.52), torsoMat);
-    torso.position.y = 1.32;
-    group.add(torso);
-
-    // 가슴 정면 황금 용문양 흉배
-    const badge = new THREE.Mesh(
-      new THREE.CircleGeometry(0.24, 24),
-      new THREE.MeshStandardMaterial({ color: 0xfde047, metalness: 0.7, roughness: 0.2 })
-    );
-    badge.position.set(0, 1.42, 0.27);
-    group.add(badge);
-
-    // 3. 로블록스 스타일 각진 양팔 (어깨 관절 회전)
-    const armGeo = new THREE.BoxGeometry(0.36, 1.1, 0.38);
-    armGeo.translate(0, -0.45, 0);
-    const leftArm = new THREE.Mesh(armGeo, torsoMat);
-    leftArm.position.set(-0.74, 1.85, 0);
-    group.add(leftArm);
-
-    const rightArm = new THREE.Mesh(armGeo, torsoMat);
-    rightArm.position.set(0.74, 1.85, 0);
-    group.add(rightArm);
-
-    // 4. 로블록스 스타일 각진 양다리 (골반 관절 회전)
-    const legGeo = new THREE.BoxGeometry(0.46, 1.0, 0.48);
-    legGeo.translate(0, -0.45, 0);
-    const legMat = new THREE.MeshStandardMaterial({ color: 0x1e293b });
-    const leftLeg = new THREE.Mesh(legGeo, legMat);
-    leftLeg.position.set(-0.26, 0.7, 0);
-    group.add(leftLeg);
-
-    const rightLeg = new THREE.Mesh(legGeo, legMat);
-    rightLeg.position.set(0.26, 0.7, 0);
-    group.add(rightLeg);
-
-    group.userData = { head, torso, leftArm, rightArm, leftLeg, rightLeg };
-    return group;
-  };
-
-  function rebuildToRobloxAvatar() {
-    if (!scene3d) return;
-    if (mainAvatar3d) scene3d.remove(mainAvatar3d);
-    mainAvatar3d = window.createHumanoid3D(0xeab308, true);
-    scene3d.add(mainAvatar3d);
-
-    const oldBadge = document.getElementById('selfie-html-badge');
-    if (oldBadge) oldBadge.remove();
-
-    const saved = localStorage.getItem('mars_selfie_3d');
-    if (saved) applyTextureToRobloxHead(saved);
-  }
-
-  function applyTextureToRobloxHead(imgData) {
-    if (!mainAvatar3d) return;
-    const img = new Image();
-    img.onload = function() {
-      const c = document.createElement('canvas');
-      c.width = 512; c.height = 512;
-      const ctx = c.getContext('2d');
-      ctx.fillStyle = '#ffdcb1';
-      ctx.fillRect(0, 0, 512, 512);
-
-      const min = Math.min(img.width, img.height);
-      ctx.drawImage(img, (img.width - min) / 2, (img.height - min) / 2, min, min, 24, 24, 464, 464);
-
-      const tex = new THREE.CanvasTexture(c);
-      const frontMat = new THREE.MeshBasicMaterial({ map: tex });
-      mainAvatar3d.userData.head.material[4] = frontMat;
-      mainAvatar3d.userData.head.material.needsUpdate = true;
-    };
-    img.src = imgData;
-  }
-
-  const prevOpenStudio = window.open3DAvatarStudio;
-  window.open3DAvatarStudio = function() {
-    if (typeof prevOpenStudio === 'function') prevOpenStudio();
-    setTimeout(rebuildToRobloxAvatar, 100);
-  };
-
-  window.applySelfieTo3D = function(event) {
-    const file = event.target.files && event.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = function(e) {
-      localStorage.setItem('mars_selfie_3d', e.target.result);
-      applyTextureToRobloxHead(e.target.result);
-    };
-    reader.readAsDataURL(file);
-  };
-        // 🎮 [강제 고정 패치] 옛날 원기둥 몸통과 동그란 스티커를 완전히 없애고 로블록스 6관절 블록으로 즉시 교체!
-  function forceRobloxBody() {
-    // 1. 화면에 따로 떠 있는 동그란 사진 스티커(selfie-html-badge) 즉시 삭제
-    const oldBadge = document.getElementById('selfie-html-badge');
-    if (oldBadge) oldBadge.remove();
-
-    // 2. 아직 원기둥 몸통이면 즉시 로블록스 각진 블록 체형으로 교체
-    if (typeof scene3d !== 'undefined' && scene3d && typeof mainAvatar3d !== 'undefined' && mainAvatar3d) {
-      if (!mainAvatar3d.userData.isRoblox) {
-        scene3d.remove(mainAvatar3d);
-
-        const group = new THREE.Group();
-        const skinMat = new THREE.MeshStandardMaterial({ color: 0xffdcb1, roughness: 0.5 });
-        const headMats = [skinMat, skinMat, skinMat, skinMat, skinMat.clone(), skinMat];
-        
-        // 로블록스 네모 머리
-        const head = new THREE.Mesh(new THREE.BoxGeometry(0.82, 0.82, 0.82), headMats);
-        head.position.y = 2.35;
-        group.add(head);
-
-        // 전통 갓
-        const hatBrim = new THREE.Mesh(new THREE.CylinderGeometry(0.78, 0.78, 0.05, 32), new THREE.MeshStandardMaterial({ color: 0x111111 }));
-        hatBrim.position.y = 2.8;
-        group.add(hatBrim);
-        const hatTop = new THREE.Mesh(new THREE.CylinderGeometry(0.34, 0.36, 0.4, 32), new THREE.MeshStandardMaterial({ color: 0x111111 }));
-        hatTop.position.y = 3.0;
-        group.add(hatTop);
-
-        // 로블록스 직사각형 한복 몸통 & 황금 흉배
-        const torsoMat = new THREE.MeshStandardMaterial({ color: 0xeab308, roughness: 0.4 });
-        const torso = new THREE.Mesh(new THREE.BoxGeometry(1.08, 1.25, 0.54), torsoMat);
-        torso.position.y = 1.32;
-        group.add(torso);
-
-        const badge = new THREE.Mesh(new THREE.CircleGeometry(0.24, 24), new THREE.MeshStandardMaterial({ color: 0xfde047, metalness: 0.5 }));
-        badge.position.set(0, 1.42, 0.28);
-        group.add(badge);
-
-        // 로블록스 각진 양팔
-        const armGeo = new THREE.BoxGeometry(0.38, 1.1, 0.4);
-        armGeo.translate(0, -0.45, 0);
-        const leftArm = new THREE.Mesh(armGeo, torsoMat);
-        leftArm.position.set(-0.76, 1.85, 0);
-        group.add(leftArm);
-
-        const rightArm = new THREE.Mesh(armGeo, torsoMat);
-        rightArm.position.set(0.76, 1.85, 0);
-        group.add(rightArm);
-
-        // 로블록스 각진 양다리
-        const legGeo = new THREE.BoxGeometry(0.48, 1.0, 0.5);
-        legGeo.translate(0, -0.45, 0);
-        const legMat = new THREE.MeshStandardMaterial({ color: 0xf8fafc });
-        const leftLeg = new THREE.Mesh(legGeo, legMat);
-        leftLeg.position.set(-0.27, 0.7, 0);
-        group.add(leftLeg);
-
-        const rightLeg = new THREE.Mesh(legGeo, legMat);
-        rightLeg.position.set(0.27, 0.7, 0);
-        group.add(rightLeg);
-
-        group.userData = { head, torso, leftArm, rightArm, leftLeg, rightLeg, isRoblox: true };
-        mainAvatar3d = group;
-        scene3d.add(mainAvatar3d);
-
-        // 저장된 오빠 셀카를 로블록스 네모 머리 앞면에 꽉 차게 인쇄
-        const saved = localStorage.getItem('mars_selfie_3d');
-        if (saved) paintFaceOnRobloxBox(saved);
-      }
-    }
-  }
-
-  function paintFaceOnRobloxBox(imgData) {
-    if (!mainAvatar3d || !mainAvatar3d.userData.isRoblox) return;
-    const img = new Image();
-    img.onload = function() {
-      const c = document.createElement('canvas');
-      c.width = 512; c.height = 512;
-      const ctx = c.getContext('2d');
-      ctx.fillStyle = '#ffdcb1';
-      ctx.fillRect(0, 0, 512, 512);
-      const min = Math.min(img.width, img.height);
-      ctx.drawImage(img, (img.width - min) / 2, (img.height - min) / 2, min, min, 16, 16, 480, 480);
-
-      const tex = new THREE.CanvasTexture(c);
-      mainAvatar3d.userData.head.material[4] = new THREE.MeshBasicMaterial({ map: tex });
-      mainAvatar3d.userData.head.material.needsUpdate = true;
-    };
-    img.src = imgData;
-  }
-
-  // 0.4초마다 체크해서 옛날 원기둥이나 동그란 스티커가 절대 못 나오게 강제 고정!
-  setInterval(forceRobloxBody, 400);
-
-  window.applySelfieTo3D = function(event) {
-    const file = event.target.files && event.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = function(e) {
-      localStorage.setItem('mars_selfie_3d', e.target.result);
-      forceRobloxBody();
-      paintFaceOnRobloxBox(e.target.result);
-    };
-    reader.readAsDataURL(file);
-  };
 </script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
 <script>
-  // 1. 기존 네모 상자 로봇을 계속 만들던 타이머 완전 중지!
-  window.forceRobloxBody = function() {};
-  window.rebuildToRobloxAvatar = function() {};
-
-  // 2. 진짜 8등신 3D 인간형 모델(.glb) 소환 엔진
+// ✨ [올인원 클린 3D 한복 아바타 엔진] 중복 없이 하나로 통합된 최종 코드!
+(function() {
+  let glbModel = null;
   let glbMixer = null;
   let glbActions = {};
-  let glbModel = null;
   let glbHeadBone = null;
-  let glbLoaded = false;
+  let glbSpineBone = null;
+  let glbRightArm = null;
+  let glbRightForeArm = null;
+  let glbLeftArm = null;
 
-  function loadRealGLBAvatar() {
-    if (glbLoaded || typeof scene3d === 'undefined' || !scene3d) return;
-    glbLoaded = true;
+  let hanbokGroup = null;
+  let hatGroup = null;
+  let faceMesh = null;
+  let friendsGroup = null;
 
-    // 기존 네모 상자 로봇 영구 숨김
-    if (typeof mainAvatar3d !== 'undefined' && mainAvatar3d) {
-      mainAvatar3d.visible = false;
+  let currentCoatColor = '#eab308';
+  let currentMode = 'walk';
+  let isLoaded = false;
+
+  // 1. 주인공 8등신 .glb 모델 및 3D 한복/갓 초기화
+  function initCleanAvatar() {
+    if (isLoaded || typeof scene3d === 'undefined' || !scene3d) return;
+    isLoaded = true;
+
+    // 기존 기본 원기둥/상자 캐릭터 숨기기
+    if (typeof mainAvatar3d !== 'undefined' && mainAvatar3d) mainAvatar3d.visible = false;
+    if (typeof crowdAvatars3d !== 'undefined' && Array.isArray(crowdAvatars3d)) {
+      crowdAvatars3d.forEach(c => { if (c) c.visible = false; });
     }
 
     const loader = new THREE.GLTFLoader();
@@ -3626,1279 +3415,287 @@ window.copyInviteText = function() {
       glbModel.scale.set(1.55, 1.55, 1.55);
       glbModel.position.set(0, 0, 0);
 
-      glbModel.traverse(function(child) {
-        if (child.isMesh) {
-          child.material = child.material.clone();
-          child.material.color.set('#eab308');
-          child.material.metalness = 0.35;
-          child.material.roughness = 0.35;
+      glbModel.traverse(c => {
+        if (c.isMesh) {
+          c.material = c.material.clone();
+          c.material.color.set(currentCoatColor);
+          c.material.roughness = 0.4;
         }
-        if (child.isBone && (child.name.includes('Head') || child.name.includes('head'))) {
-          glbHeadBone = child;
+        if (c.isBone) {
+          const n = c.name.toLowerCase();
+          if (c.name === 'mixamorigHead' || c.name === 'Head') glbHeadBone = c;
+          if (c.name === 'mixamorigSpine1' || c.name === 'Spine') glbSpineBone = c;
+          if (n.includes('rightarm') && !n.includes('fore') && !n.includes('hand')) glbRightArm = c;
+          if (n.includes('rightforearm')) glbRightForeArm = c;
+          if (n.includes('leftarm') && !n.includes('fore') && !n.includes('hand')) glbLeftArm = c;
         }
       });
 
-      // 머리 뼈대에 전통 갓 장착
-      if (glbHeadBone) {
-        const hat = new THREE.Mesh(
-          new THREE.CylinderGeometry(0.32, 0.32, 0.02, 32),
-          new THREE.MeshStandardMaterial({ color: 0x111111, transparent: true, opacity: 0.9 })
-        );
-        hat.position.set(0, 0.22, 0);
-        glbHeadBone.add(hat);
-
-        const hatTop = new THREE.Mesh(
-          new THREE.CylinderGeometry(0.14, 0.15, 0.18, 32),
-          new THREE.MeshStandardMaterial({ color: 0x111111 })
-        );
-        hatTop.position.set(0, 0.31, 0);
-        glbHeadBone.add(hatTop);
-      }
-
       scene3d.add(glbModel);
+      buildHanbokAndHat();
 
+      // 모션 애니메이션 설정
       glbMixer = new THREE.AnimationMixer(glbModel);
       gltf.animations.forEach(clip => {
         glbActions[clip.name.toLowerCase()] = glbMixer.clipAction(clip);
       });
-      playGLBAnim('walk');
+      setCleanAnimMode('walk');
 
-      const saved = localStorage.getItem('mars_selfie_3d');
-      if (saved) attachSelfieToGLB(saved);
+      // 저장된 내 셀카 불러오기
+      const savedSelfie = localStorage.getItem('mars_selfie_3d');
+      if (savedSelfie) updateFaceTexture(savedSelfie);
     });
   }
 
-  function playGLBAnim(mode) {
-    if (!glbMixer) return;
-    Object.values(glbActions).forEach(act => act.stop());
-    if (mode === 'walk' && glbActions['walk']) {
-      glbActions['walk'].play();
-    } else if (mode === 'dance' && (glbActions['run'] || glbActions['agree'])) {
-      (glbActions['run'] || glbActions['agree']).play();
-    } else if (glbActions['idle']) {
-      glbActions['idle'].play();
-    }
+  // 2. 3D 한복 도포와 전통 갓 생성
+  function buildHanbokAndHat() {
+    const coatMat = new THREE.MeshStandardMaterial({ color: currentCoatColor, roughness: 0.4, metalness: 0.1 });
+
+    hanbokGroup = new THREE.Group();
+    const upper = new THREE.Mesh(new THREE.CylinderGeometry(0.19, 0.23, 0.50, 32), coatMat);
+    upper.scale.set(1.15, 1, 0.88);
+    upper.position.set(0, 0.06, 0.02);
+
+    const skirt = new THREE.Mesh(new THREE.CylinderGeometry(0.23, 0.56, 1.08, 32), coatMat);
+    skirt.scale.set(1.12, 1, 1.35);
+    skirt.position.set(0, -0.68, 0.06);
+
+    const collar = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.17, 0.12, 24), new THREE.MeshStandardMaterial({ color: 0xffffff }));
+    collar.position.set(0, 0.31, 0.02);
+
+    const badge = new THREE.Mesh(new THREE.CircleGeometry(0.11, 32), new THREE.MeshBasicMaterial({ color: 0xfde047 }));
+    badge.position.set(0, 0.12, 0.24);
+
+    const belt = new THREE.Mesh(new THREE.CylinderGeometry(0.235, 0.235, 0.065, 32), new THREE.MeshStandardMaterial({ color: 0xdc2626 }));
+    belt.scale.set(1.16, 1, 0.95);
+    belt.position.set(0, -0.14, 0.03);
+
+    hanbokGroup.add(upper, skirt, collar, badge, belt);
+    hanbokGroup.userData.coatMeshes = [upper, skirt];
+    scene3d.add(hanbokGroup);
+
+    hatGroup = new THREE.Group();
+    const brim = new THREE.Mesh(new THREE.CylinderGeometry(0.48, 0.48, 0.03, 32), new THREE.MeshStandardMaterial({ color: 0x111111 }));
+    brim.position.y = 0.22;
+    const topHat = new THREE.Mesh(new THREE.CylinderGeometry(0.20, 0.22, 0.26, 32), new THREE.MeshStandardMaterial({ color: 0x111111 }));
+    topHat.position.y = 0.36;
+    hatGroup.add(brim, topHat);
+    scene3d.add(hatGroup);
   }
 
-  function attachSelfieToGLB(imgData) {
-    if (!glbModel) return;
+  // 3. 내 셀카를 달걀형 3D 입체 얼굴로 적용
+  function updateFaceTexture(imgData) {
+    if (!scene3d) return;
     const img = new Image();
     img.onload = function() {
       const c = document.createElement('canvas');
       c.width = 512; c.height = 512;
       const ctx = c.getContext('2d');
+      ctx.clearRect(0, 0, 512, 512);
 
       ctx.save();
       ctx.beginPath();
-      ctx.arc(256, 256, 240, 0, Math.PI * 2);
+      ctx.ellipse(256, 256, 235, 250, 0, 0, Math.PI * 2);
       ctx.clip();
       const min = Math.min(img.width, img.height);
-      ctx.drawImage(img, (img.width - min) / 2, (img.height - min) / 2, min, min, 0, 0, 512, 512);
+      const crop = min * 0.82;
+      ctx.drawImage(img, (img.width - crop) / 2, (img.height - crop) / 2, crop, crop, 0, 0, 512, 512);
       ctx.restore();
 
-      ctx.beginPath();
-      ctx.arc(256, 256, 240, 0, Math.PI * 2);
-      ctx.lineWidth = 18;
-      ctx.strokeStyle = '#fde047';
-      ctx.stroke();
-
       const tex = new THREE.CanvasTexture(c);
-      const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex }));
+      if (faceMesh) scene3d.remove(faceMesh);
 
-      if (glbHeadBone) {
-        if (glbHeadBone.userData.faceSprite) glbHeadBone.remove(glbHeadBone.userData.faceSprite);
-        sprite.scale.set(0.32, 0.32, 1);
-        sprite.position.set(0, 0.08, 0.14);
-        glbHeadBone.add(sprite);
-        glbHeadBone.userData.faceSprite = sprite;
-      }
+      const faceGeo = new THREE.CylinderGeometry(0.22, 0.19, 0.38, 32, 1, true, -Math.PI / 2.5, (Math.PI * 2) / 2.5);
+      const faceMat = new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthTest: false, side: THREE.FrontSide });
+      faceMesh = new THREE.Mesh(faceGeo, faceMat);
+      faceMesh.renderOrder = 999;
+      scene3d.add(faceMesh);
     };
     img.src = imgData;
   }
 
-  window.change3DHanbokColor = function(hexStr) {
-    if (!glbModel) return;
-    glbModel.traverse(child => {
-      if (child.isMesh) child.material.color.set(hexStr);
+  // 4. 모션 전환 (당당히 걷기 / K-팝 콘서트 댄스 / 반갑게 손흔들기)
+  function setCleanAnimMode(mode) {
+    currentMode = mode;
+    window.animMode3d = mode;
+    if (!glbMixer) return;
+
+    Object.values(glbActions).forEach(act => act.stop());
+    if (mode === 'walk' && glbActions['walk']) {
+      glbMixer.timeScale = 1;
+      glbActions['walk'].play();
+    } else if (mode === 'dance' && (glbActions['run'] || glbActions['walk'])) {
+      glbMixer.timeScale = 1;
+      (glbActions['run'] || glbActions['walk']).play();
+    } else if (mode === 'wave') {
+      if (glbActions['idle']) glbActions['idle'].play();
+      glbMixer.update(0.01);
+      glbMixer.timeScale = 0; // 애니메이션이 팔을 내리지 못하게 고정 후 직접 손 흔들기!
+    }
+  }
+
+  // 5. 제이·보라·이웃 4인방 광장 소환 토글
+  function toggleCleanFriends() {
+    if (!scene3d) return;
+    if (typeof crowdAvatars3d !== 'undefined' && Array.isArray(crowdAvatars3d)) {
+      crowdAvatars3d.forEach(b => { if (b) b.visible = false; });
+    }
+    if (friendsGroup) {
+      friendsGroup.visible = !friendsGroup.visible;
+      return;
+    }
+
+    friendsGroup = new THREE.Group();
+    const configs = [
+      { x: -1.4, z: -0.4, color: '#ec4899', rotY: 0.35 },  // 제이 (핑크)
+      { x: 1.4,  z: -0.4, color: '#a855f7', rotY: -0.35 }, // 보라 (보라)
+      { x: -2.4, z: -0.9, color: '#0ea5e9', rotY: 0.45 },  // 선비1 (청색)
+      { x: 2.4,  z: -0.9, color: '#10b981', rotY: -0.45 }  // 선비2 (비취)
+    ];
+
+    configs.forEach((cfg, idx) => {
+      const npc = new THREE.Group();
+      npc.position.set(cfg.x, 0, cfg.z);
+      npc.rotation.y = cfg.rotY;
+
+      const cMat = new THREE.MeshStandardMaterial({ color: cfg.color, roughness: 0.35 });
+      const sMat = new THREE.MeshStandardMaterial({ color: 0xffdcb1, roughness: 0.5 });
+
+      const head = new THREE.Mesh(new THREE.SphereGeometry(0.16, 24, 24), sMat);
+      head.scale.set(1, 1.2, 1);
+      head.position.set(0, 2.05, 0);
+      const brim = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.42, 0.025, 24), new THREE.MeshStandardMaterial({ color: 0x111111 }));
+      brim.position.set(0, 2.24, 0);
+      const topH = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.19, 0.22, 24), new THREE.MeshStandardMaterial({ color: 0x111111 }));
+      topH.position.set(0, 2.36, 0);
+
+      const collar = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.16, 0.1, 20), new THREE.MeshStandardMaterial({ color: 0xffffff }));
+      collar.position.set(0, 1.80, 0);
+      const upper = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.22, 0.48, 24), cMat);
+      upper.scale.set(1.15, 1, 0.88);
+      upper.position.set(0, 1.54, 0);
+      const badge = new THREE.Mesh(new THREE.CircleGeometry(0.1, 24), new THREE.MeshBasicMaterial({ color: 0xfde047 }));
+      badge.position.set(0, 1.60, 0.21);
+      const belt = new THREE.Mesh(new THREE.CylinderGeometry(0.225, 0.225, 0.06, 24), new THREE.MeshStandardMaterial({ color: 0xdc2626 }));
+      belt.scale.set(1.16, 1, 0.92);
+      belt.position.set(0, 1.34, 0);
+      const skirt = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.52, 1.05, 28), cMat);
+      skirt.scale.set(1.1, 1, 1.25);
+      skirt.position.set(0, 0.80, 0);
+
+      const armGeo = new THREE.CylinderGeometry(0.065, 0.055, 0.65, 16);
+      armGeo.translate(0, -0.28, 0);
+      const leftArm = new THREE.Mesh(armGeo, cMat);
+      leftArm.position.set(-0.26, 1.72, 0);
+      leftArm.rotation.z = 0.22;
+      const rightArm = new THREE.Mesh(armGeo, cMat);
+      rightArm.position.set(0.26, 1.72, 0);
+      rightArm.rotation.z = -0.22;
+
+      npc.add(head, brim, topH, collar, upper, badge, belt, skirt, leftArm, rightArm);
+      npc.userData = { leftArm, rightArm, phase: idx * 1.3 };
+      friendsGroup.add(npc);
     });
-  };
 
-  window.set3DAnimMode = function(mode) {
-    animMode3d = mode;
-    playGLBAnim(mode);
-  };
+    scene3d.add(friendsGroup);
+  }
 
+  // 6. 기존 HTML 버튼 함수들과 완벽 연동
   window.applySelfieTo3D = function(event) {
     const file = event.target.files && event.target.files[0];
     if (!file) return;
     const reader = new FileReader();
     reader.onload = function(e) {
       localStorage.setItem('mars_selfie_3d', e.target.result);
-      attachSelfieToGLB(e.target.result);
+      updateFaceTexture(e.target.result);
     };
     reader.readAsDataURL(file);
   };
 
-  const glbClock = new THREE.Clock();
-  function updateGLBLoop() {
-    requestAnimationFrame(updateGLBLoop);
+  window.change3DHanbokColor = function(hexStr) {
+    currentCoatColor = hexStr;
+    if (hanbokGroup && hanbokGroup.userData.coatMeshes) {
+      hanbokGroup.userData.coatMeshes.forEach(m => m.material.color.set(hexStr));
+    }
+    if (glbModel) {
+      glbModel.traverse(c => { if (c.isMesh) c.material.color.set(hexStr); });
+    }
+  };
+
+  window.set3DAnimMode = setCleanAnimMode;
+  window.summon3DCrowd = toggleCleanFriends;
+
+  // 7. 단 하나의 통합 렌더링 루프 (충돌 제로!)
+  const clock = new THREE.Clock();
+  const posV = new THREE.Vector3();
+  const quatQ = new THREE.Quaternion();
+
+  function cleanMasterLoop() {
+    requestAnimationFrame(cleanMasterLoop);
+    const dt = clock.getDelta();
+    const t = clock.getElapsedTime();
+
     if (typeof mainAvatar3d !== 'undefined' && mainAvatar3d) mainAvatar3d.visible = false;
-    if (!glbLoaded && typeof scene3d !== 'undefined' && scene3d) loadRealGLBAvatar();
-    if (glbMixer) glbMixer.update(glbClock.getDelta());
-    if (glbModel && animMode3d === 'dance') {
-      glbModel.rotation.y += 0.03;
+    if (typeof crowdAvatars3d !== 'undefined' && Array.isArray(crowdAvatars3d)) {
+      crowdAvatars3d.forEach(b => { if (b) b.visible = false; });
     }
-  }
-  updateGLBLoop();
-    // 📸 [셀카 & 전통 갓 크기 정상화 패치] 뼈대 축소 현상을 무시하고 머리 위치에 큼직하게 고정!
-  let glbExternalHat = null;
-  let glbExternalFace = null;
+    if (!isLoaded && typeof scene3d !== 'undefined' && scene3d) initCleanAvatar();
 
-  function ensureExternalHeadGear() {
-    if (typeof scene3d === 'undefined' || !scene3d || glbExternalHat) return;
+    if (glbMixer && currentMode !== 'wave') glbMixer.update(dt);
 
-    // 1. 무대(scene3d)에 정상 크기의 전통 갓 생성
-    glbExternalHat = new THREE.Group();
-    const brim = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.48, 0.48, 0.03, 32),
-      new THREE.MeshStandardMaterial({ color: 0x111111, transparent: true, opacity: 0.92 })
-    );
-    brim.position.y = 0.22;
-    glbExternalHat.add(brim);
-
-    const topHat = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.20, 0.22, 0.26, 32),
-      new THREE.MeshStandardMaterial({ color: 0x111111 })
-    );
-    topHat.position.y = 0.36;
-    glbExternalHat.add(topHat);
-    scene3d.add(glbExternalHat);
-
-    // 2. 저장된 셀카가 있으면 즉시 얼굴에 큼직하게 표시
-    const saved = localStorage.getItem('mars_selfie_3d');
-    if (saved) attachSelfieToGLB(saved);
-  }
-
-  // 오빠 셀카를 머리 앞면에 큼직하고 선명하게 띄우는 함수 덮어쓰기
-  window.attachSelfieToGLB = function(imgData) {
-    if (typeof scene3d === 'undefined' || !scene3d) return;
-    const img = new Image();
-    img.onload = function() {
-      const c = document.createElement('canvas');
-      c.width = 512; c.height = 512;
-      const ctx = c.getContext('2d');
-
-      ctx.save();
-      ctx.beginPath();
-      ctx.arc(256, 256, 236, 0, Math.PI * 2);
-      ctx.clip();
-      const min = Math.min(img.width, img.height);
-      ctx.drawImage(img, (img.width - min) / 2, (img.height - min) / 2, min, min, 0, 0, 512, 512);
-      ctx.restore();
-
-      ctx.beginPath();
-      ctx.arc(256, 256, 236, 0, Math.PI * 2);
-      ctx.lineWidth = 22;
-      ctx.strokeStyle = '#fde047';
-      ctx.stroke();
-
-      const tex = new THREE.CanvasTexture(c);
-      if (glbExternalFace) scene3d.remove(glbExternalFace);
-
-      glbExternalFace = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, depthTest: false }));
-      glbExternalFace.scale.set(0.62, 0.62, 1); // 눈에 확 띄는 큼직한 얼굴 크기!
-      glbExternalFace.renderOrder = 999; // 머리에 파묻히지 않고 무조건 맨 앞에 선명하게 표시!
-      scene3d.add(glbExternalFace);
-    };
-    img.src = imgData;
-  };
-
-  // 캐릭터가 걷거나 춤출 때 머리 위치를 0.01초 단위로 실시간 추적해서 얼굴과 갓이 따라다니게 연결
-  const headWorldPos = new THREE.Vector3();
-  function syncHeadGearLoop() {
-    requestAnimationFrame(syncHeadGearLoop);
-    if (glbModel && glbHeadBone) {
-      ensureExternalHeadGear();
-      glbHeadBone.getWorldPosition(headWorldPos);
-
-      if (glbExternalHat) {
-        glbExternalHat.position.copy(headWorldPos);
+    if (glbModel) {
+      if (currentMode === 'dance') {
+        glbModel.rotation.y += 0.03;
+      } else if (currentMode === 'wave') {
+        glbModel.rotation.y = 0;
+        if (glbRightArm) glbRightArm.rotation.set(0.2, 0, -2.35 + Math.sin(t * 12) * 0.45);
+        if (glbRightForeArm) glbRightForeArm.rotation.set(0, 0, -0.3 + Math.sin(t * 12) * 0.35);
+        if (glbLeftArm) glbLeftArm.rotation.set(0, 0, 1.25);
       }
-      if (glbExternalFace) {
-        glbExternalFace.position.set(headWorldPos.x, headWorldPos.y + 0.05, headWorldPos.z + 0.18);
+
+      if (glbSpineBone && hanbokGroup) {
+        glbSpineBone.getWorldPosition(posV);
+        glbSpineBone.getWorldQuaternion(quatQ);
+        hanbokGroup.position.copy(posV);
+        hanbokGroup.quaternion.copy(quatQ);
+      }
+
+      if (glbHeadBone) {
+        glbHeadBone.getWorldPosition(posV);
+        glbHeadBone.getWorldQuaternion(quatQ);
+        if (hatGroup) {
+          hatGroup.position.set(posV.x, posV.y - 0.02, posV.z);
+          hatGroup.quaternion.copy(quatQ);
+        }
+        if (faceMesh) {
+          faceMesh.position.set(posV.x, posV.y + 0.08, posV.z + 0.03);
+          faceMesh.quaternion.copy(quatQ);
+        }
       }
     }
-  }
-  syncHeadGearLoop();
-    // 🎭 [진짜 3D 입체 얼굴 이식 패치] 둥둥 떠다니는 동그란 스티커를 없애고 3D 머리 표면과 완전 일체화!
-  window.attachSelfieToGLB = function(imgData) {
-    if (!glbModel || !glbHeadBone) return;
 
-    // 1. 기존에 따로 떠다니던 동그란 스티커 완전히 제거
-    if (typeof glbExternalFace !== 'undefined' && glbExternalFace) {
-      scene3d.remove(glbExternalFace);
-      glbExternalFace = null;
-    }
-
-    const img = new Image();
-    img.onload = function() {
-      const c = document.createElement('canvas');
-      c.width = 512; c.height = 512;
-      const ctx = c.getContext('2d');
-
-      // 아바타 피부톤 바탕 칠하기
-      ctx.fillStyle = '#ffdcb1';
-      ctx.fillRect(0, 0, 512, 512);
-
-      // 오빠 얼굴 이목구비 부분만 자연스러운 타원형으로 크롭 (인위적인 노란 테두리 제거!)
-      ctx.save();
-      ctx.beginPath();
-      ctx.ellipse(256, 256, 215, 240, 0, 0, Math.PI * 2);
-      ctx.clip();
-
-      const min = Math.min(img.width, img.height);
-      ctx.drawImage(img, (img.width - min) / 2, (img.height - min) / 2, min, min, 0, 0, 512, 512);
-      ctx.restore();
-
-      // 얼굴 가장자리를 피부색으로 부드럽게 그라데이션 블렌딩 (경계선이 티 나지 않게!)
-      const grad = ctx.createRadialGradient(256, 256, 150, 256, 256, 245);
-      grad.addColorStop(0, 'rgba(255, 220, 177, 0)');
-      grad.addColorStop(1, 'rgba(255, 220, 177, 1)');
-      ctx.fillStyle = grad;
-      ctx.fillRect(0, 0, 512, 512);
-
-      const tex = new THREE.CanvasTexture(c);
-
-      // 2. Xbot 머리통의 노란 로봇 투구 재질을 살구색 피부톤으로 변경
-      glbModel.traverse(child => {
-        if (child.isMesh && (child.name.toLowerCase().includes('head') || child.name.toLowerCase().includes('surface'))) {
-          // 몸통은 한복 색상 유지, 머리 쪽 광택 완화
-          child.material.roughness = 0.6;
+    if (friendsGroup && friendsGroup.visible) {
+      friendsGroup.children.forEach(npc => {
+        const p = npc.userData.phase;
+        npc.position.y = Math.abs(Math.sin(t * 4 + p)) * 0.05;
+        if (currentMode === 'wave') {
+          npc.userData.rightArm.rotation.x = 0;
+          npc.userData.rightArm.rotation.z = -2.4 + Math.sin(t * 12 + p) * 0.4;
+        } else if (currentMode === 'dance') {
+          npc.rotation.y += 0.03;
+          npc.userData.rightArm.rotation.z = -1.9 + Math.sin(t * 8 + p) * 0.5;
+          npc.userData.leftArm.rotation.z = 1.9 - Math.sin(t * 8 + p) * 0.5;
+        } else {
+          npc.userData.rightArm.rotation.z = -0.22;
+          npc.userData.leftArm.rotation.z = 0.22;
+          npc.userData.rightArm.rotation.x = Math.sin(t * 5 + p) * 0.45;
+          npc.userData.leftArm.rotation.x = -Math.sin(t * 5 + p) * 0.45;
         }
       });
-
-      // 3. 머리 뼈대(glbHeadBone)에 직접 입체 곡면 얼굴(Curved 3D Face) 심기!
-      // (뼈대가 0.01 스케일이므로 크기를 100배 보정해서 넣으면 머리통 표면에 1mm 오차 없이 딱 밀착됨)
-      if (glbHeadBone.userData.realFaceMesh) {
-        glbHeadBone.remove(glbHeadBone.userData.realFaceMesh);
-      }
-
-      // 평면이 아니라 실제 얼굴 앞면처럼 둥글게 휘어진 원통 곡면(Cylinder Segment) 사용
-      const faceGeo = new THREE.CylinderGeometry(11.5, 10.5, 23, 32, 1, true, -Math.PI / 3.2, (Math.PI * 2) / 3.2);
-      const faceMat = new THREE.MeshBasicMaterial({
-        map: tex,
-        side: THREE.DoubleSide
-      });
-
-      const faceMesh = new THREE.Mesh(faceGeo, faceMat);
-      faceMesh.position.set(0, 9.5, 2.2); // 아바타 얼굴 정면 표면에 딱 맞게 밀착
-      glbHeadBone.add(faceMesh);
-      glbHeadBone.userData.realFaceMesh = faceMesh;
-    };
-    img.src = imgData;
-  };
-
-  // 페이지 로드 후 이미 저장된 셀카가 있으면 즉시 입체 얼굴로 자동 변환
-  setTimeout(() => {
-    const saved = localStorage.getItem('mars_selfie_3d');
-    if (saved && glbHeadBone) window.attachSelfieToGLB(saved);
-  }, 1500);
-    // 🎯 [얼굴 정위치 밀착 패치] 정수리 위로 올라간 얼굴을 노란 머리통 정면 자리에 딱 맞추기!
-  let glbRealFace3D = null;
-
-  window.attachSelfieToGLB = function(imgData) {
-    if (!glbModel || !scene3d) return;
-
-    // 1. 기존에 잘못 올라간 얼굴이나 스티커 모두 깔끔하게 제거
-    if (typeof glbExternalFace !== 'undefined' && glbExternalFace) {
-      scene3d.remove(glbExternalFace);
-      glbExternalFace = null;
-    }
-    if (glbHeadBone && glbHeadBone.userData.realFaceMesh) {
-      glbHeadBone.remove(glbHeadBone.userData.realFaceMesh);
-      glbHeadBone.userData.realFaceMesh = null;
-    }
-    if (glbRealFace3D) {
-      scene3d.remove(glbRealFace3D);
-      glbRealFace3D = null;
-    }
-
-    // 정수리 끝(HeadTop_End)이 아닌 진짜 목/머리 중심 뼈대 다시 정확히 찾기
-    glbModel.traverse(child => {
-      if (child.isBone && (child.name === 'mixamorigHead' || child.name === 'Head')) {
-        glbHeadBone = child;
-      }
-    });
-
-    const img = new Image();
-    img.onload = function() {
-      const c = document.createElement('canvas');
-      c.width = 512; c.height = 512;
-      const ctx = c.getContext('2d');
-
-      ctx.fillStyle = '#ffdcb1';
-      ctx.fillRect(0, 0, 512, 512);
-
-      const min = Math.min(img.width, img.height);
-      ctx.drawImage(img, (img.width - min) / 2, (img.height - min) / 2, min, min, 0, 0, 512, 512);
-
-      // 가장자리 피부톤 그라데이션 블렌딩
-      const grad = ctx.createRadialGradient(256, 256, 175, 256, 256, 250);
-      grad.addColorStop(0, 'rgba(255, 220, 177, 0)');
-      grad.addColorStop(1, 'rgba(255, 220, 177, 1)');
-      ctx.fillStyle = grad;
-      ctx.fillRect(0, 0, 512, 512);
-
-      const tex = new THREE.CanvasTexture(c);
-
-      // 2. 바깥 무대(scene3d)에 노란 머리통 크기(반지름 0.19, 높이 0.34)와 똑같은 3D 입체 곡면 생성!
-      const faceGeo = new THREE.CylinderGeometry(0.19, 0.17, 0.34, 32, 1, true, -Math.PI / 2.6, (Math.PI * 2) / 2.6);
-      const faceMat = new THREE.MeshBasicMaterial({ map: tex, side: THREE.DoubleSide });
-
-      glbRealFace3D = new THREE.Mesh(faceGeo, faceMat);
-      scene3d.add(glbRealFace3D);
-    };
-    img.src = imgData;
-  };
-
-  // 3. 매 프레임 노란 머리통의 위치와 고개 회전 각도를 그대로 따라가며 정면에 밀착!
-  const headQuat = new THREE.Quaternion();
-  function syncRealFace3DLoop() {
-    requestAnimationFrame(syncRealFace3DLoop);
-    if (glbModel && glbHeadBone) {
-      if (glbHeadBone.userData.realFaceMesh) {
-        glbHeadBone.remove(glbHeadBone.userData.realFaceMesh);
-        glbHeadBone.userData.realFaceMesh = null;
-      }
-      glbHeadBone.getWorldPosition(headWorldPos);
-      glbHeadBone.getWorldQuaternion(headQuat);
-
-      // 전통 갓 위치를 머리 바로 위로 밀착
-      if (typeof glbExternalHat !== 'undefined' && glbExternalHat) {
-        glbExternalHat.position.set(headWorldPos.x, headWorldPos.y - 0.02, headWorldPos.z);
-        glbExternalHat.quaternion.copy(headQuat);
-      }
-
-      // 3D 입체 얼굴을 정수리가 아닌 노란 얼굴 정면(y + 0.08, z + 0.03)에 정확히 고정!
-      if (glbRealFace3D) {
-        glbRealFace3D.position.set(headWorldPos.x, headWorldPos.y + 0.08, headWorldPos.z + 0.03);
-        glbRealFace3D.quaternion.copy(headQuat);
-      }
     }
   }
-  syncRealFace3DLoop();
-
-  setTimeout(() => {
-    const saved = localStorage.getItem('mars_selfie_3d');
-    if (saved) window.attachSelfieToGLB(saved);
-  }, 1600);
-    window.attachSelfieToGLB = function(imgData) {
-  if (!glbModel || !scene3d) return;
-
-  glbModel.traverse(child => {
-    if (child.isBone && (child.name === 'mixamorigHead' || child.name === 'Head')) {
-      glbHeadBone = child;
-    }
-    if (child.isBone) {
-      for (let i = child.children.length - 1; i >= 0; i--) {
-        if (child.children[i].isMesh || child.children[i].isSprite) {
-          child.remove(child.children[i]);
-        }
-      }
-    }
-  });
-
-  if (typeof glbRealFace3D !== 'undefined' && glbRealFace3D) {
-    scene3d.remove(glbRealFace3D);
-    glbRealFace3D = null;
-  }
-
-  const img = new Image();
-  img.onload = function() {
-    const c = document.createElement('canvas');
-    c.width = 512; c.height = 512;
-    const ctx = c.getContext('2d');
-    ctx.clearRect(0, 0, 512, 512);
-
-    ctx.save();
-    ctx.beginPath();
-    ctx.ellipse(256, 256, 220, 245, 0, 0, Math.PI * 2);
-    ctx.clip();
-
-    const min = Math.min(img.width, img.height);
-    ctx.drawImage(img, (img.width - min) / 2, (img.height - min) / 2, min, min, 0, 0, 512, 512);
-    ctx.restore();
-
-    const tex = new THREE.CanvasTexture(c);
-    const faceGeo = new THREE.SphereGeometry(0.18, 32, 32, -Math.PI / 2 - 0.65, 1.3, Math.PI / 2 - 0.65, 1.3);
-    const faceMat = new THREE.MeshBasicMaterial({
-      map: tex,
-      transparent: true,
-      side: THREE.DoubleSide
-    });
-
-    glbRealFace3D = new THREE.Mesh(faceGeo, faceMat);
-    glbRealFace3D.scale.set(1, 1.22, 1);
-    scene3d.add(glbRealFace3D);
-  };
-  img.src = imgData;
-};
-
-setTimeout(() => {
-  const saved = localStorage.getItem('mars_selfie_3d');
-  if (saved) window.attachSelfieToGLB(saved);
-}, 1700);
-    window.paintOvalFaceNow = function(imgData) {
-  if (typeof scene3d === 'undefined' || !scene3d || typeof glbModel === 'undefined' || !glbModel) return;
-
-  if (typeof glbExternalFace !== 'undefined' && glbExternalFace) {
-    scene3d.remove(glbExternalFace);
-    glbExternalFace = null;
-  }
-  if (typeof glbRealFace3D !== 'undefined' && glbRealFace3D) {
-    scene3d.remove(glbRealFace3D);
-    glbRealFace3D = null;
-  }
-
-  glbModel.traverse(child => {
-    if (child.isBone && (child.name === 'mixamorigHead' || child.name === 'Head')) {
-      glbHeadBone = child;
-    }
-    if (child.isBone) {
-      for (let i = child.children.length - 1; i >= 0; i--) {
-        if (child.children[i].isMesh || child.children[i].isSprite) {
-          child.remove(child.children[i]);
-        }
-      }
-    }
-  });
-
-  const img = new Image();
-  img.onload = function() {
-    const c = document.createElement('canvas');
-    c.width = 512; c.height = 512;
-    const ctx = c.getContext('2d');
-    ctx.clearRect(0, 0, 512, 512);
-
-    ctx.save();
-    ctx.beginPath();
-    ctx.ellipse(256, 256, 220, 248, 0, 0, Math.PI * 2);
-    ctx.clip();
-
-    const min = Math.min(img.width, img.height);
-    ctx.drawImage(img, (img.width - min) / 2, (img.height - min) / 2, min, min, 0, 0, 512, 512);
-    ctx.restore();
-
-    const tex = new THREE.CanvasTexture(c);
-
-    // 노란 머리통에 가려지지 않고 무조건 정면에 선명하게 보이는 3D 곡면 생성
-    const faceGeo = new THREE.CylinderGeometry(0.16, 0.14, 0.28, 32, 1, true, -Math.PI / 3, (Math.PI * 2) / 3);
-    const faceMat = new THREE.MeshBasicMaterial({
-      map: tex,
-      transparent: true,
-      depthTest: false,
-      side: THREE.DoubleSide
-    });
-
-    glbRealFace3D = new THREE.Mesh(faceGeo, faceMat);
-    glbRealFace3D.renderOrder = 999;
-    scene3d.add(glbRealFace3D);
-  };
-  img.src = imgData;
-};
-
-// 셀카 업로드 버튼을 누르면 옛날 함수 대신 무조건 새 달걀형 얼굴 함수가 실행되도록 직결!
-window.applySelfieTo3D = function(event) {
-  const file = event.target.files && event.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = function(e) {
-    localStorage.setItem('mars_selfie_3d', e.target.result);
-    window.paintOvalFaceNow(e.target.result);
-  };
-  reader.readAsDataURL(file);
-};
-
-// 이미 올라가 있는 셀카도 0.5초마다 체크해서 얼굴이 비어있으면 자동으로 즉시 부착!
-setInterval(() => {
-  const saved = localStorage.getItem('mars_selfie_3d');
-  if (saved && typeof glbModel !== 'undefined' && glbModel && (!glbRealFace3D || !glbRealFace3D.parent)) {
-    window.paintOvalFaceNow(saved);
-  }
-}, 600);
-    // 👘 [얼굴 확대 & 3D 한복 도포 착용 패치] 얼굴을 선명하게 키우고 몸통에 한복 도포 입히기!
-let glbHanbokCoat = null;
-
-window.paintOvalFaceNow = function(imgData) {
-  if (typeof scene3d === 'undefined' || !scene3d || typeof glbModel === 'undefined' || !glbModel) return;
-
-  if (typeof glbRealFace3D !== 'undefined' && glbRealFace3D) {
-    scene3d.remove(glbRealFace3D);
-    glbRealFace3D = null;
-  }
-
-  // 로봇 머리통과 목을 자연스러운 살구색 피부톤으로 변경
-  glbModel.traverse(child => {
-    if (child.isBone && (child.name === 'mixamorigHead' || child.name === 'Head')) {
-      glbHeadBone = child;
-    }
-    if (child.isMesh && child.name.toLowerCase().includes('surface')) {
-      child.material.roughness = 0.5;
-    }
-  });
-
-  const img = new Image();
-  img.onload = function() {
-    const c = document.createElement('canvas');
-    c.width = 512; c.height = 512;
-    const ctx = c.getContext('2d');
-    ctx.clearRect(0, 0, 512, 512);
-
-    // 얼굴만 큼직하게 클로즈업해서 달걀형으로 부드럽게 자르기
-    ctx.save();
-    ctx.beginPath();
-    ctx.ellipse(256, 256, 235, 250, 0, 0, Math.PI * 2);
-    ctx.clip();
-
-    const min = Math.min(img.width, img.height);
-    // 사진의 가장자리 여백을 줄이고 얼굴 중심부를 15% 더 크게 확대해서 그리기
-    const crop = min * 0.82;
-    ctx.drawImage(img, (img.width - crop) / 2, (img.height - crop) / 2, crop, crop, 0, 0, 512, 512);
-    ctx.restore();
-
-    const tex = new THREE.CanvasTexture(c);
-
-    // 노란 머리통을 꽉 채우도록 얼굴 크기를 1.45배 확대 (0.16 -> 0.23)
-    const faceGeo = new THREE.CylinderGeometry(0.22, 0.19, 0.38, 32, 1, true, -Math.PI / 2.5, (Math.PI * 2) / 2.5);
-    const faceMat = new THREE.MeshBasicMaterial({
-      map: tex,
-      transparent: true,
-      depthTest: false,
-      side: THREE.DoubleSide
-    });
-
-    glbRealFace3D = new THREE.Mesh(faceGeo, faceMat);
-    glbRealFace3D.renderOrder = 999;
-    scene3d.add(glbRealFace3D);
-  };
-  img.src = imgData;
-};
-
-// 저장된 사진 즉시 확대 재적용
-setTimeout(() => {
-  const saved = localStorage.getItem('mars_selfie_3d');
-  if (saved) window.paintOvalFaceNow(saved);
-}, 800);
-    // 👘 [3D 한복 도포 착용 패치] 맨몸 마네킹에 전통 한복 도포, 동정(흰 옷깃), 황금 흉배 입히기!
-let glbHanbokOutfit = null;
-let glbSpineBone = null;
-let currentHanbokColor = '#eab308';
-
-function equip3DHanbokOutfit() {
-  if (typeof scene3d === 'undefined' || !scene3d || !glbModel || glbHanbokOutfit) return;
-
-  // 1. 온몸이 노란 마네킹 피부를 자연스러운 살구색 피부/비단 바지 톤으로 변경
-  glbModel.traverse(child => {
-    if (child.isBone && (child.name === 'mixamorigSpine1' || child.name === 'mixamorigSpine' || child.name === 'Spine')) {
-      glbSpineBone = child;
-    }
-    if (child.isMesh) {
-      child.material = child.material.clone();
-      if (child.name.toLowerCase().includes('joint')) {
-        child.material.color.set('#1e293b'); // 관절은 짙은 남색 바지/신발 톤
-      } else {
-        child.material.color.set('#ffdcb1'); // 손과 목은 자연스러운 살구색 피부톤
-      }
-    }
-  });
-
-  // 2. 몸통을 감싸는 입체 한복 도포(곤룡포) 그룹 생성
-  glbHanbokOutfit = new THREE.Group();
-
-  const coatMat = new THREE.MeshStandardMaterial({
-    color: currentHanbokColor,
-    roughness: 0.4,
-    metalness: 0.15
-  });
-
-  // 상의 몸통 (어깨부터 허리까지 감싸는 한복 저고리/포)
-  const upperCoat = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.22, 0.52, 24), coatMat);
-  upperCoat.scale.set(1.15, 1, 0.78);
-  upperCoat.position.set(0, 0.08, 0);
-  glbHanbokOutfit.add(upperCoat);
-
-  // 하의 도포 자락 (허리부터 무릎 아래까지 퍼지는 전통 도포 치마/자락)
-  const lowerSkirt = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.38, 0.75, 24), coatMat);
-  lowerSkirt.scale.set(1.1, 1, 0.82);
-  lowerSkirt.position.set(0, -0.52, 0);
-  glbHanbokOutfit.add(lowerSkirt);
-
-  // 양쪽 넓은 한복 소매 (어깨 덮개)
-  const sleeveGeo = new THREE.CylinderGeometry(0.11, 0.15, 0.36, 16);
-  const leftSleeve = new THREE.Mesh(sleeveGeo, coatMat);
-  leftSleeve.position.set(-0.28, 0.14, 0);
-  leftSleeve.rotation.z = 0.35;
-  glbHanbokOutfit.add(leftSleeve);
-
-  const rightSleeve = new THREE.Mesh(sleeveGeo, coatMat);
-  rightSleeve.position.set(0.28, 0.14, 0);
-  rightSleeve.rotation.z = -0.35;
-  glbHanbokOutfit.add(rightSleeve);
-
-  // 목 부분 하얀 전통 동정 (V자 한복 옷깃)
-  const collarMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.3 });
-  const collar = new THREE.Mesh(new THREE.TorusGeometry(0.14, 0.025, 12, 24), collarMat);
-  collar.rotation.x = Math.PI / 2;
-  collar.position.set(0, 0.33, 0.03);
-  glbHanbokOutfit.add(collar);
-
-  // 가슴 정면 황금 용문양 흉배 (왕의 상징)
-  const badgeMat = new THREE.MeshStandardMaterial({ color: 0xfde047, metalness: 0.7, roughness: 0.2 });
-  const frontBadge = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.11, 0.02, 24), badgeMat);
-  frontBadge.rotation.x = Math.PI / 2;
-  frontBadge.position.set(0, 0.14, 0.18);
-  glbHanbokOutfit.add(frontBadge);
-
-  // 가슴 전통 각대 (왕의 허리띠)
-  const beltMat = new THREE.MeshStandardMaterial({ color: 0x991b1b, metalness: 0.4 });
-  const belt = new THREE.Mesh(new THREE.CylinderGeometry(0.23, 0.23, 0.06, 24), beltMat);
-  belt.scale.set(1.16, 1, 0.8);
-  belt.position.set(0, -0.12, 0);
-  glbHanbokOutfit.add(belt);
-
-  glbHanbokOutfit.userData = { coatMeshes: [upperCoat, lowerSkirt, leftSleeve, rightSleeve] };
-  scene3d.add(glbHanbokOutfit);
-}
-
-// 옷 갈아입기 버튼(황금 곤룡포 / 푸른 선비도포 / 핑크 무대의상) 연동
-window.change3DHanbokColor = function(hexStr) {
-  currentHanbokColor = hexStr;
-  if (glbHanbokOutfit && glbHanbokOutfit.userData.coatMeshes) {
-    glbHanbokOutfit.userData.coatMeshes.forEach(m => m.material.color.set(hexStr));
-  }
-};
-
-// 캐릭터가 걷거나 춤출 때 한복 도포도 척추(가슴) 움직임을 따라 실시간으로 흔들리게 연결
-const spinePos = new THREE.Vector3();
-const spineQuat = new THREE.Quaternion();
-function syncHanbokLoop() {
-  requestAnimationFrame(syncHanbokLoop);
-  if (glbModel) {
-    equip3DHanbokOutfit();
-    if (glbSpineBone && glbHanbokOutfit) {
-      glbSpineBone.getWorldPosition(spinePos);
-      glbSpineBone.getWorldQuaternion(spineQuat);
-      glbHanbokOutfit.position.copy(spinePos);
-      glbHanbokOutfit.quaternion.copy(spineQuat);
-    }
-  }
-}
-syncHanbokLoop();
-    // 👘 [한복 핏 완벽 교정 패치] 다리·팔이 옷을 뚫고 나오는 현상을 없애고 풍성한 도포 라인으로 업그레이드!
-function upgradeCleanHanbokFit() {
-  if (!glbModel || !glbHanbokOutfit) return;
-  if (glbHanbokOutfit.userData.isUpgraded) return;
-  glbHanbokOutfit.userData.isUpgraded = true;
-
-  // 1. 기존에 좁아서 다리가 튀어나오던 도포 조각들 비우기
-  while (glbHanbokOutfit.children.length > 0) {
-    glbHanbokOutfit.remove(glbHanbokOutfit.children[0]);
-  }
-
-  const coatMat = new THREE.MeshStandardMaterial({
-    color: currentHanbokColor,
-    roughness: 0.45,
-    metalness: 0.1
-  });
-
-  // 2. 어깨와 가슴을 여유 있게 감싸는 상의 도포
-  const upperCoat = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.26, 0.56, 32), coatMat);
-  upperCoat.scale.set(1.22, 1, 0.92);
-  upperCoat.position.set(0, 0.08, 0.02);
-  glbHanbokOutfit.add(upperCoat);
-
-  // 3. 무릎과 허벅지가 절대 뚫고 나오지 않도록 넓고 길게 퍼지는 A라인 한복 도포 자락
-  const lowerSkirt = new THREE.Mesh(new THREE.CylinderGeometry(0.26, 0.52, 1.05, 32), coatMat);
-  lowerSkirt.scale.set(1.18, 1, 0.98);
-  lowerSkirt.position.set(0, -0.68, 0.02);
-  glbHanbokOutfit.add(lowerSkirt);
-
-  // 4. 목 부분 깔끔한 V자 하얀 동정 깃
-  const collarMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.3 });
-  const collar = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.19, 0.12, 24), collarMat);
-  collar.position.set(0, 0.34, 0.02);
-  glbHanbokOutfit.add(collar);
-
-  // 5. 가슴 정면 입체 황금 용문양 흉배 (옷에 파묻히지 않게 앞쪽으로 배치)
-  const badgeMat = new THREE.MeshStandardMaterial({ color: 0xfde047, metalness: 0.6, roughness: 0.2 });
-  const frontBadge = new THREE.Mesh(new THREE.CircleGeometry(0.13, 32), badgeMat);
-  frontBadge.position.set(0, 0.14, 0.27);
-  glbHanbokOutfit.add(frontBadge);
-
-  // 6. 왕의 붉은 각대(허리띠)
-  const beltMat = new THREE.MeshStandardMaterial({ color: 0x991b1b, roughness: 0.3 });
-  const belt = new THREE.Mesh(new THREE.CylinderGeometry(0.27, 0.27, 0.07, 32), beltMat);
-  belt.scale.set(1.23, 1, 0.94);
-  belt.position.set(0, -0.14, 0.02);
-  glbHanbokOutfit.add(belt);
-
-  // 7. 마네킹 본체의 팔과 몸통도 한복 도포 색상과 일치시켜서 팔을 흔들 때 긴 소매처럼 보이게 처리!
-  glbModel.traverse(child => {
-    if (child.isMesh) {
-      if (child.name.toLowerCase().includes('joint')) {
-        child.material.color.set('#1e293b');
-      } else {
-        child.material.color.set(currentHanbokColor);
-      }
-    }
-  });
-
-  glbHanbokOutfit.userData.coatMeshes = [upperCoat, lowerSkirt];
-}
-
-// 옷 색깔 바꿀 때 소매(팔) 색상도 같이 바뀌도록 연결
-window.change3DHanbokColor = function(hexStr) {
-  currentHanbokColor = hexStr;
-  if (glbHanbokOutfit && glbHanbokOutfit.userData.coatMeshes) {
-    glbHanbokOutfit.userData.coatMeshes.forEach(m => m.material.color.set(hexStr));
-  }
-  if (glbModel) {
-    glbModel.traverse(child => {
-      if (child.isMesh && !child.name.toLowerCase().includes('joint')) {
-        child.material.color.set(hexStr);
-      }
-    });
-  }
-};
-
-setInterval(upgradeCleanHanbokFit, 400);
-    // ✨ [한복 슬림 어깨 & 무릎 뚫림 완전 차단 패치]
-function perfectHanbokSilhouette() {
-  if (!glbModel || !glbHanbokOutfit) return;
-  if (glbHanbokOutfit.userData.isSilhouetteFixed) return;
-  glbHanbokOutfit.userData.isSilhouetteFixed = true;
-
-  // 기존 도포 파츠 비우기
-  while (glbHanbokOutfit.children.length > 0) {
-    glbHanbokOutfit.remove(glbHanbokOutfit.children[0]);
-  }
-
-  const coatMat = new THREE.MeshStandardMaterial({
-    color: currentHanbokColor,
-    roughness: 0.4,
-    metalness: 0.1
-  });
-
-  // 1. 상의: 뭉툭한 원통 느낌을 없애고 어깨선이 자연스럽게 떨어지도록 슬림하게 조정
-  const upperCoat = new THREE.Mesh(new THREE.CylinderGeometry(0.19, 0.23, 0.50, 32), coatMat);
-  upperCoat.scale.set(1.15, 1, 0.88);
-  upperCoat.position.set(0, 0.06, 0.02);
-  glbHanbokOutfit.add(upperCoat);
-
-  // 2. 하의 도포 자락: 앞뒤 폭(Z축 1.35배)을 풍성하게 넓히고 살짝 앞으로 배치해 무릎 돌출 100% 차단!
-  const lowerSkirt = new THREE.Mesh(new THREE.CylinderGeometry(0.23, 0.56, 1.08, 32), coatMat);
-  lowerSkirt.scale.set(1.12, 1, 1.35);
-  lowerSkirt.position.set(0, -0.68, 0.06);
-  glbHanbokOutfit.add(lowerSkirt);
-
-  // 3. 목 부분 하얀 동정 깃
-  const collarMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.3 });
-  const collar = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.17, 0.12, 24), collarMat);
-  collar.position.set(0, 0.31, 0.02);
-  glbHanbokOutfit.add(collar);
-
-  // 4. 가슴 정면 황금 용문양 흉배 (선명하게 빛나도록 자체 발광 효과 추가)
-  const badgeMat = new THREE.MeshBasicMaterial({ color: 0xfde047 });
-  const frontBadge = new THREE.Mesh(new THREE.CircleGeometry(0.11, 32), badgeMat);
-  frontBadge.position.set(0, 0.12, 0.24);
-  glbHanbokOutfit.add(frontBadge);
-
-  // 5. 왕의 붉은 각대(허리띠)
-  const beltMat = new THREE.MeshStandardMaterial({ color: 0xdc2626, roughness: 0.3 });
-  const belt = new THREE.Mesh(new THREE.CylinderGeometry(0.235, 0.235, 0.065, 32), beltMat);
-  belt.scale.set(1.16, 1, 0.95);
-  belt.position.set(0, -0.14, 0.03);
-  glbHanbokOutfit.add(belt);
-
-  // 6. 혹시라도 관절 색상이 튀지 않게 관절(joint)까지 전부 한복 도포 색상으로 통일!
-  glbModel.traverse(child => {
-    if (child.isMesh) {
-      child.material.color.set(currentHanbokColor);
-    }
-  });
-
-  glbHanbokOutfit.userData.coatMeshes = [upperCoat, lowerSkirt];
-}
-
-// 옷 색상 변경 버튼을 누를 때 관절까지 모두 한복 색으로 깔끔하게 통일
-window.change3DHanbokColor = function(hexStr) {
-  currentHanbokColor = hexStr;
-  if (glbHanbokOutfit && glbHanbokOutfit.userData.coatMeshes) {
-    glbHanbokOutfit.userData.coatMeshes.forEach(m => m.material.color.set(hexStr));
-  }
-  if (glbModel) {
-    glbModel.traverse(child => {
-      if (child.isMesh) child.material.color.set(hexStr);
-    });
-  }
-};
-
-setInterval(perfectHanbokSilhouette, 400);
-    // 🔒 [얼굴 영구 고정 & 발밑 조각 완전 삭제 패치]
-// 1. 예전 타이머가 얼굴을 덮어쓰지 못하도록 하나로 통일!
-window.attachSelfieToGLB = function(imgData) {
-  window.paintOvalFaceNow(imgData);
-};
-
-// 2. 발밑에 따라다니는 옛날 회색 조각(갓/얼굴 잔여물) 싹 청소
-function cleanFootTrash() {
-  if (!glbModel) return;
-  glbModel.traverse(child => {
-    if (child.isBone) {
-      for (let i = child.children.length - 1; i >= 0; i--) {
-        const item = child.children[i];
-        if (item.isMesh || item.isSprite) {
-          child.remove(item);
-        }
-      }
-    }
-  });
-}
-
-// 3. 노란 머리통 앞으로 오빠 얼굴이 무조건 선명하게 나오도록 강제 유지!
-setInterval(() => {
-  cleanFootTrash();
-  const saved = localStorage.getItem('mars_selfie_3d');
-  if (saved && typeof glbModel !== 'undefined' && glbModel) {
-    if (!glbRealFace3D || !glbRealFace3D.parent || glbRealFace3D.material.depthTest !== false) {
-      window.paintOvalFaceNow(saved);
-    }
-  }
-}, 500);
-    // 👋 [최종 완성 패치] 1. 반갑게 손흔들기 관절 모션 + 2. 제이·보라·이웃 8등신 .glb 소환 + 3. 옆모습 하얀 판 제거!
-let glbRightArm = null;
-let glbRightForeArm = null;
-let glbCrowdList = [];
-
-// 오른팔 관절 찾기 & 발밑 회색 조각 완벽 청소
-function initArmAndClean() {
-  if (!glbModel) return;
-  glbModel.traverse(child => {
-    if (child.isBone) {
-      const n = child.name.toLowerCase();
-      if (n.includes('rightarm') && !n.includes('fore')) glbRightArm = child;
-      if (n.includes('rightforearm')) glbRightForeArm = child;
-
-      // 뼈대에 붙어 발밑에 따라다니던 회색 조각 완전 삭제
-      for (let i = child.children.length - 1; i >= 0; i--) {
-        if (child.children[i].isMesh || child.children[i].isSprite) {
-          child.remove(child.children[i]);
-        }
-      }
-    }
-  });
-
-  // 옆에서 봤을 때 얼굴 뒷면이 하얗게 보이지 않도록 정면만 렌더링(FrontSide) 및 밀착
-  if (typeof glbRealFace3D !== 'undefined' && glbRealFace3D && glbRealFace3D.material) {
-    glbRealFace3D.material.side = THREE.FrontSide;
-  }
-}
-
-// 모션 버튼 제어 (걷기 / 춤추기 / 반갑게 손흔들기)
-window.set3DAnimMode = function(mode) {
-  animMode3d = mode;
-  if (!glbMixer) return;
-  Object.values(glbActions).forEach(act => act.stop());
-
-  if (mode === 'walk' && glbActions['walk']) {
-    glbActions['walk'].play();
-  } else if (mode === 'dance' && (glbActions['run'] || glbActions['walk'])) {
-    (glbActions['run'] || glbActions['walk']).play();
-  } else if (mode === 'wave') {
-    // 손 흔들 때는 다리는 차분히 서 있고(idle) 오른팔만 흔들기!
-    if (glbActions['idle']) glbActions['idle'].play();
-  }
-};
-
-// [제이·보라·이웃 광장 소환] 누르면 네모 상자 대신 8등신 .glb 한복 캐릭터 4명 소환!
-window.summon3DCrowd = function() {
-  if (typeof scene3d === 'undefined' || !scene3d) return;
-
-  // 1. 기존 어설픈 네모 상자 군단(crowdAvatars3d) 싹 지우기!
-  if (typeof crowdAvatars3d !== 'undefined' && Array.isArray(crowdAvatars3d)) {
-    crowdAvatars3d.forEach(boxBot => scene3d.remove(boxBot));
-    crowdAvatars3d.length = 0;
-  }
-
-  // 이미 소환된 .glb 이웃이 있으면 토글(제거 후 재소환)
-  if (glbCrowdList.length > 0) {
-    glbCrowdList.forEach(item => {
-      scene3d.remove(item.model);
-      scene3d.remove(item.coat);
-      scene3d.remove(item.hat);
-    });
-    glbCrowdList = [];
-    return;
-  }
-
-  // 제이(핑크), 보라(보라색), 선비1(푸른색), 선비2(에메랄드) 설정
-  const configs = [
-    { x: -1.7, z: -0.7, color: '#ec4899', rotY: 0.35 },
-    { x: 1.7,  z: -0.7, color: '#a855f7', rotY: -0.35 },
-    { x: -0.95, z: -1.3, color: '#0ea5e9', rotY: 0.2 },
-    { x: 0.95,  z: -1.3, color: '#10b981', rotY: -0.2 }
-  ];
-
-  const loader = new THREE.GLTFLoader();
-  configs.forEach((cfg, idx) => {
-    loader.load('https://threejs.org/examples/models/gltf/Xbot.glb', function(gltf) {
-      const m = gltf.scene;
-      m.scale.set(1.4, 1.4, 1.4);
-      m.position.set(cfg.x, 0, cfg.z);
-      m.rotation.y = cfg.rotY;
-
-      let spBone = null;
-      let hdBone = null;
-      m.traverse(c => {
-        if (c.isMesh) {
-          c.material = c.material.clone();
-          c.material.color.set(cfg.color);
-        }
-        if (c.isBone) {
-          if (c.name === 'mixamorigSpine1' || c.name === 'Spine') spBone = c;
-          if (c.name === 'mixamorigHead' || c.name === 'Head') hdBone = c;
-        }
-      });
-
-      // 이웃 캐릭터용 3D 한복 도포 세트
-      const coat = new THREE.Group();
-      const cMat = new THREE.MeshStandardMaterial({ color: cfg.color, roughness: 0.4 });
-      const up = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.22, 0.46, 24), cMat);
-      up.position.y = 0.05;
-      const sk = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.50, 0.98, 24), cMat);
-      sk.scale.set(1.1, 1, 1.3);
-      sk.position.set(0, -0.62, 0.04);
-      const col = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.16, 0.1, 20), new THREE.MeshStandardMaterial({ color: 0xffffff }));
-      col.position.y = 0.28;
-      const bd = new THREE.Mesh(new THREE.CircleGeometry(0.09, 24), new THREE.MeshBasicMaterial({ color: 0xfde047 }));
-      bd.position.set(0, 0.1, 0.22);
-      coat.add(up, sk, col, bd);
-
-      // 이웃 캐릭터용 갓/족두리
-      const hat = new THREE.Group();
-      const brim = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.42, 0.03, 24), new THREE.MeshStandardMaterial({ color: 0x111111 }));
-      brim.position.y = 0.20;
-      const topH = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.20, 0.22, 24), new THREE.MeshStandardMaterial({ color: 0x111111 }));
-      topH.position.y = 0.32;
-      hat.add(brim, topH);
-
-      scene3d.add(m, coat, hat);
-
-      const mx = new THREE.AnimationMixer(m);
-      const walkClip = gltf.animations.find(a => a.name.toLowerCase().includes('walk')) || gltf.animations[0];
-      if (walkClip) mx.clipAction(walkClip).play();
-
-      glbCrowdList.push({ model: m, mixer: mx, spine: spBone, head: hdBone, coat, hat, phase: idx });
-    });
-  });
-};
-
-// 매 프레임마다 손 흔들기 관절 작동 + 소환된 8등신 이웃들 움직임 업데이트!
-const waveClock = new THREE.Clock();
-const tmpV = new THREE.Vector3();
-const tmpQ = new THREE.Quaternion();
-
-function masterAvatarLoop() {
-  requestAnimationFrame(masterAvatarLoop);
-  const dt = waveClock.getDelta();
-  const t = waveClock.getElapsedTime();
-
-  initArmAndClean();
-
-  // 1. 기존 네모 상자 군단이 나타나면 즉시 숨김
-  if (typeof crowdAvatars3d !== 'undefined' && Array.isArray(crowdAvatars3d) && crowdAvatars3d.length > 0) {
-    crowdAvatars3d.forEach(b => scene3d.remove(b));
-    crowdAvatars3d.length = 0;
-  }
-
-  // 2. [반갑게 손흔들기] 모드일 때 오른팔을 높이 들어 좌우로 흔들기!
-  if (animMode3d === 'wave' && glbRightArm) {
-    glbRightArm.rotation.z = -1.25; // 팔을 어깨 위로 번쩍 들기
-    glbRightArm.rotation.x = 0.35 + Math.sin(t * 10) * 0.45; // 앞뒤/좌우로 힘차게 손 흔들기!
-    if (glbRightForeArm) {
-      glbRightForeArm.rotation.z = -0.6 + Math.sin(t * 10) * 0.35;
-    }
-  }
-
-  // 3. 소환된 제이·보라·이웃 8등신 캐릭터들 모션 & 한복 동기화
-  glbCrowdList.forEach(c => {
-    if (c.mixer) c.mixer.update(dt);
-    if (c.spine) {
-      c.spine.getWorldPosition(tmpV);
-      c.spine.getWorldQuaternion(tmpQ);
-      c.coat.position.copy(tmpV);
-      c.coat.quaternion.copy(tmpQ);
-    }
-    if (c.head) {
-      c.head.getWorldPosition(tmpV);
-      c.head.getWorldQuaternion(tmpQ);
-      c.hat.position.set(tmpV.x, tmpV.y - 0.02, tmpV.z);
-      c.hat.quaternion.copy(tmpQ);
-    }
-    if (animMode3d === 'dance') {
-      c.model.rotation.y += 0.03;
-    }
-  });
-}
-masterAvatarLoop();
-    // 🛠️ [완벽 교정 패치] 1. 발밑 복제 얼굴 삭제 + 2. T자 양팔 벌림 해결 및 진짜 손흔들기 + 3. 네모 상자 군단 강제 철거!
-
-// 1. 무대(scene3d) 전체를 스캔해서 발밑에 떨어진 여분의 얼굴과 네모 상자 로봇들을 싹 청소!
-function deepCleanScene3D() {
-  if (typeof scene3d === 'undefined' || !scene3d) return;
-
-  const faceMeshes = [];
-  const toRemove = [];
-
-  scene3d.children.forEach(obj => {
-    // (A) 주인공 아바타가 아닌데 네모 상자(BoxGeometry)로 조립된 옛날 상자 로봇 그룹 모두 찾아내서 철거!
-    if (obj.type === 'Group' && obj !== glbModel && obj !== glbHanbokOutfit && obj !== glbExternalHat) {
-      let hasBox = false;
-      obj.traverse(c => {
-        if (c.isMesh && c.geometry && c.geometry.type === 'BoxGeometry') hasBox = true;
-      });
-      if (hasBox) toRemove.push(obj);
-    }
-
-    // (B) 무대에 생성된 얼굴 메쉬들 찾기 (발밑에 떨어진 중복 얼굴 제거용)
-    if (obj.isMesh && obj.renderOrder === 999) {
-      faceMeshes.push(obj);
-    }
-  });
-
-  // 네모 상자 로봇들 즉시 삭제
-  toRemove.forEach(boxGroup => scene3d.remove(boxGroup));
-
-  // 얼굴이 2개 이상이면 가장 마지막에 만든 1개(머리 위 얼굴)만 남기고 발밑 얼굴은 즉시 삭제!
-  if (faceMeshes.length > 1) {
-    for (let i = 0; i < faceMeshes.length - 1; i++) {
-      scene3d.remove(faceMeshes[i]);
-    }
-    glbRealFace3D = faceMeshes[faceMeshes.length - 1];
-  } else if (faceMeshes.length === 1) {
-    glbRealFace3D = faceMeshes[0];
-  }
-}
-
-// 2. [반갑게 손흔들기] 버튼을 눌렀을 때 양팔 벌린 T자 자세가 되지 않도록 자연스러운 자세 유지!
-window.set3DAnimMode = function(mode) {
-  animMode3d = mode;
-  if (!glbMixer) return;
-  Object.values(glbActions).forEach(act => act.stop());
-
-  // 걷기/춤/손흔들기 모두 기본 걸음/호흡 모션을 켜두어 T자 마네킹 자세 방지
-  const baseAnim = glbActions['idle'] || glbActions['walk'] || Object.values(glbActions)[0];
-  if (mode === 'walk' && glbActions['walk']) {
-    glbActions['walk'].play();
-  } else if (mode === 'dance' && (glbActions['run'] || glbActions['walk'])) {
-    (glbActions['run'] || glbActions['walk']).play();
-  } else if (baseAnim) {
-    baseAnim.play();
-  }
-};
-
-// 3. 애니메이션 업데이트 직후에 오른팔을 들어 흔들고, 소환 버튼을 누르면 8등신 이웃만 나오게 고정!
-const fixClock = new THREE.Clock();
-function finalFixLoop() {
-  requestAnimationFrame(finalFixLoop);
-  const t = fixClock.getElapsedTime();
-
-  deepCleanScene3D();
-
-  // 애니메이션 재생기(glbMixer)가 먼저 돈 직후에 오른팔 각도를 덮어써야 손이 번쩍 들림!
-  if (typeof animMode3d !== 'undefined' && animMode3d === 'wave' && typeof glbModel !== 'undefined' && glbModel) {
-    glbModel.traverse(c => {
-      if (c.isBone) {
-        const n = c.name.toLowerCase();
-        // 왼팔은 차렷 자세로 자연스럽게 내리기
-        if (n.includes('leftarm') && !n.includes('fore')) {
-          c.rotation.set(0, 0, 1.2);
-        }
-        // 오른팔은 머리 위로 번쩍 들어 좌우로 반갑게 흔들기!
-        if (n.includes('rightarm') && !n.includes('fore')) {
-          c.rotation.set(0.2, 0, -2.1 + Math.sin(t * 12) * 0.35);
-        }
-        if (n.includes('rightforearm')) {
-          c.rotation.set(0, 0, -0.4 + Math.sin(t * 12) * 0.25);
-        }
-      }
-    });
-  }
-}
-finalFixLoop();
-    // 🚀 [손흔들기 & 제이·보라·이웃 4인 즉시 소환 완성 패치]
-let realCrowdGroup = null;
-
-// 1. 버튼 글자를 직접 찾아서 클릭 시 100% 작동하도록 강제 직결!
-document.addEventListener('click', function(e) {
-  const btn = e.target.closest('button');
-  if (!btn) return;
-  const txt = btn.innerText || '';
-
-  if (txt.includes('손흔들기')) {
-    window.animMode3d = 'wave';
-  } else if (txt.includes('걷기')) {
-    window.animMode3d = 'walk';
-    if (typeof playGLBAnim === 'function') playGLBAnim('walk');
-  } else if (txt.includes('댄스')) {
-    window.animMode3d = 'dance';
-    if (typeof playGLBAnim === 'function') playGLBAnim('dance');
-  } else if (txt.includes('소환')) {
-    spawnReal3DFriendsNow();
-  }
-}, true);
-
-// 2. [제이·보라·이웃 광장 소환] 누르면 기다림 없이 0.1초 만에 8등신 한복 친구 4명 생성!
-function spawnReal3DFriendsNow() {
-  if (typeof scene3d === 'undefined' || !scene3d) return;
-
-  // 이미 소환되어 있으면 깔끔하게 숨기기(토글)
-  if (realCrowdGroup) {
-    scene3d.remove(realCrowdGroup);
-    realCrowdGroup = null;
-    return;
-  }
-
-  realCrowdGroup = new THREE.Group();
-  const friends = [
-    { name: '제이', x: -1.35, z: -0.45, color: '#ec4899', rotY: 0.35 },
-    { name: '보라', x: 1.35,  z: -0.45, color: '#a855f7', rotY: -0.35 },
-    { name: '선비1', x: -2.35, z: -0.95, color: '#0ea5e9', rotY: 0.45 },
-    { name: '선비2', x: 2.35,  z: -0.95, color: '#10b981', rotY: -0.45 }
-  ];
-
-  friends.forEach((f, idx) => {
-    const npc = new THREE.Group();
-    npc.position.set(f.x, 0, f.z);
-    npc.rotation.y = f.rotY;
-
-    const coatMat = new THREE.MeshStandardMaterial({ color: f.color, roughness: 0.35, metalness: 0.1 });
-    const skinMat = new THREE.MeshStandardMaterial({ color: 0xffdcb1, roughness: 0.5 });
-
-    // 8등신 달걀형 얼굴 & 목
-    const head = new THREE.Mesh(new THREE.SphereGeometry(0.16, 24, 24), skinMat);
-    head.scale.set(1, 1.2, 1);
-    head.position.set(0, 2.08, 0);
-    npc.add(head);
-
-    // 전통 갓
-    const brim = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.42, 0.025, 24), new THREE.MeshStandardMaterial({ color: 0x111111 }));
-    brim.position.set(0, 2.26, 0);
-    const hatTop = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.19, 0.22, 24), new THREE.MeshStandardMaterial({ color: 0x111111 }));
-    hatTop.position.set(0, 2.38, 0);
-    npc.add(brim, hatTop);
-
-    // 하얀 동정 옷깃 & 상의 도포
-    const collar = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.16, 0.1, 24), new THREE.MeshStandardMaterial({ color: 0xffffff }));
-    collar.position.set(0, 1.82, 0);
-    const upper = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.22, 0.48, 24), coatMat);
-    upper.scale.set(1.15, 1, 0.88);
-    upper.position.set(0, 1.56, 0);
-    npc.add(collar, upper);
-
-    // 황금 흉배 & 붉은 각대(허리띠)
-    const badge = new THREE.Mesh(new THREE.CircleGeometry(0.1, 24), new THREE.MeshBasicMaterial({ color: 0xfde047 }));
-    badge.position.set(0, 1.62, 0.21);
-    const belt = new THREE.Mesh(new THREE.CylinderGeometry(0.225, 0.225, 0.06, 24), new THREE.MeshStandardMaterial({ color: 0xdc2626 }));
-    belt.scale.set(1.16, 1, 0.92);
-    belt.position.set(0, 1.36, 0);
-    npc.add(badge, belt);
-
-    // 풍성한 A라인 하의 도포 자락
-    const skirt = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.52, 1.05, 28), coatMat);
-    skirt.scale.set(1.1, 1, 1.25);
-    skirt.position.set(0, 0.82, 0);
-    npc.add(skirt);
-
-    // 양팔 (오른팔은 관절 회전으로 같이 손을 흔들어줌!)
-    const armGeo = new THREE.CylinderGeometry(0.065, 0.055, 0.65, 16);
-    armGeo.translate(0, -0.28, 0);
-    const leftArm = new THREE.Mesh(armGeo, coatMat);
-    leftArm.position.set(-0.26, 1.75, 0);
-    leftArm.rotation.z = 0.22;
-
-    const rightArm = new THREE.Mesh(armGeo, coatMat);
-    rightArm.position.set(0.26, 1.75, 0);
-    rightArm.rotation.z = -0.22;
-    npc.add(leftArm, rightArm);
-
-    // 하얀 버선/신발
-    const footGeo = new THREE.SphereGeometry(0.09, 16, 16);
-    const footMat = new THREE.MeshStandardMaterial({ color: 0xffffff });
-    const lFoot = new THREE.Mesh(footGeo, footMat);
-    lFoot.position.set(-0.12, 0.08, 0.05);
-    const rFoot = new THREE.Mesh(footGeo, footMat);
-    rFoot.position.set(0.12, 0.08, 0.05);
-    npc.add(lFoot, rFoot);
-
-    npc.userData = { rightArm, leftArm, phase: idx * 1.2 };
-    realCrowdGroup.add(npc);
-  });
-
-  scene3d.add(realCrowdGroup);
-}
-
-// 3. 손흔들기 모드일 때 애니메이션 재생기가 팔을 못 내리게 막고 오른팔을 높이 들어 흔들기!
-const actionClock = new THREE.Clock();
-function guaranteeWaveAndCrowdLoop() {
-  requestAnimationFrame(guaranteeWaveAndCrowdLoop);
-  const t = actionClock.getElapsedTime();
-
-  // 주인공 아바타 손 흔들기 (오른팔 어깨를 머리 위로 번쩍 들어 흔들기)
-  if (window.animMode3d === 'wave' && typeof glbModel !== 'undefined' && glbModel) {
-    glbModel.traverse(c => {
-      if (c.isBone) {
-        const n = c.name.toLowerCase();
-        // 오른팔 어깨와 팔뚝을 확실하게 위로 들어서 흔들기
-        if (n.includes('rightarm') && !n.includes('fore') && !n.includes('hand')) {
-          c.rotation.x = -0.4;
-          c.rotation.y = 0;
-          c.rotation.z = -2.2 + Math.sin(t * 10) * 0.4;
-        }
-        if (n.includes('rightforearm')) {
-          c.rotation.x = 0;
-          c.rotation.y = 0;
-          c.rotation.z = -0.3 + Math.sin(t * 10) * 0.3;
-        }
-        // 왼팔은 차분하게 아래로 내리기
-        if (n.includes('leftarm') && !n.includes('fore') && !n.includes('hand')) {
-          c.rotation.set(0, 0, 1.25);
-        }
-      }
-    });
-  }
-
-  // 소환된 제이·보라·이웃 4명도 오빠를 따라 같이 걸으며 반갑게 손 흔들기!
-  if (realCrowdGroup) {
-    realCrowdGroup.children.forEach(npc => {
-      const p = npc.userData.phase;
-      npc.position.y = Math.abs(Math.sin(t * 4 + p)) * 0.06;
-      if (window.animMode3d === 'wave') {
-        npc.userData.rightArm.rotation.z = -2.3 + Math.sin(t * 10 + p) * 0.35;
-      } else if (window.animMode3d === 'dance') {
-        npc.rotation.y += 0.03;
-        npc.userData.rightArm.rotation.z = -1.8 + Math.sin(t * 8 + p) * 0.5;
-        npc.userData.leftArm.rotation.z = 1.8 - Math.sin(t * 8 + p) * 0.5;
-      } else {
-        npc.userData.rightArm.rotation.z = -0.22;
-        npc.userData.leftArm.rotation.z = 0.22;
-        npc.userData.rightArm.rotation.x = Math.sin(t * 5 + p) * 0.4;
-        npc.userData.leftArm.rotation.x = -Math.sin(t * 5 + p) * 0.4;
-      }
-    });
-  }
-}
-guaranteeWaveAndCrowdLoop();
+  cleanMasterLoop();
+})();
 </script>
   </body>
 </html>
