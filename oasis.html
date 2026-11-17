@@ -3750,6 +3750,86 @@ window.copyInviteText = function() {
     }
   }
   updateGLBLoop();
+    // 📸 [셀카 & 전통 갓 크기 정상화 패치] 뼈대 축소 현상을 무시하고 머리 위치에 큼직하게 고정!
+  let glbExternalHat = null;
+  let glbExternalFace = null;
+
+  function ensureExternalHeadGear() {
+    if (typeof scene3d === 'undefined' || !scene3d || glbExternalHat) return;
+
+    // 1. 무대(scene3d)에 정상 크기의 전통 갓 생성
+    glbExternalHat = new THREE.Group();
+    const brim = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.48, 0.48, 0.03, 32),
+      new THREE.MeshStandardMaterial({ color: 0x111111, transparent: true, opacity: 0.92 })
+    );
+    brim.position.y = 0.22;
+    glbExternalHat.add(brim);
+
+    const topHat = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.20, 0.22, 0.26, 32),
+      new THREE.MeshStandardMaterial({ color: 0x111111 })
+    );
+    topHat.position.y = 0.36;
+    glbExternalHat.add(topHat);
+    scene3d.add(glbExternalHat);
+
+    // 2. 저장된 셀카가 있으면 즉시 얼굴에 큼직하게 표시
+    const saved = localStorage.getItem('mars_selfie_3d');
+    if (saved) attachSelfieToGLB(saved);
+  }
+
+  // 오빠 셀카를 머리 앞면에 큼직하고 선명하게 띄우는 함수 덮어쓰기
+  window.attachSelfieToGLB = function(imgData) {
+    if (typeof scene3d === 'undefined' || !scene3d) return;
+    const img = new Image();
+    img.onload = function() {
+      const c = document.createElement('canvas');
+      c.width = 512; c.height = 512;
+      const ctx = c.getContext('2d');
+
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(256, 256, 236, 0, Math.PI * 2);
+      ctx.clip();
+      const min = Math.min(img.width, img.height);
+      ctx.drawImage(img, (img.width - min) / 2, (img.height - min) / 2, min, min, 0, 0, 512, 512);
+      ctx.restore();
+
+      ctx.beginPath();
+      ctx.arc(256, 256, 236, 0, Math.PI * 2);
+      ctx.lineWidth = 22;
+      ctx.strokeStyle = '#fde047';
+      ctx.stroke();
+
+      const tex = new THREE.CanvasTexture(c);
+      if (glbExternalFace) scene3d.remove(glbExternalFace);
+
+      glbExternalFace = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, depthTest: false }));
+      glbExternalFace.scale.set(0.62, 0.62, 1); // 눈에 확 띄는 큼직한 얼굴 크기!
+      glbExternalFace.renderOrder = 999; // 머리에 파묻히지 않고 무조건 맨 앞에 선명하게 표시!
+      scene3d.add(glbExternalFace);
+    };
+    img.src = imgData;
+  };
+
+  // 캐릭터가 걷거나 춤출 때 머리 위치를 0.01초 단위로 실시간 추적해서 얼굴과 갓이 따라다니게 연결
+  const headWorldPos = new THREE.Vector3();
+  function syncHeadGearLoop() {
+    requestAnimationFrame(syncHeadGearLoop);
+    if (glbModel && glbHeadBone) {
+      ensureExternalHeadGear();
+      glbHeadBone.getWorldPosition(headWorldPos);
+
+      if (glbExternalHat) {
+        glbExternalHat.position.copy(headWorldPos);
+      }
+      if (glbExternalFace) {
+        glbExternalFace.position.set(headWorldPos.x, headWorldPos.y + 0.05, headWorldPos.z + 0.18);
+      }
+    }
+  }
+  syncHeadGearLoop();
 </script>
   </body>
 </html>
