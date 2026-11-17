@@ -4444,6 +4444,37 @@ window.change3DHanbokColor = function(hexStr) {
 };
 
 setInterval(perfectHanbokSilhouette, 400);
+    // 🔒 [얼굴 영구 고정 & 발밑 조각 완전 삭제 패치]
+// 1. 예전 타이머가 얼굴을 덮어쓰지 못하도록 하나로 통일!
+window.attachSelfieToGLB = function(imgData) {
+  window.paintOvalFaceNow(imgData);
+};
+
+// 2. 발밑에 따라다니는 옛날 회색 조각(갓/얼굴 잔여물) 싹 청소
+function cleanFootTrash() {
+  if (!glbModel) return;
+  glbModel.traverse(child => {
+    if (child.isBone) {
+      for (let i = child.children.length - 1; i >= 0; i--) {
+        const item = child.children[i];
+        if (item.isMesh || item.isSprite) {
+          child.remove(item);
+        }
+      }
+    }
+  });
+}
+
+// 3. 노란 머리통 앞으로 오빠 얼굴이 무조건 선명하게 나오도록 강제 유지!
+setInterval(() => {
+  cleanFootTrash();
+  const saved = localStorage.getItem('mars_selfie_3d');
+  if (saved && typeof glbModel !== 'undefined' && glbModel) {
+    if (!glbRealFace3D || !glbRealFace3D.parent || glbRealFace3D.material.depthTest !== false) {
+      window.paintOvalFaceNow(saved);
+    }
+  }
+}, 500);
 </script>
   </body>
 </html>
