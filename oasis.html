@@ -4048,6 +4048,84 @@ setTimeout(() => {
   const saved = localStorage.getItem('mars_selfie_3d');
   if (saved) window.attachSelfieToGLB(saved);
 }, 1700);
+    window.paintOvalFaceNow = function(imgData) {
+  if (typeof scene3d === 'undefined' || !scene3d || typeof glbModel === 'undefined' || !glbModel) return;
+
+  if (typeof glbExternalFace !== 'undefined' && glbExternalFace) {
+    scene3d.remove(glbExternalFace);
+    glbExternalFace = null;
+  }
+  if (typeof glbRealFace3D !== 'undefined' && glbRealFace3D) {
+    scene3d.remove(glbRealFace3D);
+    glbRealFace3D = null;
+  }
+
+  glbModel.traverse(child => {
+    if (child.isBone && (child.name === 'mixamorigHead' || child.name === 'Head')) {
+      glbHeadBone = child;
+    }
+    if (child.isBone) {
+      for (let i = child.children.length - 1; i >= 0; i--) {
+        if (child.children[i].isMesh || child.children[i].isSprite) {
+          child.remove(child.children[i]);
+        }
+      }
+    }
+  });
+
+  const img = new Image();
+  img.onload = function() {
+    const c = document.createElement('canvas');
+    c.width = 512; c.height = 512;
+    const ctx = c.getContext('2d');
+    ctx.clearRect(0, 0, 512, 512);
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.ellipse(256, 256, 220, 248, 0, 0, Math.PI * 2);
+    ctx.clip();
+
+    const min = Math.min(img.width, img.height);
+    ctx.drawImage(img, (img.width - min) / 2, (img.height - min) / 2, min, min, 0, 0, 512, 512);
+    ctx.restore();
+
+    const tex = new THREE.CanvasTexture(c);
+
+    // 노란 머리통에 가려지지 않고 무조건 정면에 선명하게 보이는 3D 곡면 생성
+    const faceGeo = new THREE.CylinderGeometry(0.16, 0.14, 0.28, 32, 1, true, -Math.PI / 3, (Math.PI * 2) / 3);
+    const faceMat = new THREE.MeshBasicMaterial({
+      map: tex,
+      transparent: true,
+      depthTest: false,
+      side: THREE.DoubleSide
+    });
+
+    glbRealFace3D = new THREE.Mesh(faceGeo, faceMat);
+    glbRealFace3D.renderOrder = 999;
+    scene3d.add(glbRealFace3D);
+  };
+  img.src = imgData;
+};
+
+// 셀카 업로드 버튼을 누르면 옛날 함수 대신 무조건 새 달걀형 얼굴 함수가 실행되도록 직결!
+window.applySelfieTo3D = function(event) {
+  const file = event.target.files && event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    localStorage.setItem('mars_selfie_3d', e.target.result);
+    window.paintOvalFaceNow(e.target.result);
+  };
+  reader.readAsDataURL(file);
+};
+
+// 이미 올라가 있는 셀카도 0.5초마다 체크해서 얼굴이 비어있으면 자동으로 즉시 부착!
+setInterval(() => {
+  const saved = localStorage.getItem('mars_selfie_3d');
+  if (saved && typeof glbModel !== 'undefined' && glbModel && (!glbRealFace3D || !glbRealFace3D.parent)) {
+    window.paintOvalFaceNow(saved);
+  }
+}, 600);
 </script>
   </body>
 </html>
