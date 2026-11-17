@@ -3903,6 +3903,95 @@ window.copyInviteText = function() {
     const saved = localStorage.getItem('mars_selfie_3d');
     if (saved && glbHeadBone) window.attachSelfieToGLB(saved);
   }, 1500);
+    // 🎯 [얼굴 정위치 밀착 패치] 정수리 위로 올라간 얼굴을 노란 머리통 정면 자리에 딱 맞추기!
+  let glbRealFace3D = null;
+
+  window.attachSelfieToGLB = function(imgData) {
+    if (!glbModel || !scene3d) return;
+
+    // 1. 기존에 잘못 올라간 얼굴이나 스티커 모두 깔끔하게 제거
+    if (typeof glbExternalFace !== 'undefined' && glbExternalFace) {
+      scene3d.remove(glbExternalFace);
+      glbExternalFace = null;
+    }
+    if (glbHeadBone && glbHeadBone.userData.realFaceMesh) {
+      glbHeadBone.remove(glbHeadBone.userData.realFaceMesh);
+      glbHeadBone.userData.realFaceMesh = null;
+    }
+    if (glbRealFace3D) {
+      scene3d.remove(glbRealFace3D);
+      glbRealFace3D = null;
+    }
+
+    // 정수리 끝(HeadTop_End)이 아닌 진짜 목/머리 중심 뼈대 다시 정확히 찾기
+    glbModel.traverse(child => {
+      if (child.isBone && (child.name === 'mixamorigHead' || child.name === 'Head')) {
+        glbHeadBone = child;
+      }
+    });
+
+    const img = new Image();
+    img.onload = function() {
+      const c = document.createElement('canvas');
+      c.width = 512; c.height = 512;
+      const ctx = c.getContext('2d');
+
+      ctx.fillStyle = '#ffdcb1';
+      ctx.fillRect(0, 0, 512, 512);
+
+      const min = Math.min(img.width, img.height);
+      ctx.drawImage(img, (img.width - min) / 2, (img.height - min) / 2, min, min, 0, 0, 512, 512);
+
+      // 가장자리 피부톤 그라데이션 블렌딩
+      const grad = ctx.createRadialGradient(256, 256, 175, 256, 256, 250);
+      grad.addColorStop(0, 'rgba(255, 220, 177, 0)');
+      grad.addColorStop(1, 'rgba(255, 220, 177, 1)');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 512, 512);
+
+      const tex = new THREE.CanvasTexture(c);
+
+      // 2. 바깥 무대(scene3d)에 노란 머리통 크기(반지름 0.19, 높이 0.34)와 똑같은 3D 입체 곡면 생성!
+      const faceGeo = new THREE.CylinderGeometry(0.19, 0.17, 0.34, 32, 1, true, -Math.PI / 2.6, (Math.PI * 2) / 2.6);
+      const faceMat = new THREE.MeshBasicMaterial({ map: tex, side: THREE.DoubleSide });
+
+      glbRealFace3D = new THREE.Mesh(faceGeo, faceMat);
+      scene3d.add(glbRealFace3D);
+    };
+    img.src = imgData;
+  };
+
+  // 3. 매 프레임 노란 머리통의 위치와 고개 회전 각도를 그대로 따라가며 정면에 밀착!
+  const headQuat = new THREE.Quaternion();
+  function syncRealFace3DLoop() {
+    requestAnimationFrame(syncRealFace3DLoop);
+    if (glbModel && glbHeadBone) {
+      if (glbHeadBone.userData.realFaceMesh) {
+        glbHeadBone.remove(glbHeadBone.userData.realFaceMesh);
+        glbHeadBone.userData.realFaceMesh = null;
+      }
+      glbHeadBone.getWorldPosition(headWorldPos);
+      glbHeadBone.getWorldQuaternion(headQuat);
+
+      // 전통 갓 위치를 머리 바로 위로 밀착
+      if (typeof glbExternalHat !== 'undefined' && glbExternalHat) {
+        glbExternalHat.position.set(headWorldPos.x, headWorldPos.y - 0.02, headWorldPos.z);
+        glbExternalHat.quaternion.copy(headQuat);
+      }
+
+      // 3D 입체 얼굴을 정수리가 아닌 노란 얼굴 정면(y + 0.08, z + 0.03)에 정확히 고정!
+      if (glbRealFace3D) {
+        glbRealFace3D.position.set(headWorldPos.x, headWorldPos.y + 0.08, headWorldPos.z + 0.03);
+        glbRealFace3D.quaternion.copy(headQuat);
+      }
+    }
+  }
+  syncRealFace3DLoop();
+
+  setTimeout(() => {
+    const saved = localStorage.getItem('mars_selfie_3d');
+    if (saved) window.attachSelfieToGLB(saved);
+  }, 1600);
 </script>
   </body>
 </html>
