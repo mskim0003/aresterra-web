@@ -4294,6 +4294,84 @@ function syncHanbokLoop() {
   }
 }
 syncHanbokLoop();
+    // 👘 [한복 핏 완벽 교정 패치] 다리·팔이 옷을 뚫고 나오는 현상을 없애고 풍성한 도포 라인으로 업그레이드!
+function upgradeCleanHanbokFit() {
+  if (!glbModel || !glbHanbokOutfit) return;
+  if (glbHanbokOutfit.userData.isUpgraded) return;
+  glbHanbokOutfit.userData.isUpgraded = true;
+
+  // 1. 기존에 좁아서 다리가 튀어나오던 도포 조각들 비우기
+  while (glbHanbokOutfit.children.length > 0) {
+    glbHanbokOutfit.remove(glbHanbokOutfit.children[0]);
+  }
+
+  const coatMat = new THREE.MeshStandardMaterial({
+    color: currentHanbokColor,
+    roughness: 0.45,
+    metalness: 0.1
+  });
+
+  // 2. 어깨와 가슴을 여유 있게 감싸는 상의 도포
+  const upperCoat = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.26, 0.56, 32), coatMat);
+  upperCoat.scale.set(1.22, 1, 0.92);
+  upperCoat.position.set(0, 0.08, 0.02);
+  glbHanbokOutfit.add(upperCoat);
+
+  // 3. 무릎과 허벅지가 절대 뚫고 나오지 않도록 넓고 길게 퍼지는 A라인 한복 도포 자락
+  const lowerSkirt = new THREE.Mesh(new THREE.CylinderGeometry(0.26, 0.52, 1.05, 32), coatMat);
+  lowerSkirt.scale.set(1.18, 1, 0.98);
+  lowerSkirt.position.set(0, -0.68, 0.02);
+  glbHanbokOutfit.add(lowerSkirt);
+
+  // 4. 목 부분 깔끔한 V자 하얀 동정 깃
+  const collarMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.3 });
+  const collar = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.19, 0.12, 24), collarMat);
+  collar.position.set(0, 0.34, 0.02);
+  glbHanbokOutfit.add(collar);
+
+  // 5. 가슴 정면 입체 황금 용문양 흉배 (옷에 파묻히지 않게 앞쪽으로 배치)
+  const badgeMat = new THREE.MeshStandardMaterial({ color: 0xfde047, metalness: 0.6, roughness: 0.2 });
+  const frontBadge = new THREE.Mesh(new THREE.CircleGeometry(0.13, 32), badgeMat);
+  frontBadge.position.set(0, 0.14, 0.27);
+  glbHanbokOutfit.add(frontBadge);
+
+  // 6. 왕의 붉은 각대(허리띠)
+  const beltMat = new THREE.MeshStandardMaterial({ color: 0x991b1b, roughness: 0.3 });
+  const belt = new THREE.Mesh(new THREE.CylinderGeometry(0.27, 0.27, 0.07, 32), beltMat);
+  belt.scale.set(1.23, 1, 0.94);
+  belt.position.set(0, -0.14, 0.02);
+  glbHanbokOutfit.add(belt);
+
+  // 7. 마네킹 본체의 팔과 몸통도 한복 도포 색상과 일치시켜서 팔을 흔들 때 긴 소매처럼 보이게 처리!
+  glbModel.traverse(child => {
+    if (child.isMesh) {
+      if (child.name.toLowerCase().includes('joint')) {
+        child.material.color.set('#1e293b');
+      } else {
+        child.material.color.set(currentHanbokColor);
+      }
+    }
+  });
+
+  glbHanbokOutfit.userData.coatMeshes = [upperCoat, lowerSkirt];
+}
+
+// 옷 색깔 바꿀 때 소매(팔) 색상도 같이 바뀌도록 연결
+window.change3DHanbokColor = function(hexStr) {
+  currentHanbokColor = hexStr;
+  if (glbHanbokOutfit && glbHanbokOutfit.userData.coatMeshes) {
+    glbHanbokOutfit.userData.coatMeshes.forEach(m => m.material.color.set(hexStr));
+  }
+  if (glbModel) {
+    glbModel.traverse(child => {
+      if (child.isMesh && !child.name.toLowerCase().includes('joint')) {
+        child.material.color.set(hexStr);
+      }
+    });
+  }
+};
+
+setInterval(upgradeCleanHanbokFit, 400);
 </script>
   </body>
 </html>
