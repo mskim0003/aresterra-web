@@ -4126,6 +4126,69 @@ setInterval(() => {
     window.paintOvalFaceNow(saved);
   }
 }, 600);
+    // 👘 [얼굴 확대 & 3D 한복 도포 착용 패치] 얼굴을 선명하게 키우고 몸통에 한복 도포 입히기!
+let glbHanbokCoat = null;
+
+window.paintOvalFaceNow = function(imgData) {
+  if (typeof scene3d === 'undefined' || !scene3d || typeof glbModel === 'undefined' || !glbModel) return;
+
+  if (typeof glbRealFace3D !== 'undefined' && glbRealFace3D) {
+    scene3d.remove(glbRealFace3D);
+    glbRealFace3D = null;
+  }
+
+  // 로봇 머리통과 목을 자연스러운 살구색 피부톤으로 변경
+  glbModel.traverse(child => {
+    if (child.isBone && (child.name === 'mixamorigHead' || child.name === 'Head')) {
+      glbHeadBone = child;
+    }
+    if (child.isMesh && child.name.toLowerCase().includes('surface')) {
+      child.material.roughness = 0.5;
+    }
+  });
+
+  const img = new Image();
+  img.onload = function() {
+    const c = document.createElement('canvas');
+    c.width = 512; c.height = 512;
+    const ctx = c.getContext('2d');
+    ctx.clearRect(0, 0, 512, 512);
+
+    // 얼굴만 큼직하게 클로즈업해서 달걀형으로 부드럽게 자르기
+    ctx.save();
+    ctx.beginPath();
+    ctx.ellipse(256, 256, 235, 250, 0, 0, Math.PI * 2);
+    ctx.clip();
+
+    const min = Math.min(img.width, img.height);
+    // 사진의 가장자리 여백을 줄이고 얼굴 중심부를 15% 더 크게 확대해서 그리기
+    const crop = min * 0.82;
+    ctx.drawImage(img, (img.width - crop) / 2, (img.height - crop) / 2, crop, crop, 0, 0, 512, 512);
+    ctx.restore();
+
+    const tex = new THREE.CanvasTexture(c);
+
+    // 노란 머리통을 꽉 채우도록 얼굴 크기를 1.45배 확대 (0.16 -> 0.23)
+    const faceGeo = new THREE.CylinderGeometry(0.22, 0.19, 0.38, 32, 1, true, -Math.PI / 2.5, (Math.PI * 2) / 2.5);
+    const faceMat = new THREE.MeshBasicMaterial({
+      map: tex,
+      transparent: true,
+      depthTest: false,
+      side: THREE.DoubleSide
+    });
+
+    glbRealFace3D = new THREE.Mesh(faceGeo, faceMat);
+    glbRealFace3D.renderOrder = 999;
+    scene3d.add(glbRealFace3D);
+  };
+  img.src = imgData;
+};
+
+// 저장된 사진 즉시 확대 재적용
+setTimeout(() => {
+  const saved = localStorage.getItem('mars_selfie_3d');
+  if (saved) window.paintOvalFaceNow(saved);
+}, 800);
 </script>
   </body>
 </html>
