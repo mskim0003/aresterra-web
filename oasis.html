@@ -3282,7 +3282,7 @@ window.copyInviteText = function() {
     });
   });
 
-  // 📸 셀카 사진을 올리면 3D 아바타 얼굴 정면에 큼직하고 선명하게 붙도록 업그레이드
+ // 📸 오빠 얼굴이 왜곡 없이 황금 테두리 액자에 정면으로 선명하게 뜨도록 교정!
   window.applySelfieTo3D = function(event) {
     const file = event.target.files[0];
     if (!file || !mainAvatar3d) return;
@@ -3290,25 +3290,52 @@ window.copyInviteText = function() {
     reader.onload = function(e) {
       const img = new Image();
       img.onload = function() {
+        const size = 512;
         const canvas = document.createElement('canvas');
-        canvas.width = 512;
-        canvas.height = 512;
+        canvas.width = size;
+        canvas.height = size;
         const ctx = canvas.getContext('2d');
-        ctx.fillStyle = '#ffdcb1';
-        ctx.fillRect(0, 0, 512, 512);
-        ctx.drawImage(img, 128, 96, 256, 320);
+
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(size / 2, size / 2, size / 2 - 14, 0, Math.PI * 2);
+        ctx.closePath();
+        ctx.clip();
+
+        const minSide = Math.min(img.width, img.height);
+        const sx = (img.width - minSide) / 2;
+        const sy = (img.height - minSide) / 2;
+        ctx.drawImage(img, sx, sy, minSide, minSide, 0, 0, size, size);
+        ctx.restore();
+
+        ctx.beginPath();
+        ctx.arc(size / 2, size / 2, size / 2 - 14, 0, Math.PI * 2);
+        ctx.lineWidth = 20;
+        ctx.strokeStyle = '#fde047';
+        ctx.stroke();
 
         const tex = new THREE.CanvasTexture(canvas);
-        mainAvatar3d.userData.head.material.map = tex;
-        mainAvatar3d.userData.head.material.color.setHex(0xffffff);
-        mainAvatar3d.userData.head.material.needsUpdate = true;
+        const p = mainAvatar3d.userData;
+
+        p.head.material.transparent = true;
+        p.head.material.opacity = 0;
+
+        if (p.faceBadge) mainAvatar3d.remove(p.faceBadge);
+        const faceMat = new THREE.SpriteMaterial({ map: tex });
+        const faceSprite = new THREE.Sprite(faceMat);
+        faceSprite.scale.set(0.95, 0.95, 1);
+        faceSprite.position.set(0, 2.32, 0.1);
+        mainAvatar3d.add(faceSprite);
+        p.faceBadge = faceSprite;
+
+        p.torso.scale.set(0.82, 1.05, 0.65);
 
         if (typeof avatarState !== 'undefined') {
           avatarState.photoUrl = e.target.result;
           localStorage.setItem('mars_avatar_state', JSON.stringify(avatarState));
           if (typeof applyAvatarVisuals === 'function') applyAvatarVisuals();
         }
-        alert('📸 오빠 셀카가 3D 한복 아바타 얼굴에 멋지게 적용되었어!');
+        alert('📸 오빠 셀카가 황금 액자 한복 아바타에 멋지게 적용되었어!');
       };
       img.src = e.target.result;
     };
