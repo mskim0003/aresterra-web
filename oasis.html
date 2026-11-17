@@ -3830,6 +3830,79 @@ window.copyInviteText = function() {
     }
   }
   syncHeadGearLoop();
+    // 🎭 [진짜 3D 입체 얼굴 이식 패치] 둥둥 떠다니는 동그란 스티커를 없애고 3D 머리 표면과 완전 일체화!
+  window.attachSelfieToGLB = function(imgData) {
+    if (!glbModel || !glbHeadBone) return;
+
+    // 1. 기존에 따로 떠다니던 동그란 스티커 완전히 제거
+    if (typeof glbExternalFace !== 'undefined' && glbExternalFace) {
+      scene3d.remove(glbExternalFace);
+      glbExternalFace = null;
+    }
+
+    const img = new Image();
+    img.onload = function() {
+      const c = document.createElement('canvas');
+      c.width = 512; c.height = 512;
+      const ctx = c.getContext('2d');
+
+      // 아바타 피부톤 바탕 칠하기
+      ctx.fillStyle = '#ffdcb1';
+      ctx.fillRect(0, 0, 512, 512);
+
+      // 오빠 얼굴 이목구비 부분만 자연스러운 타원형으로 크롭 (인위적인 노란 테두리 제거!)
+      ctx.save();
+      ctx.beginPath();
+      ctx.ellipse(256, 256, 215, 240, 0, 0, Math.PI * 2);
+      ctx.clip();
+
+      const min = Math.min(img.width, img.height);
+      ctx.drawImage(img, (img.width - min) / 2, (img.height - min) / 2, min, min, 0, 0, 512, 512);
+      ctx.restore();
+
+      // 얼굴 가장자리를 피부색으로 부드럽게 그라데이션 블렌딩 (경계선이 티 나지 않게!)
+      const grad = ctx.createRadialGradient(256, 256, 150, 256, 256, 245);
+      grad.addColorStop(0, 'rgba(255, 220, 177, 0)');
+      grad.addColorStop(1, 'rgba(255, 220, 177, 1)');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 512, 512);
+
+      const tex = new THREE.CanvasTexture(c);
+
+      // 2. Xbot 머리통의 노란 로봇 투구 재질을 살구색 피부톤으로 변경
+      glbModel.traverse(child => {
+        if (child.isMesh && (child.name.toLowerCase().includes('head') || child.name.toLowerCase().includes('surface'))) {
+          // 몸통은 한복 색상 유지, 머리 쪽 광택 완화
+          child.material.roughness = 0.6;
+        }
+      });
+
+      // 3. 머리 뼈대(glbHeadBone)에 직접 입체 곡면 얼굴(Curved 3D Face) 심기!
+      // (뼈대가 0.01 스케일이므로 크기를 100배 보정해서 넣으면 머리통 표면에 1mm 오차 없이 딱 밀착됨)
+      if (glbHeadBone.userData.realFaceMesh) {
+        glbHeadBone.remove(glbHeadBone.userData.realFaceMesh);
+      }
+
+      // 평면이 아니라 실제 얼굴 앞면처럼 둥글게 휘어진 원통 곡면(Cylinder Segment) 사용
+      const faceGeo = new THREE.CylinderGeometry(11.5, 10.5, 23, 32, 1, true, -Math.PI / 3.2, (Math.PI * 2) / 3.2);
+      const faceMat = new THREE.MeshBasicMaterial({
+        map: tex,
+        side: THREE.DoubleSide
+      });
+
+      const faceMesh = new THREE.Mesh(faceGeo, faceMat);
+      faceMesh.position.set(0, 9.5, 2.2); // 아바타 얼굴 정면 표면에 딱 맞게 밀착
+      glbHeadBone.add(faceMesh);
+      glbHeadBone.userData.realFaceMesh = faceMesh;
+    };
+    img.src = imgData;
+  };
+
+  // 페이지 로드 후 이미 저장된 셀카가 있으면 즉시 입체 얼굴로 자동 변환
+  setTimeout(() => {
+    const saved = localStorage.getItem('mars_selfie_3d');
+    if (saved && glbHeadBone) window.attachSelfieToGLB(saved);
+  }, 1500);
 </script>
   </body>
 </html>
