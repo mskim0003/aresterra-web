@@ -4651,6 +4651,91 @@ function masterAvatarLoop() {
   });
 }
 masterAvatarLoop();
+    // 🛠️ [완벽 교정 패치] 1. 발밑 복제 얼굴 삭제 + 2. T자 양팔 벌림 해결 및 진짜 손흔들기 + 3. 네모 상자 군단 강제 철거!
+
+// 1. 무대(scene3d) 전체를 스캔해서 발밑에 떨어진 여분의 얼굴과 네모 상자 로봇들을 싹 청소!
+function deepCleanScene3D() {
+  if (typeof scene3d === 'undefined' || !scene3d) return;
+
+  const faceMeshes = [];
+  const toRemove = [];
+
+  scene3d.children.forEach(obj => {
+    // (A) 주인공 아바타가 아닌데 네모 상자(BoxGeometry)로 조립된 옛날 상자 로봇 그룹 모두 찾아내서 철거!
+    if (obj.type === 'Group' && obj !== glbModel && obj !== glbHanbokOutfit && obj !== glbExternalHat) {
+      let hasBox = false;
+      obj.traverse(c => {
+        if (c.isMesh && c.geometry && c.geometry.type === 'BoxGeometry') hasBox = true;
+      });
+      if (hasBox) toRemove.push(obj);
+    }
+
+    // (B) 무대에 생성된 얼굴 메쉬들 찾기 (발밑에 떨어진 중복 얼굴 제거용)
+    if (obj.isMesh && obj.renderOrder === 999) {
+      faceMeshes.push(obj);
+    }
+  });
+
+  // 네모 상자 로봇들 즉시 삭제
+  toRemove.forEach(boxGroup => scene3d.remove(boxGroup));
+
+  // 얼굴이 2개 이상이면 가장 마지막에 만든 1개(머리 위 얼굴)만 남기고 발밑 얼굴은 즉시 삭제!
+  if (faceMeshes.length > 1) {
+    for (let i = 0; i < faceMeshes.length - 1; i++) {
+      scene3d.remove(faceMeshes[i]);
+    }
+    glbRealFace3D = faceMeshes[faceMeshes.length - 1];
+  } else if (faceMeshes.length === 1) {
+    glbRealFace3D = faceMeshes[0];
+  }
+}
+
+// 2. [반갑게 손흔들기] 버튼을 눌렀을 때 양팔 벌린 T자 자세가 되지 않도록 자연스러운 자세 유지!
+window.set3DAnimMode = function(mode) {
+  animMode3d = mode;
+  if (!glbMixer) return;
+  Object.values(glbActions).forEach(act => act.stop());
+
+  // 걷기/춤/손흔들기 모두 기본 걸음/호흡 모션을 켜두어 T자 마네킹 자세 방지
+  const baseAnim = glbActions['idle'] || glbActions['walk'] || Object.values(glbActions)[0];
+  if (mode === 'walk' && glbActions['walk']) {
+    glbActions['walk'].play();
+  } else if (mode === 'dance' && (glbActions['run'] || glbActions['walk'])) {
+    (glbActions['run'] || glbActions['walk']).play();
+  } else if (baseAnim) {
+    baseAnim.play();
+  }
+};
+
+// 3. 애니메이션 업데이트 직후에 오른팔을 들어 흔들고, 소환 버튼을 누르면 8등신 이웃만 나오게 고정!
+const fixClock = new THREE.Clock();
+function finalFixLoop() {
+  requestAnimationFrame(finalFixLoop);
+  const t = fixClock.getElapsedTime();
+
+  deepCleanScene3D();
+
+  // 애니메이션 재생기(glbMixer)가 먼저 돈 직후에 오른팔 각도를 덮어써야 손이 번쩍 들림!
+  if (typeof animMode3d !== 'undefined' && animMode3d === 'wave' && typeof glbModel !== 'undefined' && glbModel) {
+    glbModel.traverse(c => {
+      if (c.isBone) {
+        const n = c.name.toLowerCase();
+        // 왼팔은 차렷 자세로 자연스럽게 내리기
+        if (n.includes('leftarm') && !n.includes('fore')) {
+          c.rotation.set(0, 0, 1.2);
+        }
+        // 오른팔은 머리 위로 번쩍 들어 좌우로 반갑게 흔들기!
+        if (n.includes('rightarm') && !n.includes('fore')) {
+          c.rotation.set(0.2, 0, -2.1 + Math.sin(t * 12) * 0.35);
+        }
+        if (n.includes('rightforearm')) {
+          c.rotation.set(0, 0, -0.4 + Math.sin(t * 12) * 0.25);
+        }
+      }
+    });
+  }
+}
+finalFixLoop();
 </script>
   </body>
 </html>
