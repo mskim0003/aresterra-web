@@ -2934,6 +2934,13 @@
           btn.style.background = window.avatarVisible ? '#334155' : 'linear-gradient(135deg, #10b981, #059669)';
         }
       }
+        // 홈페이지 [💌 지인 초대장] 버튼 클릭 시 실제 작동하는 주소로 즉시 복사되게 덮어쓰기
+window.copyInviteText = function() {
+  const msg = `[🪐 ARESTERRA.IO 화성 오아시스구 제1특구 VIP 초대장]\n발송인: 👑 mskim0003 (황금 곤룡포 대군복 착용 · #001번지 본부 땅주인)\n\n"지구에 내 땅 없던 설움, 화성 제1특구에서 한국식 지적도(1대·2장·3답)로 등기된 내 땅으로 풀자! 답답한 우주복 대신 멋진 한복 아바타로 내 땅을 걸어 다녀 봐!"\n\n📍 3D 화성 지구본 메인: https://aresterra.io\n📍 100필지 & 한복 임장소: https://aresterra.io/oasis.html\n🎁 지인 전용 10,000 $MARSM 무료 착공 바우처 코드: [ ARES-MSKIM-VIP ]\n\n지금 바로 접속해서 한복 아바타로 실시간 임장도 돌고, 내 이름으로 된 aresterra.io 전용 땅 주소도 선점해 보세요!`;
+  navigator.clipboard.writeText(msg).then(() => {
+    alert("💌 카톡·문자용 초대장이 복사되었습니다! 채팅창에 바로 붙여넣기 하세요!");
+  });
+};
     </script>
 
     <!-- 우측 하단 아바타 ON/OFF 리모컨 버튼 -->
