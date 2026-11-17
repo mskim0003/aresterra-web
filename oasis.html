@@ -4736,6 +4736,169 @@ function finalFixLoop() {
   }
 }
 finalFixLoop();
+    // 🚀 [손흔들기 & 제이·보라·이웃 4인 즉시 소환 완성 패치]
+let realCrowdGroup = null;
+
+// 1. 버튼 글자를 직접 찾아서 클릭 시 100% 작동하도록 강제 직결!
+document.addEventListener('click', function(e) {
+  const btn = e.target.closest('button');
+  if (!btn) return;
+  const txt = btn.innerText || '';
+
+  if (txt.includes('손흔들기')) {
+    window.animMode3d = 'wave';
+  } else if (txt.includes('걷기')) {
+    window.animMode3d = 'walk';
+    if (typeof playGLBAnim === 'function') playGLBAnim('walk');
+  } else if (txt.includes('댄스')) {
+    window.animMode3d = 'dance';
+    if (typeof playGLBAnim === 'function') playGLBAnim('dance');
+  } else if (txt.includes('소환')) {
+    spawnReal3DFriendsNow();
+  }
+}, true);
+
+// 2. [제이·보라·이웃 광장 소환] 누르면 기다림 없이 0.1초 만에 8등신 한복 친구 4명 생성!
+function spawnReal3DFriendsNow() {
+  if (typeof scene3d === 'undefined' || !scene3d) return;
+
+  // 이미 소환되어 있으면 깔끔하게 숨기기(토글)
+  if (realCrowdGroup) {
+    scene3d.remove(realCrowdGroup);
+    realCrowdGroup = null;
+    return;
+  }
+
+  realCrowdGroup = new THREE.Group();
+  const friends = [
+    { name: '제이', x: -1.35, z: -0.45, color: '#ec4899', rotY: 0.35 },
+    { name: '보라', x: 1.35,  z: -0.45, color: '#a855f7', rotY: -0.35 },
+    { name: '선비1', x: -2.35, z: -0.95, color: '#0ea5e9', rotY: 0.45 },
+    { name: '선비2', x: 2.35,  z: -0.95, color: '#10b981', rotY: -0.45 }
+  ];
+
+  friends.forEach((f, idx) => {
+    const npc = new THREE.Group();
+    npc.position.set(f.x, 0, f.z);
+    npc.rotation.y = f.rotY;
+
+    const coatMat = new THREE.MeshStandardMaterial({ color: f.color, roughness: 0.35, metalness: 0.1 });
+    const skinMat = new THREE.MeshStandardMaterial({ color: 0xffdcb1, roughness: 0.5 });
+
+    // 8등신 달걀형 얼굴 & 목
+    const head = new THREE.Mesh(new THREE.SphereGeometry(0.16, 24, 24), skinMat);
+    head.scale.set(1, 1.2, 1);
+    head.position.set(0, 2.08, 0);
+    npc.add(head);
+
+    // 전통 갓
+    const brim = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.42, 0.025, 24), new THREE.MeshStandardMaterial({ color: 0x111111 }));
+    brim.position.set(0, 2.26, 0);
+    const hatTop = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.19, 0.22, 24), new THREE.MeshStandardMaterial({ color: 0x111111 }));
+    hatTop.position.set(0, 2.38, 0);
+    npc.add(brim, hatTop);
+
+    // 하얀 동정 옷깃 & 상의 도포
+    const collar = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.16, 0.1, 24), new THREE.MeshStandardMaterial({ color: 0xffffff }));
+    collar.position.set(0, 1.82, 0);
+    const upper = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.22, 0.48, 24), coatMat);
+    upper.scale.set(1.15, 1, 0.88);
+    upper.position.set(0, 1.56, 0);
+    npc.add(collar, upper);
+
+    // 황금 흉배 & 붉은 각대(허리띠)
+    const badge = new THREE.Mesh(new THREE.CircleGeometry(0.1, 24), new THREE.MeshBasicMaterial({ color: 0xfde047 }));
+    badge.position.set(0, 1.62, 0.21);
+    const belt = new THREE.Mesh(new THREE.CylinderGeometry(0.225, 0.225, 0.06, 24), new THREE.MeshStandardMaterial({ color: 0xdc2626 }));
+    belt.scale.set(1.16, 1, 0.92);
+    belt.position.set(0, 1.36, 0);
+    npc.add(badge, belt);
+
+    // 풍성한 A라인 하의 도포 자락
+    const skirt = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.52, 1.05, 28), coatMat);
+    skirt.scale.set(1.1, 1, 1.25);
+    skirt.position.set(0, 0.82, 0);
+    npc.add(skirt);
+
+    // 양팔 (오른팔은 관절 회전으로 같이 손을 흔들어줌!)
+    const armGeo = new THREE.CylinderGeometry(0.065, 0.055, 0.65, 16);
+    armGeo.translate(0, -0.28, 0);
+    const leftArm = new THREE.Mesh(armGeo, coatMat);
+    leftArm.position.set(-0.26, 1.75, 0);
+    leftArm.rotation.z = 0.22;
+
+    const rightArm = new THREE.Mesh(armGeo, coatMat);
+    rightArm.position.set(0.26, 1.75, 0);
+    rightArm.rotation.z = -0.22;
+    npc.add(leftArm, rightArm);
+
+    // 하얀 버선/신발
+    const footGeo = new THREE.SphereGeometry(0.09, 16, 16);
+    const footMat = new THREE.MeshStandardMaterial({ color: 0xffffff });
+    const lFoot = new THREE.Mesh(footGeo, footMat);
+    lFoot.position.set(-0.12, 0.08, 0.05);
+    const rFoot = new THREE.Mesh(footGeo, footMat);
+    rFoot.position.set(0.12, 0.08, 0.05);
+    npc.add(lFoot, rFoot);
+
+    npc.userData = { rightArm, leftArm, phase: idx * 1.2 };
+    realCrowdGroup.add(npc);
+  });
+
+  scene3d.add(realCrowdGroup);
+}
+
+// 3. 손흔들기 모드일 때 애니메이션 재생기가 팔을 못 내리게 막고 오른팔을 높이 들어 흔들기!
+const actionClock = new THREE.Clock();
+function guaranteeWaveAndCrowdLoop() {
+  requestAnimationFrame(guaranteeWaveAndCrowdLoop);
+  const t = actionClock.getElapsedTime();
+
+  // 주인공 아바타 손 흔들기 (오른팔 어깨를 머리 위로 번쩍 들어 흔들기)
+  if (window.animMode3d === 'wave' && typeof glbModel !== 'undefined' && glbModel) {
+    glbModel.traverse(c => {
+      if (c.isBone) {
+        const n = c.name.toLowerCase();
+        // 오른팔 어깨와 팔뚝을 확실하게 위로 들어서 흔들기
+        if (n.includes('rightarm') && !n.includes('fore') && !n.includes('hand')) {
+          c.rotation.x = -0.4;
+          c.rotation.y = 0;
+          c.rotation.z = -2.2 + Math.sin(t * 10) * 0.4;
+        }
+        if (n.includes('rightforearm')) {
+          c.rotation.x = 0;
+          c.rotation.y = 0;
+          c.rotation.z = -0.3 + Math.sin(t * 10) * 0.3;
+        }
+        // 왼팔은 차분하게 아래로 내리기
+        if (n.includes('leftarm') && !n.includes('fore') && !n.includes('hand')) {
+          c.rotation.set(0, 0, 1.25);
+        }
+      }
+    });
+  }
+
+  // 소환된 제이·보라·이웃 4명도 오빠를 따라 같이 걸으며 반갑게 손 흔들기!
+  if (realCrowdGroup) {
+    realCrowdGroup.children.forEach(npc => {
+      const p = npc.userData.phase;
+      npc.position.y = Math.abs(Math.sin(t * 4 + p)) * 0.06;
+      if (window.animMode3d === 'wave') {
+        npc.userData.rightArm.rotation.z = -2.3 + Math.sin(t * 10 + p) * 0.35;
+      } else if (window.animMode3d === 'dance') {
+        npc.rotation.y += 0.03;
+        npc.userData.rightArm.rotation.z = -1.8 + Math.sin(t * 8 + p) * 0.5;
+        npc.userData.leftArm.rotation.z = 1.8 - Math.sin(t * 8 + p) * 0.5;
+      } else {
+        npc.userData.rightArm.rotation.z = -0.22;
+        npc.userData.leftArm.rotation.z = 0.22;
+        npc.userData.rightArm.rotation.x = Math.sin(t * 5 + p) * 0.4;
+        npc.userData.leftArm.rotation.x = -Math.sin(t * 5 + p) * 0.4;
+      }
+    });
+  }
+}
+guaranteeWaveAndCrowdLoop();
 </script>
   </body>
 </html>
