@@ -4189,6 +4189,111 @@ setTimeout(() => {
   const saved = localStorage.getItem('mars_selfie_3d');
   if (saved) window.paintOvalFaceNow(saved);
 }, 800);
+    // 👘 [3D 한복 도포 착용 패치] 맨몸 마네킹에 전통 한복 도포, 동정(흰 옷깃), 황금 흉배 입히기!
+let glbHanbokOutfit = null;
+let glbSpineBone = null;
+let currentHanbokColor = '#eab308';
+
+function equip3DHanbokOutfit() {
+  if (typeof scene3d === 'undefined' || !scene3d || !glbModel || glbHanbokOutfit) return;
+
+  // 1. 온몸이 노란 마네킹 피부를 자연스러운 살구색 피부/비단 바지 톤으로 변경
+  glbModel.traverse(child => {
+    if (child.isBone && (child.name === 'mixamorigSpine1' || child.name === 'mixamorigSpine' || child.name === 'Spine')) {
+      glbSpineBone = child;
+    }
+    if (child.isMesh) {
+      child.material = child.material.clone();
+      if (child.name.toLowerCase().includes('joint')) {
+        child.material.color.set('#1e293b'); // 관절은 짙은 남색 바지/신발 톤
+      } else {
+        child.material.color.set('#ffdcb1'); // 손과 목은 자연스러운 살구색 피부톤
+      }
+    }
+  });
+
+  // 2. 몸통을 감싸는 입체 한복 도포(곤룡포) 그룹 생성
+  glbHanbokOutfit = new THREE.Group();
+
+  const coatMat = new THREE.MeshStandardMaterial({
+    color: currentHanbokColor,
+    roughness: 0.4,
+    metalness: 0.15
+  });
+
+  // 상의 몸통 (어깨부터 허리까지 감싸는 한복 저고리/포)
+  const upperCoat = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.22, 0.52, 24), coatMat);
+  upperCoat.scale.set(1.15, 1, 0.78);
+  upperCoat.position.set(0, 0.08, 0);
+  glbHanbokOutfit.add(upperCoat);
+
+  // 하의 도포 자락 (허리부터 무릎 아래까지 퍼지는 전통 도포 치마/자락)
+  const lowerSkirt = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.38, 0.75, 24), coatMat);
+  lowerSkirt.scale.set(1.1, 1, 0.82);
+  lowerSkirt.position.set(0, -0.52, 0);
+  glbHanbokOutfit.add(lowerSkirt);
+
+  // 양쪽 넓은 한복 소매 (어깨 덮개)
+  const sleeveGeo = new THREE.CylinderGeometry(0.11, 0.15, 0.36, 16);
+  const leftSleeve = new THREE.Mesh(sleeveGeo, coatMat);
+  leftSleeve.position.set(-0.28, 0.14, 0);
+  leftSleeve.rotation.z = 0.35;
+  glbHanbokOutfit.add(leftSleeve);
+
+  const rightSleeve = new THREE.Mesh(sleeveGeo, coatMat);
+  rightSleeve.position.set(0.28, 0.14, 0);
+  rightSleeve.rotation.z = -0.35;
+  glbHanbokOutfit.add(rightSleeve);
+
+  // 목 부분 하얀 전통 동정 (V자 한복 옷깃)
+  const collarMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.3 });
+  const collar = new THREE.Mesh(new THREE.TorusGeometry(0.14, 0.025, 12, 24), collarMat);
+  collar.rotation.x = Math.PI / 2;
+  collar.position.set(0, 0.33, 0.03);
+  glbHanbokOutfit.add(collar);
+
+  // 가슴 정면 황금 용문양 흉배 (왕의 상징)
+  const badgeMat = new THREE.MeshStandardMaterial({ color: 0xfde047, metalness: 0.7, roughness: 0.2 });
+  const frontBadge = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.11, 0.02, 24), badgeMat);
+  frontBadge.rotation.x = Math.PI / 2;
+  frontBadge.position.set(0, 0.14, 0.18);
+  glbHanbokOutfit.add(frontBadge);
+
+  // 가슴 전통 각대 (왕의 허리띠)
+  const beltMat = new THREE.MeshStandardMaterial({ color: 0x991b1b, metalness: 0.4 });
+  const belt = new THREE.Mesh(new THREE.CylinderGeometry(0.23, 0.23, 0.06, 24), beltMat);
+  belt.scale.set(1.16, 1, 0.8);
+  belt.position.set(0, -0.12, 0);
+  glbHanbokOutfit.add(belt);
+
+  glbHanbokOutfit.userData = { coatMeshes: [upperCoat, lowerSkirt, leftSleeve, rightSleeve] };
+  scene3d.add(glbHanbokOutfit);
+}
+
+// 옷 갈아입기 버튼(황금 곤룡포 / 푸른 선비도포 / 핑크 무대의상) 연동
+window.change3DHanbokColor = function(hexStr) {
+  currentHanbokColor = hexStr;
+  if (glbHanbokOutfit && glbHanbokOutfit.userData.coatMeshes) {
+    glbHanbokOutfit.userData.coatMeshes.forEach(m => m.material.color.set(hexStr));
+  }
+};
+
+// 캐릭터가 걷거나 춤출 때 한복 도포도 척추(가슴) 움직임을 따라 실시간으로 흔들리게 연결
+const spinePos = new THREE.Vector3();
+const spineQuat = new THREE.Quaternion();
+function syncHanbokLoop() {
+  requestAnimationFrame(syncHanbokLoop);
+  if (glbModel) {
+    equip3DHanbokOutfit();
+    if (glbSpineBone && glbHanbokOutfit) {
+      glbSpineBone.getWorldPosition(spinePos);
+      glbSpineBone.getWorldQuaternion(spineQuat);
+      glbHanbokOutfit.position.copy(spinePos);
+      glbHanbokOutfit.quaternion.copy(spineQuat);
+    }
+  }
+}
+syncHanbokLoop();
 </script>
   </body>
 </html>
