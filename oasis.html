@@ -3784,6 +3784,126 @@ window.copyInviteText = function() {
   }
   cleanMasterLoop();
 })();
+    // ⛏️ [24시간 출석 스위치형 자동 채굴 엔진] 창을 닫아도 24시간 동안 자동 정산!
+(function() {
+  const MINING_RATE_PER_HOUR = 10.0; // 시간당 10 MARSM 채굴 (하루 240 MARSM)
+  const MINING_DURATION_MS = 24 * 60 * 60 * 1000; // 24시간 (밀리초 단위)
+  const RATE_PER_MS = MINING_RATE_PER_HOUR / (60 * 60 * 1000);
+
+  let uiCreated = false;
+  let balanceEl = null;
+  let timerEl = null;
+  let startBtn = null;
+
+  // 1. 아바타 광장 모달 안에 채굴 계기판 & 출석 버튼 UI 자동 생성
+  function createMiningUI() {
+    if (uiCreated) return;
+    const buttons = document.querySelectorAll('button');
+    let targetContainer = null;
+    buttons.forEach(b => {
+      if ((b.innerText || '').includes('소환')) {
+        targetContainer = b.parentElement;
+      }
+    });
+    if (!targetContainer) return;
+    uiCreated = true;
+
+    const panel = document.createElement('div');
+    panel.style.cssText = 'width:100%; margin-top:12px; padding:12px 16px; background:linear-gradient(135deg, rgba(15,23,42,0.95), rgba(30,41,59,0.95)); border:2px solid #eab308; border-radius:14px; display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:10px; box-shadow:0 0 15px rgba(234,179,8,0.25);';
+
+    panel.innerHTML = `
+      <div style="display:flex; flex-direction:column; gap:4px;">
+        <div style="font-size:13px; color:#fde047; font-weight:bold;">⛏️ 오아시스 광장 24시간 자동 채굴기 (시간당 +10 MARSM)</div>
+        <div style="font-size:20px; color:#ffffff; font-weight:900; letter-spacing:0.5px;">
+          보유량: <span id="marsm-live-balance" style="color:#38bdf8;">0.0000</span> <span style="font-size:14px; color:#eab308;">$MARSM</span>
+        </div>
+        <div id="marsm-live-timer" style="font-size:12px; color:#94a3b8;">⚪ 현재 채굴 대기 중 (출석 버튼을 눌러 가동하세요!)</div>
+      </div>
+      <button id="marsm-start-btn" style="padding:12px 20px; border:none; border-radius:10px; font-weight:bold; font-size:14px; cursor:pointer; background:linear-gradient(90deg, #eab308, #f59e0b); color:#0f172a; box-shadow:0 4px 12px rgba(234,179,8,0.4); transition:0.2s;">
+        ⚡ 24시간 채굴 가동하기
+      </button>
+    `;
+
+    targetContainer.parentElement.appendChild(panel);
+    balanceEl = document.getElementById('marsm-live-balance');
+    timerEl = document.getElementById('marsm-live-timer');
+    startBtn = document.getElementById('marsm-start-btn');
+
+    startBtn.onclick = function() {
+      start24HourMining();
+    };
+  }
+
+  // 2. 창을 닫았다가 들어와도 시간을 계산해서 자동 적립해주는 핵심 정산 함수
+  function syncMiningState() {
+    const now = Date.now();
+    let savedCoins = parseFloat(localStorage.getItem('marsm_saved_coins') || '0');
+    let startTime = parseInt(localStorage.getItem('marsm_mine_start') || '0', 10);
+
+    if (startTime > 0) {
+      const elapsed = now - startTime;
+      if (elapsed >= MINING_DURATION_MS) {
+        // 24시간이 모두 지났으면 24시간 치 코인을 확정 저장하고 대기 상태로 전환
+        savedCoins += MINING_DURATION_MS * RATE_PER_MS;
+        localStorage.setItem('marsm_saved_coins', savedCoins.toFixed(6));
+        localStorage.setItem('marsm_mine_start', '0');
+        startTime = 0;
+      } else {
+        // 아직 24시간 이내라면 실시간으로 흐른 시간만큼 코인 합산 표시
+        const currentTotal = savedCoins + (elapsed * RATE_PER_MS);
+        const remainMs = MINING_DURATION_MS - elapsed;
+        const hrs = String(Math.floor(remainMs / 3600000)).padStart(2, '0');
+        const mins = String(Math.floor((remainMs % 3600000) / 60000)).padStart(2, '0');
+        const secs = String(Math.floor((remainMs % 60000) / 1000)).padStart(2, '0');
+
+        if (balanceEl) balanceEl.innerText = currentTotal.toFixed(4);
+        if (timerEl) {
+          timerEl.style.color = '#4ade80';
+          timerEl.innerText = `🟢 24시간 자동 채굴 중! (창을 닫아도 진행됨 | 남은 시간: ${hrs}:${mins}:${secs})`;
+        }
+        if (startBtn) {
+          startBtn.innerText = '⛏️ 채굴 가동 중...';
+          startBtn.style.background = '#334155';
+          startBtn.style.color = '#94a3b8';
+          startBtn.style.cursor = 'default';
+        }
+        return;
+      }
+    }
+
+    // 대기 상태 표시
+    if (balanceEl) balanceEl.innerText = savedCoins.toFixed(4);
+    if (timerEl) {
+      timerEl.style.color = '#fbbf24';
+      timerEl.innerText = '⚪ 채굴 정지 상태 (오늘의 출석 버튼을 눌러 24시간 채굴을 시작하세요!)';
+    }
+    if (startBtn) {
+      startBtn.innerText = '⚡ 24시간 채굴 가동하기';
+      startBtn.style.background = 'linear-gradient(90deg, #eab308, #f59e0b)';
+      startBtn.style.color = '#0f172a';
+      startBtn.style.cursor = 'pointer';
+    }
+  }
+
+  // 3. [⚡ 24시간 채굴 가동하기] 버튼 클릭 시 작동
+  function start24HourMining() {
+    const startTime = parseInt(localStorage.getItem('marsm_mine_start') || '0', 10);
+    const now = Date.now();
+    if (startTime > 0 && (now - startTime) < MINING_DURATION_MS) {
+      return; // 이미 24시간 채굴 중이면 중복 실행 방지
+    }
+    localStorage.setItem('marsm_mine_start', String(now));
+    // 채굴 가동과 함께 아바타가 기분 좋게 댄스 모션!
+    if (typeof window.set3DAnimMode === 'function') window.set3DAnimMode('dance');
+    syncMiningState();
+  }
+
+  // 0.2초마다 실시간으로 코인 숫자가 올라가는 모습 표시
+  setInterval(function() {
+    createMiningUI();
+    if (uiCreated) syncMiningState();
+  }, 200);
+})();
 </script>
   </body>
 </html>
