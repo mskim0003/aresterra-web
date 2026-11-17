@@ -3246,29 +3246,32 @@ window.copyInviteText = function() {
   }
 </script>
     <script>
-  // 🏛️ 입학식 문구를 '중앙 만남의 광장 모임터'로 자동 변경 & 지도 속 [광장공] 클릭 연결
+  // 🛠️ 3D 아바타 도화지(Canvas)를 건드리지 않고 안전하게 광장 모드 & 셀카 얼굴 입히기
   window.addEventListener('load', () => {
-    // 1. 우측 하단 버튼 이름 및 색상 변경
     const studioBtn = document.querySelector('button[onclick="open3DAvatarStudio()"]');
     if (studioBtn) {
       studioBtn.innerHTML = '🏛️ 중앙광장 3D 아바타 모임터 입장';
       studioBtn.style.background = 'linear-gradient(135deg, #f59e0b, #dc2626)';
     }
-    // 2. 팝업창 내부의 입학식 문구들을 광장 산책·인사 문구로 자동 교체
-    const modal = document.getElementById('avatar3d-modal');
-    if (modal) {
-      modal.innerHTML = modal.innerHTML
-        .replace('✨ 화성 제1특구 3D 휴머노이드 아바타 & 메타버스 입학식·콘서트 홀', '🏛️ 오아시스구 중앙 만남의 광장 (3D 한복 아바타 모임터)')
-        .replace('🎓 입학식 대표 선서', '👋 반갑게 손흔들기')
-        .replace('👥 입학식·콘서트 군중 소환', '👥 제이·보라·이웃 광장 소환');
-    }
-    // 3. 지도 한가운데 [🏛️ 광장공] 클릭 시 바로 3D 광장 열기 + 방향키 이동
+
+    // 캔버스가 초기화되지 않도록 글자만 있는 버튼과 제목만 안전하게 변경
+    document.querySelectorAll('#avatar3d-modal div, #avatar3d-modal button').forEach(el => {
+      if (el.children.length === 0 && el.innerText) {
+        el.innerText = el.innerText
+          .replace('✨ 화성 제1특구 3D 휴머노이드 아바타 & 메타버스 입학식·콘서트 홀', '🏛️ 오아시스구 중앙 만남의 광장 (3D 한복 아바타 모임터)')
+          .replace('🎓 입학식 대표 선서', '👋 반갑게 손흔들기')
+          .replace('👥 입학식·콘서트 군중 소환', '👥 제이·보라·이웃 광장 소환');
+      }
+    });
+
+    // 지도 한가운데 [🏛️ 광장공] 클릭 시 바로 3D 광장 열기 + 방향키 이동
     document.querySelectorAll('div, button, span').forEach(el => {
       if (el.innerText && el.innerText.includes('광장공') && el.children.length < 3) {
         el.style.cursor = 'pointer';
         el.addEventListener('click', open3DAvatarStudio);
       }
     });
+
     window.addEventListener('keydown', e => {
       if (!mainAvatar3d || document.getElementById('avatar3d-modal').style.display !== 'flex') return;
       const step = 0.25;
@@ -3278,6 +3281,39 @@ window.copyInviteText = function() {
       if (e.key === 'ArrowDown') { mainAvatar3d.position.z += step; mainAvatar3d.rotation.y = 0; }
     });
   });
+
+  // 📸 셀카 사진을 올리면 3D 아바타 얼굴 정면에 큼직하고 선명하게 붙도록 업그레이드
+  window.applySelfieTo3D = function(event) {
+    const file = event.target.files[0];
+    if (!file || !mainAvatar3d) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const img = new Image();
+      img.onload = function() {
+        const canvas = document.createElement('canvas');
+        canvas.width = 512;
+        canvas.height = 512;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#ffdcb1';
+        ctx.fillRect(0, 0, 512, 512);
+        ctx.drawImage(img, 128, 96, 256, 320);
+
+        const tex = new THREE.CanvasTexture(canvas);
+        mainAvatar3d.userData.head.material.map = tex;
+        mainAvatar3d.userData.head.material.color.setHex(0xffffff);
+        mainAvatar3d.userData.head.material.needsUpdate = true;
+
+        if (typeof avatarState !== 'undefined') {
+          avatarState.photoUrl = e.target.result;
+          localStorage.setItem('mars_avatar_state', JSON.stringify(avatarState));
+          if (typeof applyAvatarVisuals === 'function') applyAvatarVisuals();
+        }
+        alert('📸 오빠 셀카가 3D 한복 아바타 얼굴에 멋지게 적용되었어!');
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  };
 </script>
   </body>
 </html>
