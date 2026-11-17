@@ -3378,7 +3378,7 @@ window.copyInviteText = function() {
 </script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
 <script>
-// ✨ [올인원 클린 3D 한복 아바타 엔진 v2] 머리 위 이름표 + 귀여운 표정 + 한 손 인사 완벽 교정!
+// ✨ [올인원 클린 3D 한복 아바타 엔진 v3] 옛날 원기둥 인형 완벽 차단 + 이름표 4인방 + 한 손 인사!
 (function() {
   let glbModel = null;
   let glbMixer = null;
@@ -3399,14 +3399,13 @@ window.copyInviteText = function() {
   let currentMode = 'walk';
   let isLoaded = false;
 
-  // 🏷️ 머리 위 3D 이름표 생성 함수
+  // 🏷️ 머리 위 3D 이름표 생성
   function makeNameTag(text, borderColor) {
     const c = document.createElement('canvas');
     c.width = 512; c.height = 128;
     const ctx = c.getContext('2d');
 
-    // 반투명 검은 라운드 배경 + 컬러 테두리
-    ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
     ctx.strokeStyle = borderColor || '#fde047';
     ctx.lineWidth = 8;
     ctx.beginPath();
@@ -3414,8 +3413,7 @@ window.copyInviteText = function() {
     ctx.fill();
     ctx.stroke();
 
-    // 이름 글자
-    ctx.font = 'bold 46px sans-serif';
+    ctx.font = 'bold 44px sans-serif';
     ctx.fillStyle = '#ffffff';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
@@ -3428,7 +3426,7 @@ window.copyInviteText = function() {
     return sp;
   }
 
-  // 😊 제이·보라·이웃용 귀여운 웃는 얼굴 텍스처 생성
+  // 😊 제이·보라·이웃용 웃는 얼굴 텍스처
   function makeSmileFaceTexture() {
     const c = document.createElement('canvas');
     c.width = 256; c.height = 256;
@@ -3436,19 +3434,16 @@ window.copyInviteText = function() {
     ctx.fillStyle = '#ffdcb1';
     ctx.fillRect(0, 0, 256, 256);
 
-    // 반달 눈
     ctx.strokeStyle = '#1e293b';
     ctx.lineWidth = 8;
     ctx.lineCap = 'round';
     ctx.beginPath(); ctx.arc(95, 110, 14, Math.PI * 1.1, Math.PI * 1.9); ctx.stroke();
     ctx.beginPath(); ctx.arc(161, 110, 14, Math.PI * 1.1, Math.PI * 1.9); ctx.stroke();
 
-    // 발그레한 볼터치
     ctx.fillStyle = 'rgba(244, 63, 94, 0.35)';
     ctx.beginPath(); ctx.arc(75, 135, 16, 0, Math.PI * 2); ctx.fill();
     ctx.beginPath(); ctx.arc(181, 135, 16, 0, Math.PI * 2); ctx.fill();
 
-    // 웃는 입
     ctx.strokeStyle = '#e11d48';
     ctx.lineWidth = 7;
     ctx.beginPath(); ctx.arc(128, 135, 20, 0.15 * Math.PI, 0.85 * Math.PI); ctx.stroke();
@@ -3461,14 +3456,10 @@ window.copyInviteText = function() {
     if (isLoaded || typeof scene3d === 'undefined' || !scene3d) return;
     isLoaded = true;
 
-    if (typeof mainAvatar3d !== 'undefined' && mainAvatar3d) mainAvatar3d.visible = false;
-    if (typeof crowdAvatars3d !== 'undefined' && Array.isArray(crowdAvatars3d)) {
-      crowdAvatars3d.forEach(c => { if (c) c.visible = false; });
-    }
-
     const loader = new THREE.GLTFLoader();
     loader.load('https://threejs.org/examples/models/gltf/Xbot.glb', function(gltf) {
       glbModel = gltf.scene;
+      glbModel.userData.isOurHero = true;
       glbModel.scale.set(1.55, 1.55, 1.55);
       glbModel.position.set(0, 0, 0);
 
@@ -3507,6 +3498,7 @@ window.copyInviteText = function() {
     const coatMat = new THREE.MeshStandardMaterial({ color: currentCoatColor, roughness: 0.4, metalness: 0.1 });
 
     hanbokGroup = new THREE.Group();
+    hanbokGroup.userData.isOurHero = true;
     const upper = new THREE.Mesh(new THREE.CylinderGeometry(0.19, 0.23, 0.50, 32), coatMat);
     upper.scale.set(1.15, 1, 0.88);
     upper.position.set(0, 0.06, 0.02);
@@ -3530,6 +3522,7 @@ window.copyInviteText = function() {
     scene3d.add(hanbokGroup);
 
     hatGroup = new THREE.Group();
+    hatGroup.userData.isOurHero = true;
     const brim = new THREE.Mesh(new THREE.CylinderGeometry(0.48, 0.48, 0.03, 32), new THREE.MeshStandardMaterial({ color: 0x111111 }));
     brim.position.y = 0.22;
     const topHat = new THREE.Mesh(new THREE.CylinderGeometry(0.20, 0.22, 0.26, 32), new THREE.MeshStandardMaterial({ color: 0x111111 }));
@@ -3537,8 +3530,8 @@ window.copyInviteText = function() {
     hatGroup.add(brim, topHat);
     scene3d.add(hatGroup);
 
-    // 주인공 오빠 머리 위 이름표
     myNameTag = makeNameTag('👑 mskim0003 (오빠)', '#fde047');
+    myNameTag.userData.isOurHero = true;
     scene3d.add(myNameTag);
   }
 
@@ -3567,44 +3560,47 @@ window.copyInviteText = function() {
       const faceGeo = new THREE.CylinderGeometry(0.22, 0.19, 0.38, 32, 1, true, -Math.PI / 2.5, (Math.PI * 2) / 2.5);
       const faceMat = new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthTest: false, side: THREE.FrontSide });
       faceMesh = new THREE.Mesh(faceGeo, faceMat);
+      faceMesh.userData.isOurHero = true;
       faceMesh.renderOrder = 999;
       scene3d.add(faceMesh);
     };
     img.src = imgData;
   }
 
-  // 4. 모션 전환
+  // 4. 모션 전환 (T-포즈 양팔 벌림 완벽 방지!)
   function setCleanAnimMode(mode) {
     currentMode = mode;
     window.animMode3d = mode;
     if (!glbMixer) return;
 
     Object.values(glbActions).forEach(act => act.stop());
-    if (mode === 'walk' && glbActions['walk']) {
+    const walkAct = glbActions['walk'] || Object.values(glbActions)[0];
+    const runAct = glbActions['run'] || walkAct;
+
+    if (mode === 'walk' && walkAct) {
       glbMixer.timeScale = 1;
-      glbActions['walk'].play();
-    } else if (mode === 'dance' && (glbActions['run'] || glbActions['walk'])) {
+      walkAct.play();
+    } else if (mode === 'dance' && runAct) {
       glbMixer.timeScale = 1;
-      (glbActions['run'] || glbActions['walk']).play();
-    } else if (mode === 'wave') {
-      if (glbActions['idle']) glbActions['idle'].play();
+      runAct.play();
+    } else if (mode === 'wave' && walkAct) {
+      // idle이 없어도 walk의 첫 자세(다리 모은 자세)로 고정해서 T자 양팔 벌림을 원천 차단!
+      walkAct.play();
       glbMixer.update(0.01);
       glbMixer.timeScale = 0;
     }
   }
 
-  // 5. 제이·보라·이웃 4인방 소환 (머리 위 이름표 + 웃는 얼굴 포함!)
+  // 5. 제이·보라·이웃 4인방 소환 (머리 위 이름표 + 웃는 얼굴)
   function toggleCleanFriends() {
     if (!scene3d) return;
-    if (typeof crowdAvatars3d !== 'undefined' && Array.isArray(crowdAvatars3d)) {
-      crowdAvatars3d.forEach(b => { if (b) b.visible = false; });
-    }
     if (friendsGroup) {
       friendsGroup.visible = !friendsGroup.visible;
       return;
     }
 
     friendsGroup = new THREE.Group();
+    friendsGroup.userData.isOurHero = true;
     const smileTex = makeSmileFaceTexture();
     const configs = [
       { name: '💖 제이',     x: -1.4, z: -0.4, color: '#ec4899', rotY: 0.35 },
@@ -3621,7 +3617,6 @@ window.copyInviteText = function() {
       const cMat = new THREE.MeshStandardMaterial({ color: cfg.color, roughness: 0.35 });
       const faceMat = new THREE.MeshBasicMaterial({ map: smileTex });
 
-      // 웃는 얼굴이 들어간 머리
       const head = new THREE.Mesh(new THREE.SphereGeometry(0.16, 24, 24), faceMat);
       head.scale.set(1, 1.2, 1);
       head.rotation.y = -Math.PI / 2;
@@ -3632,9 +3627,9 @@ window.copyInviteText = function() {
       const topH = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.19, 0.22, 24), new THREE.MeshStandardMaterial({ color: 0x111111 }));
       topH.position.set(0, 2.36, 0);
 
-      // 머리 위 3D 이름표 장착!
+      // 머리 위 3D 이름표
       const tag = makeNameTag(cfg.name, cfg.color);
-      tag.position.set(0, 2.72, 0);
+      tag.position.set(0, 2.75, 0);
 
       const collar = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.16, 0.1, 20), new THREE.MeshStandardMaterial({ color: 0xffffff }));
       collar.position.set(0, 1.80, 0);
@@ -3667,6 +3662,26 @@ window.copyInviteText = function() {
     scene3d.add(friendsGroup);
   }
 
+  // 6. 버튼 클릭 이벤트를 직접 가로채서 옛날 원기둥 함수가 절대 실행되지 못하게 고정!
+  document.addEventListener('click', function(e) {
+    const btn = e.target.closest('button');
+    if (!btn) return;
+    const txt = btn.innerText || '';
+    if (txt.includes('손흔들기')) {
+      e.stopImmediatePropagation();
+      setCleanAnimMode('wave');
+    } else if (txt.includes('걷기')) {
+      e.stopImmediatePropagation();
+      setCleanAnimMode('walk');
+    } else if (txt.includes('댄스')) {
+      e.stopImmediatePropagation();
+      setCleanAnimMode('dance');
+    } else if (txt.includes('소환')) {
+      e.stopImmediatePropagation();
+      toggleCleanFriends();
+    }
+  }, true);
+
   window.applySelfieTo3D = function(event) {
     const file = event.target.files && event.target.files[0];
     if (!file) return;
@@ -3688,9 +3703,7 @@ window.copyInviteText = function() {
     }
   };
 
-  window.set3DAnimMode = setCleanAnimMode;
-  window.summon3DCrowd = toggleCleanFriends;
-
+  // 7. 통합 렌더링 루프 (옛날 원기둥 인형이 무대에 올라오면 즉시 숨김!)
   const clock = new THREE.Clock();
   const posV = new THREE.Vector3();
   const quatQ = new THREE.Quaternion();
@@ -3700,11 +3713,16 @@ window.copyInviteText = function() {
     const dt = clock.getDelta();
     const t = clock.getElapsedTime();
 
-    if (typeof mainAvatar3d !== 'undefined' && mainAvatar3d) mainAvatar3d.visible = false;
-    if (typeof crowdAvatars3d !== 'undefined' && Array.isArray(crowdAvatars3d)) {
-      crowdAvatars3d.forEach(b => { if (b) b.visible = false; });
-    }
     if (!isLoaded && typeof scene3d !== 'undefined' && scene3d) initCleanAvatar();
+
+    // 무대(scene3d) 위에서 우리가 만든 캐릭터(isOurHero)가 아닌 옛날 원기둥 캐릭터들은 전부 즉시 숨김!
+    if (typeof scene3d !== 'undefined' && scene3d) {
+      scene3d.children.forEach(obj => {
+        if (obj.type === 'Group' && !obj.userData.isOurHero) {
+          obj.visible = false;
+        }
+      });
+    }
 
     if (glbMixer && currentMode !== 'wave') glbMixer.update(dt);
 
@@ -3713,10 +3731,10 @@ window.copyInviteText = function() {
         glbModel.rotation.y += 0.03;
       } else if (currentMode === 'wave') {
         glbModel.rotation.y = 0;
-        // 오른팔만 높이 들어 흔들고, 왼팔은 허리 옆에 차분히 내리기!
+        // 오른손만 높이 들어 흔들고, 왼팔은 몸통 옆으로 차렷!
         if (glbRightArm) glbRightArm.rotation.set(0.2, 0, -2.35 + Math.sin(t * 12) * 0.45);
         if (glbRightForeArm) glbRightForeArm.rotation.set(0, 0, -0.3 + Math.sin(t * 12) * 0.35);
-        if (glbLeftArm) glbLeftArm.rotation.set(0, 0, 0);
+        if (glbLeftArm) glbLeftArm.rotation.set(0, 0, 1.25);
       }
 
       if (glbSpineBone && hanbokGroup) {
@@ -3749,7 +3767,7 @@ window.copyInviteText = function() {
         npc.position.y = Math.abs(Math.sin(t * 4 + p)) * 0.05;
         if (currentMode === 'wave') {
           npc.userData.rightArm.rotation.x = 0;
-          npc.userData.rightArm.rotation.z = 2.4 + Math.sin(t * 12 + p) * 0.35; // 바깥쪽으로 시원하게 손 흔들기!
+          npc.userData.rightArm.rotation.z = 2.4 + Math.sin(t * 12 + p) * 0.35;
           npc.userData.leftArm.rotation.z = -0.22;
         } else if (currentMode === 'dance') {
           npc.rotation.y += 0.03;
