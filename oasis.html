@@ -3378,7 +3378,7 @@ window.copyInviteText = function() {
 </script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
 <script>
-// ✨ [올인원 클린 3D 한복 아바타 엔진] 중복 없이 하나로 통합된 최종 코드!
+// ✨ [올인원 클린 3D 한복 아바타 엔진 v2] 머리 위 이름표 + 귀여운 표정 + 한 손 인사 완벽 교정!
 (function() {
   let glbModel = null;
   let glbMixer = null;
@@ -3391,6 +3391,7 @@ window.copyInviteText = function() {
 
   let hanbokGroup = null;
   let hatGroup = null;
+  let myNameTag = null;
   let faceMesh = null;
   let friendsGroup = null;
 
@@ -3398,12 +3399,68 @@ window.copyInviteText = function() {
   let currentMode = 'walk';
   let isLoaded = false;
 
-  // 1. 주인공 8등신 .glb 모델 및 3D 한복/갓 초기화
+  // 🏷️ 머리 위 3D 이름표 생성 함수
+  function makeNameTag(text, borderColor) {
+    const c = document.createElement('canvas');
+    c.width = 512; c.height = 128;
+    const ctx = c.getContext('2d');
+
+    // 반투명 검은 라운드 배경 + 컬러 테두리
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+    ctx.strokeStyle = borderColor || '#fde047';
+    ctx.lineWidth = 8;
+    ctx.beginPath();
+    ctx.roundRect(16, 16, 480, 96, 48);
+    ctx.fill();
+    ctx.stroke();
+
+    // 이름 글자
+    ctx.font = 'bold 46px sans-serif';
+    ctx.fillStyle = '#ffffff';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(text, 256, 66);
+
+    const tex = new THREE.CanvasTexture(c);
+    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, depthTest: false }));
+    sp.scale.set(1.15, 0.29, 1);
+    sp.renderOrder = 1000;
+    return sp;
+  }
+
+  // 😊 제이·보라·이웃용 귀여운 웃는 얼굴 텍스처 생성
+  function makeSmileFaceTexture() {
+    const c = document.createElement('canvas');
+    c.width = 256; c.height = 256;
+    const ctx = c.getContext('2d');
+    ctx.fillStyle = '#ffdcb1';
+    ctx.fillRect(0, 0, 256, 256);
+
+    // 반달 눈
+    ctx.strokeStyle = '#1e293b';
+    ctx.lineWidth = 8;
+    ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.arc(95, 110, 14, Math.PI * 1.1, Math.PI * 1.9); ctx.stroke();
+    ctx.beginPath(); ctx.arc(161, 110, 14, Math.PI * 1.1, Math.PI * 1.9); ctx.stroke();
+
+    // 발그레한 볼터치
+    ctx.fillStyle = 'rgba(244, 63, 94, 0.35)';
+    ctx.beginPath(); ctx.arc(75, 135, 16, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(181, 135, 16, 0, Math.PI * 2); ctx.fill();
+
+    // 웃는 입
+    ctx.strokeStyle = '#e11d48';
+    ctx.lineWidth = 7;
+    ctx.beginPath(); ctx.arc(128, 135, 20, 0.15 * Math.PI, 0.85 * Math.PI); ctx.stroke();
+
+    return new THREE.CanvasTexture(c);
+  }
+
+  // 1. 주인공 8등신 .glb 모델 초기화
   function initCleanAvatar() {
     if (isLoaded || typeof scene3d === 'undefined' || !scene3d) return;
     isLoaded = true;
 
-    // 기존 기본 원기둥/상자 캐릭터 숨기기
     if (typeof mainAvatar3d !== 'undefined' && mainAvatar3d) mainAvatar3d.visible = false;
     if (typeof crowdAvatars3d !== 'undefined' && Array.isArray(crowdAvatars3d)) {
       crowdAvatars3d.forEach(c => { if (c) c.visible = false; });
@@ -3434,20 +3491,18 @@ window.copyInviteText = function() {
       scene3d.add(glbModel);
       buildHanbokAndHat();
 
-      // 모션 애니메이션 설정
       glbMixer = new THREE.AnimationMixer(glbModel);
       gltf.animations.forEach(clip => {
         glbActions[clip.name.toLowerCase()] = glbMixer.clipAction(clip);
       });
       setCleanAnimMode('walk');
 
-      // 저장된 내 셀카 불러오기
       const savedSelfie = localStorage.getItem('mars_selfie_3d');
       if (savedSelfie) updateFaceTexture(savedSelfie);
     });
   }
 
-  // 2. 3D 한복 도포와 전통 갓 생성
+  // 2. 주인공 한복, 갓, 주인공 이름표 생성
   function buildHanbokAndHat() {
     const coatMat = new THREE.MeshStandardMaterial({ color: currentCoatColor, roughness: 0.4, metalness: 0.1 });
 
@@ -3481,9 +3536,13 @@ window.copyInviteText = function() {
     topHat.position.y = 0.36;
     hatGroup.add(brim, topHat);
     scene3d.add(hatGroup);
+
+    // 주인공 오빠 머리 위 이름표
+    myNameTag = makeNameTag('👑 mskim0003 (오빠)', '#fde047');
+    scene3d.add(myNameTag);
   }
 
-  // 3. 내 셀카를 달걀형 3D 입체 얼굴로 적용
+  // 3. 내 셀카 3D 입체 얼굴 적용
   function updateFaceTexture(imgData) {
     if (!scene3d) return;
     const img = new Image();
@@ -3514,7 +3573,7 @@ window.copyInviteText = function() {
     img.src = imgData;
   }
 
-  // 4. 모션 전환 (당당히 걷기 / K-팝 콘서트 댄스 / 반갑게 손흔들기)
+  // 4. 모션 전환
   function setCleanAnimMode(mode) {
     currentMode = mode;
     window.animMode3d = mode;
@@ -3530,11 +3589,11 @@ window.copyInviteText = function() {
     } else if (mode === 'wave') {
       if (glbActions['idle']) glbActions['idle'].play();
       glbMixer.update(0.01);
-      glbMixer.timeScale = 0; // 애니메이션이 팔을 내리지 못하게 고정 후 직접 손 흔들기!
+      glbMixer.timeScale = 0;
     }
   }
 
-  // 5. 제이·보라·이웃 4인방 광장 소환 토글
+  // 5. 제이·보라·이웃 4인방 소환 (머리 위 이름표 + 웃는 얼굴 포함!)
   function toggleCleanFriends() {
     if (!scene3d) return;
     if (typeof crowdAvatars3d !== 'undefined' && Array.isArray(crowdAvatars3d)) {
@@ -3546,11 +3605,12 @@ window.copyInviteText = function() {
     }
 
     friendsGroup = new THREE.Group();
+    const smileTex = makeSmileFaceTexture();
     const configs = [
-      { x: -1.4, z: -0.4, color: '#ec4899', rotY: 0.35 },  // 제이 (핑크)
-      { x: 1.4,  z: -0.4, color: '#a855f7', rotY: -0.35 }, // 보라 (보라)
-      { x: -2.4, z: -0.9, color: '#0ea5e9', rotY: 0.45 },  // 선비1 (청색)
-      { x: 2.4,  z: -0.9, color: '#10b981', rotY: -0.45 }  // 선비2 (비취)
+      { name: '💖 제이',     x: -1.4, z: -0.4, color: '#ec4899', rotY: 0.35 },
+      { name: '💜 보라',     x: 1.4,  z: -0.4, color: '#a855f7', rotY: -0.35 },
+      { name: '💙 이웃 선비', x: -2.4, z: -0.9, color: '#0ea5e9', rotY: 0.45 },
+      { name: '💚 흥부자 벗', x: 2.4,  z: -0.9, color: '#10b981', rotY: -0.45 }
     ];
 
     configs.forEach((cfg, idx) => {
@@ -3559,15 +3619,22 @@ window.copyInviteText = function() {
       npc.rotation.y = cfg.rotY;
 
       const cMat = new THREE.MeshStandardMaterial({ color: cfg.color, roughness: 0.35 });
-      const sMat = new THREE.MeshStandardMaterial({ color: 0xffdcb1, roughness: 0.5 });
+      const faceMat = new THREE.MeshBasicMaterial({ map: smileTex });
 
-      const head = new THREE.Mesh(new THREE.SphereGeometry(0.16, 24, 24), sMat);
+      // 웃는 얼굴이 들어간 머리
+      const head = new THREE.Mesh(new THREE.SphereGeometry(0.16, 24, 24), faceMat);
       head.scale.set(1, 1.2, 1);
+      head.rotation.y = -Math.PI / 2;
       head.position.set(0, 2.05, 0);
+
       const brim = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.42, 0.025, 24), new THREE.MeshStandardMaterial({ color: 0x111111 }));
       brim.position.set(0, 2.24, 0);
       const topH = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.19, 0.22, 24), new THREE.MeshStandardMaterial({ color: 0x111111 }));
       topH.position.set(0, 2.36, 0);
+
+      // 머리 위 3D 이름표 장착!
+      const tag = makeNameTag(cfg.name, cfg.color);
+      tag.position.set(0, 2.72, 0);
 
       const collar = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.16, 0.1, 20), new THREE.MeshStandardMaterial({ color: 0xffffff }));
       collar.position.set(0, 1.80, 0);
@@ -3587,12 +3654,12 @@ window.copyInviteText = function() {
       armGeo.translate(0, -0.28, 0);
       const leftArm = new THREE.Mesh(armGeo, cMat);
       leftArm.position.set(-0.26, 1.72, 0);
-      leftArm.rotation.z = 0.22;
+      leftArm.rotation.z = -0.22;
       const rightArm = new THREE.Mesh(armGeo, cMat);
       rightArm.position.set(0.26, 1.72, 0);
-      rightArm.rotation.z = -0.22;
+      rightArm.rotation.z = 0.22;
 
-      npc.add(head, brim, topH, collar, upper, badge, belt, skirt, leftArm, rightArm);
+      npc.add(head, brim, topH, tag, collar, upper, badge, belt, skirt, leftArm, rightArm);
       npc.userData = { leftArm, rightArm, phase: idx * 1.3 };
       friendsGroup.add(npc);
     });
@@ -3600,7 +3667,6 @@ window.copyInviteText = function() {
     scene3d.add(friendsGroup);
   }
 
-  // 6. 기존 HTML 버튼 함수들과 완벽 연동
   window.applySelfieTo3D = function(event) {
     const file = event.target.files && event.target.files[0];
     if (!file) return;
@@ -3625,7 +3691,6 @@ window.copyInviteText = function() {
   window.set3DAnimMode = setCleanAnimMode;
   window.summon3DCrowd = toggleCleanFriends;
 
-  // 7. 단 하나의 통합 렌더링 루프 (충돌 제로!)
   const clock = new THREE.Clock();
   const posV = new THREE.Vector3();
   const quatQ = new THREE.Quaternion();
@@ -3648,9 +3713,10 @@ window.copyInviteText = function() {
         glbModel.rotation.y += 0.03;
       } else if (currentMode === 'wave') {
         glbModel.rotation.y = 0;
+        // 오른팔만 높이 들어 흔들고, 왼팔은 허리 옆에 차분히 내리기!
         if (glbRightArm) glbRightArm.rotation.set(0.2, 0, -2.35 + Math.sin(t * 12) * 0.45);
         if (glbRightForeArm) glbRightForeArm.rotation.set(0, 0, -0.3 + Math.sin(t * 12) * 0.35);
-        if (glbLeftArm) glbLeftArm.rotation.set(0, 0, 1.25);
+        if (glbLeftArm) glbLeftArm.rotation.set(0, 0, 0);
       }
 
       if (glbSpineBone && hanbokGroup) {
@@ -3667,6 +3733,9 @@ window.copyInviteText = function() {
           hatGroup.position.set(posV.x, posV.y - 0.02, posV.z);
           hatGroup.quaternion.copy(quatQ);
         }
+        if (myNameTag) {
+          myNameTag.position.set(posV.x, posV.y + 0.62, posV.z);
+        }
         if (faceMesh) {
           faceMesh.position.set(posV.x, posV.y + 0.08, posV.z + 0.03);
           faceMesh.quaternion.copy(quatQ);
@@ -3680,14 +3749,15 @@ window.copyInviteText = function() {
         npc.position.y = Math.abs(Math.sin(t * 4 + p)) * 0.05;
         if (currentMode === 'wave') {
           npc.userData.rightArm.rotation.x = 0;
-          npc.userData.rightArm.rotation.z = -2.4 + Math.sin(t * 12 + p) * 0.4;
+          npc.userData.rightArm.rotation.z = 2.4 + Math.sin(t * 12 + p) * 0.35; // 바깥쪽으로 시원하게 손 흔들기!
+          npc.userData.leftArm.rotation.z = -0.22;
         } else if (currentMode === 'dance') {
           npc.rotation.y += 0.03;
-          npc.userData.rightArm.rotation.z = -1.9 + Math.sin(t * 8 + p) * 0.5;
-          npc.userData.leftArm.rotation.z = 1.9 - Math.sin(t * 8 + p) * 0.5;
+          npc.userData.rightArm.rotation.z = 2.1 + Math.sin(t * 8 + p) * 0.4;
+          npc.userData.leftArm.rotation.z = -2.1 - Math.sin(t * 8 + p) * 0.4;
         } else {
-          npc.userData.rightArm.rotation.z = -0.22;
-          npc.userData.leftArm.rotation.z = 0.22;
+          npc.userData.rightArm.rotation.z = 0.22;
+          npc.userData.leftArm.rotation.z = -0.22;
           npc.userData.rightArm.rotation.x = Math.sin(t * 5 + p) * 0.45;
           npc.userData.leftArm.rotation.x = -Math.sin(t * 5 + p) * 0.45;
         }
