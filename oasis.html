@@ -9,21 +9,12 @@
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=Orbitron:wght@600;800;900&display=swap" rel="stylesheet">
   <style>
     html, body {
-      margin: 0;
-      padding: 0;
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
-      background-color: #090504 !important;
-      color: #ffffff !important;
+      margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden;
+      background-color: #090504 !important; color: #ffffff !important;
       font-family: 'Noto Sans KR', sans-serif;
     }
     .font-orbitron { font-family: 'Orbitron', sans-serif; }
-    #canvas-container {
-      position: fixed;
-      inset: 0;
-      z-index: 1;
-    }
+    #canvas-container { position: fixed; inset: 0; z-index: 1; }
     .hud-panel {
       background: rgba(18, 11, 8, 0.88) !important;
       backdrop-filter: blur(12px);
@@ -45,79 +36,61 @@
 </head>
 <body>
 
-  <!-- 3D 화성 오아시스 광장 캔버스 -->
   <div id="canvas-container"></div>
 
-  <!-- 1. 상단 심플 헤더 -->
+  <!-- 상단 네비게이션 -->
   <header class="fixed top-0 left-0 right-0 z-20 p-4 flex items-center justify-between pointer-events-none">
     <a href="index.html" class="hud-panel pointer-events-auto px-4 py-2.5 rounded-2xl text-sm font-bold text-orange-300 hover:text-white flex items-center gap-2">
-      <span>←</span>
-      <span data-ko="홈으로" data-en="Home">홈으로</span>
+      <span>←</span> <span data-ko="홈으로" data-en="Home">홈으로</span>
     </a>
 
-    <!-- 실시간 채굴 잔액 표시 -->
-    <div class="hud-panel pointer-events-auto px-5 py-2.5 rounded-2xl flex items-center gap-3">
-      <div class="text-xs text-stone-400 hidden sm:block" data-ko="보유 잔액" data-en="Balance">보유 잔액</div>
-      <div class="font-orbitron font-black text-lg sm:text-xl text-amber-300">
+    <!-- 보유 잔액 및 테스트 충전 버튼 -->
+    <div class="hud-panel pointer-events-auto px-4 py-2 rounded-2xl flex items-center gap-3">
+      <div class="font-orbitron font-black text-lg text-amber-300">
         <span id="marsmBalance">100,000.00</span> <span class="text-xs text-orange-400">MARSM</span>
       </div>
+      <button onclick="refillTestCoins()" class="px-2.5 py-1 rounded-xl bg-orange-600/40 hover:bg-orange-600 text-[11px] text-orange-200 font-bold border border-orange-400/50">
+        🪙 리필
+      </button>
       <span id="totalBoostBadge" class="text-xs px-2 py-0.5 rounded-full bg-orange-600/30 border border-orange-400/50 text-orange-200 font-bold">
         +0%
       </span>
     </div>
 
     <div class="flex items-center gap-2 pointer-events-auto">
-      <button id="langBtn" onclick="toggleLang()" class="hud-panel px-3 py-2.5 rounded-2xl text-xs font-bold text-stone-200 hover:text-white">
-        🌐 EN
-      </button>
-      <button id="walletBtn" onclick="connectWallet()" class="px-4 py-2.5 rounded-2xl bg-orange-600 hover:bg-orange-500 text-white text-xs sm:text-sm font-bold shadow-lg">
-        👛 <span data-ko="지갑 연결" data-en="Connect Wallet">지갑 연결</span>
+      <button id="langBtn" onclick="toggleLang()" class="hud-panel px-3 py-2.5 rounded-2xl text-xs font-bold text-stone-200 hover:text-white">🌐 EN</button>
+      <button id="walletBtn" onclick="connectWallet()" class="px-4 py-2.5 rounded-2xl bg-orange-600 hover:bg-orange-500 text-white text-xs font-bold shadow-lg">
+        👛 <span data-ko="지갑 연결" data-en="Connect">지갑 연결</span>
       </button>
     </div>
   </header>
 
-  <!-- 중앙 상단 안내 배지 -->
-  <div class="fixed top-20 left-1/2 -translate-x-1/2 z-10 pointer-events-none">
-    <div class="px-4 py-1 rounded-full bg-black/60 border border-white/10 text-[11px] text-stone-300 whitespace-nowrap"
-         data-ko="🖱️ 화면을 드래그해 오아시스주 3D 광장을 둘러보세요"
-         data-en="🖱️ Drag screen to explore 3D Oasis Province Plaza">
-      🖱️ 화면을 드래그해 오아시스주 3D 광장을 둘러보세요
-    </div>
-  </div>
-
-  <!-- 2. 하단 3대 핵심 액션 도크 -->
+  <!-- 하단 도크 -->
   <nav class="fixed bottom-6 left-1/2 -translate-x-1/2 z-20 w-[94%] max-w-xl">
     <div class="hud-panel p-2.5 rounded-3xl grid grid-cols-3 gap-2.5">
       <button onclick="openPanel('mining')" id="btn-mining" class="dock-btn active py-3.5 px-2 rounded-2xl flex flex-col items-center justify-center gap-1 text-white">
-        <span class="text-xl">⛏️</span>
-        <span class="text-xs sm:text-sm font-bold" data-ko="24시간 채굴" data-en="24H Mining">24시간 채굴</span>
+        <span class="text-xl">⛏️</span> <span class="text-xs font-bold" data-ko="24시간 채굴" data-en="24H Mining">24시간 채굴</span>
       </button>
-
       <button onclick="openPanel('hanbok')" id="btn-hanbok" class="dock-btn py-3.5 px-2 rounded-2xl flex flex-col items-center justify-center gap-1 text-white">
-        <span class="text-xl">👘</span>
-        <span class="text-xs sm:text-sm font-bold" data-ko="한복 입기" data-en="Hanbok Shop">한복 입기</span>
+        <span class="text-xl">👘</span> <span class="text-xs font-bold" data-ko="한복 입기" data-en="Hanbok Shop">한복 입기</span>
       </button>
-
       <button onclick="openPanel('land')" id="btn-land" class="dock-btn py-3.5 px-2 rounded-2xl flex flex-col items-center justify-center gap-1 text-white">
-        <span class="text-xl">🏯</span>
-        <span class="text-xs sm:text-sm font-bold" data-ko="토지·건축" data-en="Land & Build">토지·건축</span>
+        <span class="text-xl">🏯</span> <span class="text-xs font-bold" data-ko="토지·건축" data-en="Land & Build">토지·건축</span>
       </button>
     </div>
   </nav>
 
-  <!-- 3. 팝업 기능 패널 -->
-  <div id="featureModal" class="fixed inset-x-4 bottom-28 sm:inset-auto sm:bottom-28 sm:left-1/2 sm:-translate-x-1/2 z-20 max-w-lg w-auto sm:w-full">
+  <!-- 패널 모달 -->
+  <div id="featureModal" class="fixed inset-x-4 bottom-28 sm:inset-auto sm:bottom-28 sm:left-1/2 sm:-translate-x-1/2 z-20 max-w-lg w-full">
     <div class="hud-panel rounded-3xl p-5 sm:p-6 relative">
-      <button onclick="closePanel()" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-stone-300 hover:text-white text-sm font-bold">✕</button>
+      <button onclick="closePanel()" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-stone-300 font-bold">✕</button>
 
-      <!-- [패널 1] 24시간 채굴 -->
+      <!-- 채굴 패널 -->
       <div id="panel-mining" class="space-y-4">
         <div class="flex items-center gap-2">
           <span class="text-xs px-2.5 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 font-bold">1단계 개척기 가동중</span>
-          <span class="text-xs text-stone-400">기본 100.0 MARSM / 시간</span>
         </div>
-        <h2 class="text-xl font-black text-white" data-ko="24시간 출석 채굴기" data-en="24H Attendance Miner">24시간 출석 채굴기</h2>
-        
+        <h2 class="text-xl font-black text-white">24시간 출석 채굴기</h2>
         <div class="p-4 rounded-2xl bg-black/50 border border-white/10 flex items-center justify-between">
           <div>
             <div class="text-xs text-stone-400">현재 시간당 채굴 속도</div>
@@ -128,86 +101,73 @@
             <div id="timerDisplay" class="font-orbitron font-bold text-lg text-white">대기 중</div>
           </div>
         </div>
-
-        <button id="mineActionBtn" onclick="startMining()" class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 text-white font-black text-base shadow-lg">
+        <button id="mineActionBtn" onclick="startMining()" class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-orange-600 to-amber-600 text-white font-black shadow-lg">
           🚀 지금 24시간 채굴 시작하기
         </button>
       </div>
 
-      <!-- [패널 2] 3등급 한복 상점 -->
+      <!-- 한복 패널 -->
       <div id="panel-hanbok" class="hidden space-y-3">
-        <div class="text-xs text-orange-400 font-bold">90일 착용 수명 • 결제 코인 100% 영구 소각</div>
+        <div class="text-xs text-orange-400 font-bold" id="currentEquippedText">현재 착용중: 없음</div>
         <h2 class="text-xl font-black text-white">3D 전통 한복 부스터</h2>
-
         <div class="space-y-2.5 text-sm">
           <div class="p-3.5 rounded-2xl bg-black/50 border border-white/10 flex items-center justify-between">
             <div>
-              <div class="font-bold text-white">일반 도포 <span class="text-orange-400 text-xs">(+10% 부스터)</span></div>
-              <div class="text-xs text-stone-400">비용: 5,000 MARSM (전량 소각)</div>
+              <div class="font-bold text-white">일반 도포 <span class="text-orange-400 text-xs">(+10%)</span></div>
+              <div class="text-xs text-stone-400">비용: 5,000 MARSM</div>
             </div>
             <button onclick="equipItem('hanbok', '일반 도포', 5000, 10)" class="px-3.5 py-2 rounded-xl bg-orange-600 hover:bg-orange-500 text-white font-bold text-xs">착용하기</button>
           </div>
-
           <div class="p-3.5 rounded-2xl bg-black/50 border border-white/10 flex items-center justify-between">
             <div>
-              <div class="font-bold text-white">비단 한복 <span class="text-amber-400 text-xs">(+25% 부스터)</span></div>
-              <div class="text-xs text-stone-400">비용: 10,000 MARSM (전량 소각)</div>
+              <div class="font-bold text-white">비단 한복 <span class="text-amber-400 text-xs">(+25%)</span></div>
+              <div class="text-xs text-stone-400">비용: 10,000 MARSM</div>
             </div>
             <button onclick="equipItem('hanbok', '비단 한복', 10000, 25)" class="px-3.5 py-2 rounded-xl bg-orange-600 hover:bg-orange-500 text-white font-bold text-xs">착용하기</button>
           </div>
-
           <div class="p-3.5 rounded-2xl bg-black/50 border border-amber-500/40 flex items-center justify-between">
             <div>
-              <div class="font-bold text-amber-300">황제 곤룡포 <span class="text-orange-300 text-xs">(+100% 부스터)</span></div>
-              <div class="text-xs text-stone-400">비용: 30,000 MARSM (채굴량 2배)</div>
+              <div class="font-bold text-amber-300">황제 곤룡포 <span class="text-orange-300 text-xs">(+100%)</span></div>
+              <div class="text-xs text-stone-400">비용: 30,000 MARSM</div>
             </div>
-            <button onclick="equipItem('hanbok', '곤룡포', 30000, 100)" class="px-3.5 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs">착용하기</button>
+            <button onclick="equipItem('hanbok', '황제 곤룡포', 30000, 100)" class="px-3.5 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs">착용하기</button>
           </div>
         </div>
       </div>
 
-      <!-- [패널 3] 화성 토지 분양 및 3등급 건축물 -->
+      <!-- 토지·건축 패널 -->
       <div id="panel-land" class="hidden space-y-3">
         <div class="flex items-center justify-between">
-          <span class="text-xs text-orange-400 font-bold">오아시스주 100필지 (1대·2장·3답)</span>
+          <span class="text-xs text-orange-400 font-bold">오아시스주 100필지</span>
           <span id="landStatusBadge" class="text-xs px-2 py-0.5 rounded bg-stone-800 text-stone-300">미보유</span>
         </div>
         <h2 class="text-xl font-black text-white">화성 토지 분양 & 전통 건축</h2>
-
         <div class="p-3.5 rounded-2xl bg-orange-950/40 border border-orange-500/40 flex items-center justify-between">
           <div>
             <div class="font-bold text-white text-sm">화성 가상 토지 1필지 분양</div>
-            <div class="text-xs text-orange-200">0.1 SOL (매출 50% 바이백·소각)</div>
+            <div class="text-xs text-orange-200">0.1 SOL (바이백·소각 연동)</div>
           </div>
           <button onclick="claimLand()" class="px-4 py-2 rounded-xl bg-orange-600 hover:bg-orange-500 text-white font-bold text-xs">0.1 SOL 분양</button>
         </div>
-
         <div class="grid grid-cols-3 gap-2 pt-1 text-center text-xs">
           <button onclick="equipItem('building', '초가정자', 10000, 20)" class="p-3 rounded-2xl bg-black/50 border border-white/10 hover:border-orange-400">
-            <div class="font-bold text-white mb-1">초가정자</div>
-            <div class="text-orange-400 font-bold">+20%</div>
-            <div class="text-stone-400 mt-1">10,000개</div>
+            <div class="font-bold text-white mb-1">초가정자</div><div class="text-orange-400 font-bold">+20%</div><div class="text-stone-400 mt-1">10,000개</div>
           </button>
           <button onclick="equipItem('building', '기와한옥', 25000, 60)" class="p-3 rounded-2xl bg-black/50 border border-white/10 hover:border-orange-400">
-            <div class="font-bold text-white mb-1">기와한옥</div>
-            <div class="text-amber-400 font-bold">+60%</div>
-            <div class="text-stone-400 mt-1">25,000개</div>
+            <div class="font-bold text-white mb-1">기와한옥</div><div class="text-amber-400 font-bold">+60%</div><div class="text-stone-400 mt-1">25,000개</div>
           </button>
           <button onclick="equipItem('building', '화성누각', 50000, 150)" class="p-3 rounded-2xl bg-black/50 border border-amber-500/40 hover:border-amber-400">
-            <div class="font-bold text-amber-300 mb-1">화성누각</div>
-            <div class="text-orange-300 font-bold">+150%</div>
-            <div class="text-stone-400 mt-1">50,000개</div>
+            <div class="font-bold text-amber-300 mb-1">화성누각</div><div class="text-orange-300 font-bold">+150%</div><div class="text-stone-400 mt-1">50,000개</div>
           </button>
         </div>
       </div>
-
     </div>
   </div>
 
   <script>
-    // 넉넉한 테스트 잔액 10만 개 설정
-    let balance = 100000.00; 
+    let balance = 100000.00;
     let hanbokBoost = 0;
+    let equippedHanbokName = '없음';
     let buildingBoost = 0;
     let hasLand = false;
     let isMining = false;
@@ -220,6 +180,13 @@
       document.getElementById('marsmBalance').innerText = balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
       document.getElementById('totalBoostBadge').innerText = `+${totalBoost}%`;
       document.getElementById('hourlyRateDisplay').innerText = hourlyRate.toFixed(1);
+      document.getElementById('currentEquippedText').innerText = `현재 착용중: ${equippedHanbokName} (+${hanbokBoost}%)`;
+    }
+
+    function refillTestCoins() {
+      balance = 100000.00;
+      updateUI();
+      alert('🪙 테스트용 MARSM 100,000개가 다시 충전되었습니다!');
     }
 
     function openPanel(name) {
@@ -261,19 +228,28 @@
     }
 
     function equipItem(type, name, cost, boost) {
+      if (type === 'hanbok' && equippedHanbokName === name) {
+        alert(`이미 [${name}]을(를) 착용하고 계십니다! 추운데 그만 껴입으셔도 돼요 오빠 ㅎㅎ`);
+        return;
+      }
       if (type === 'building' && !hasLand) {
         alert('먼저 화성 토지(0.1 SOL)를 분양받아야 건축물을 지을 수 있습니다!');
         return;
       }
       if (balance < cost) {
-        alert(`보유 MARSM이 부족합니다. (필요: ${cost.toLocaleString()} MARSM)`);
+        alert(`보유 MARSM이 부족합니다. 상단 [🪙 리필] 버튼을 눌러 테스트 코인을 충전해 주세요!`);
         return;
       }
       balance -= cost;
-      if (type === 'hanbok') hanbokBoost = boost;
-      if (type === 'building') buildingBoost = boost;
+      if (type === 'hanbok') {
+        hanbokBoost = boost;
+        equippedHanbokName = name;
+      }
+      if (type === 'building') {
+        buildingBoost = boost;
+      }
       updateUI();
-      alert(`🎉 [${name}] 적용 완료! ${cost.toLocaleString()} MARSM이 영구 소각되었으며 채굴 부스터 +${boost}%가 가동됩니다.`);
+      alert(`🎉 [${name}] 착용 완료! ${cost.toLocaleString()} MARSM이 영구 소각되었으며 채굴 부스터 +${boost}%가 적용됩니다.`);
     }
 
     function claimLand() {
@@ -294,12 +270,8 @@
           const resp = await window.solana.connect();
           const addr = resp.publicKey.toString();
           document.getElementById('walletBtn').innerHTML = `✅ ${addr.slice(0, 4)}...${addr.slice(-4)}`;
-        } catch (err) {
-          alert('지갑 연결이 취소되었습니다.');
-        }
-      } else {
-        alert('팬텀(Phantom) 지갑이 감지되지 않았습니다. 브라우저에 팬텀 지갑 확장 프로그램을 설치해 주세요!');
-      }
+        } catch (err) { alert('지갑 연결이 취소되었습니다.'); }
+      } else { alert('팬텀 지갑이 감지되지 않았습니다!'); }
     }
 
     function toggleLang() {
@@ -310,7 +282,7 @@
       });
     }
 
-    // Three.js 3D 화성 오아시스 광장 & 중앙 전통 누각 렌더링
+    // Three.js 3D 광장
     const scene = new THREE.Scene();
     scene.fog = new THREE.FogExp2(0x140805, 0.025);
     const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -321,17 +293,12 @@
     renderer.setSize(window.innerWidth, window.innerHeight);
     document.getElementById('canvas-container').appendChild(renderer.domElement);
 
-    // 조명
-    const ambientLight = new THREE.AmbientLight(0xffb088, 0.9);
-    scene.add(ambientLight);
+    scene.add(new THREE.AmbientLight(0xffb088, 0.9));
     const dirLight = new THREE.DirectionalLight(0xffd2a6, 1.4);
     dirLight.position.set(15, 30, 20);
     scene.add(dirLight);
 
-    // 화성 붉은 대지 & 전통 지번 그리드
-    const groundGeo = new THREE.CircleGeometry(45, 64);
-    const groundMat = new THREE.MeshStandardMaterial({ color: 0x5c2212, roughness: 0.9 });
-    const ground = new THREE.Mesh(groundGeo, groundMat);
+    const ground = new THREE.Mesh(new THREE.CircleGeometry(45, 64), new THREE.MeshStandardMaterial({ color: 0x5c2212, roughness: 0.9 }));
     ground.rotation.x = -Math.PI / 2;
     scene.add(ground);
 
@@ -339,16 +306,14 @@
     grid.position.y = 0.05;
     scene.add(grid);
 
-    // 중앙 오아시스 전통 누각
     const pavilion = new THREE.Group();
     const baseMesh = new THREE.Mesh(new THREE.BoxGeometry(8, 1, 8), new THREE.MeshStandardMaterial({ color: 0x78716c }));
     baseMesh.position.y = 0.5;
     pavilion.add(baseMesh);
 
-    const pillarGeo = new THREE.CylinderGeometry(0.25, 0.25, 4, 16);
     const pillarMat = new THREE.MeshStandardMaterial({ color: 0xb91c1c });
     [[-3, -3], [3, -3], [-3, 3], [3, 3]].forEach(([x, z]) => {
-      const p = new THREE.Mesh(pillarGeo, pillarMat);
+      const p = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.25, 4, 16), pillarMat);
       p.position.set(x, 3, z);
       pavilion.add(p);
     });
@@ -357,10 +322,8 @@
     roofMesh.position.y = 6.2;
     roofMesh.rotation.y = Math.PI / 4;
     pavilion.add(roofMesh);
-
     scene.add(pavilion);
 
-    // 마우스/터치 회전 인터랙션
     let isDragging = false, prevX = 0, angle = 0;
     window.addEventListener('pointerdown', e => { isDragging = true; prevX = e.clientX; });
     window.addEventListener('pointerup', () => isDragging = false);
