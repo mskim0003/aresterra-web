@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="ko" class="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -7,23 +7,25 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=Orbitron:wght@600;800;900&display=swap" rel="stylesheet">
   <style>
-    body {
+    html, body {
+      background-color: #090504 !important;
+      color: #ffffff !important;
       font-family: 'Noto Sans KR', sans-serif;
-      background-color: #090504;
-      color: #f8fafc;
       overflow-x: hidden;
+      min-height: 100vh;
     }
     .font-orbitron { font-family: 'Orbitron', sans-serif; }
     .mars-glow {
-      background: radial-gradient(circle at 50% 35%, rgba(234, 88, 12, 0.28) 0%, rgba(124, 45, 18, 0.12) 45%, rgba(9, 5, 4, 1) 80%);
+      background: radial-gradient(circle at 50% 25%, rgba(194, 65, 12, 0.25) 0%, rgba(28, 12, 8, 0.9) 55%, #090504 100%) !important;
     }
     .glass-card {
-      background: rgba(24, 15, 12, 0.72);
-      backdrop-filter: blur(12px);
-      border: 1px solid rgba(251, 146, 60, 0.22);
+      background: #170f0c !important;
+      border: 1px solid rgba(251, 146, 60, 0.35) !important;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
     }
     .btn-primary {
-      background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%);
+      background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%) !important;
+      color: #ffffff !important;
       box-shadow: 0 0 25px rgba(234, 88, 12, 0.45);
       transition: all 0.25s ease;
     }
@@ -32,19 +34,20 @@
       box-shadow: 0 0 35px rgba(249, 115, 22, 0.75);
     }
     .btn-secondary {
-      background: rgba(255, 255, 255, 0.06);
-      border: 1px solid rgba(251, 191, 36, 0.4);
+      background: #1f1410 !important;
+      color: #fde68a !important;
+      border: 1px solid rgba(251, 191, 36, 0.55) !important;
       transition: all 0.25s ease;
     }
     .btn-secondary:hover {
-      background: rgba(251, 191, 36, 0.14);
+      background: #2e1d17 !important;
       transform: translateY(-2px);
     }
   </style>
 </head>
-<body class="mars-glow min-h-screen flex flex-col justify-between">
+<body class="mars-glow flex flex-col justify-between">
 
-  <!-- 상단 최소 네비게이션 (로고 + 언어전환만 배치) -->
+  <!-- 상단 최소 네비게이션 -->
   <header class="w-full max-w-6xl mx-auto px-6 py-6 flex items-center justify-between">
     <div class="flex items-center gap-3">
       <div class="w-10 h-10 rounded-full bg-gradient-to-br from-orange-500 to-amber-700 flex items-center justify-center font-orbitron font-black text-white shadow-lg">
@@ -52,18 +55,18 @@
       </div>
       <div>
         <span class="font-orbitron font-extrabold text-xl tracking-wider text-orange-400">ARES TERRA</span>
-        <span class="ml-2 text-xs px-2 py-0.5 rounded-full bg-orange-500/20 text-orange-300 font-orbitron">$MARSM</span>
+        <span class="ml-2 text-xs px-2.5 py-0.5 rounded-full bg-orange-950 border border-orange-500/40 text-orange-300 font-orbitron">$MARSM</span>
       </div>
     </div>
 
-    <button id="langToggle" onclick="toggleLanguage()" class="px-3.5 py-1.5 rounded-full text-xs font-semibold border border-orange-400/40 text-orange-200 hover:bg-orange-500/20 transition">
+    <button id="langToggle" onclick="toggleLanguage()" class="px-4 py-2 rounded-full text-xs font-bold bg-[#1f1410] border border-orange-400/50 text-orange-200 hover:bg-orange-900/40 transition">
       🌐 ENGLISH
     </button>
   </header>
 
-  <!-- 메인 히어로 섹션: 핵심 버튼 딱 2개만 배치 -->
+  <!-- 메인 히어로 섹션 -->
   <main class="w-full max-w-5xl mx-auto px-6 pt-10 pb-20 text-center">
-    <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-orange-500/15 border border-orange-500/30 text-orange-300 text-xs sm:text-sm font-medium mb-6">
+    <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#24140e] border border-orange-500/40 text-orange-300 text-xs sm:text-sm font-semibold mb-6">
       <span>🚀 SOLANA MAINNET</span>
       <span>•</span>
       <span data-ko="총 발행량 10억 개 엄격 고정" data-en="1B Fixed Total Supply">총 발행량 10억 개 엄격 고정</span>
@@ -71,10 +74,10 @@
 
     <h1 class="text-4xl sm:text-6xl font-black tracking-tight leading-tight mb-6">
       <span class="block text-white" data-ko="화성 위에 세우는" data-en="Build Your Legacy">화성 위에 세우는</span>
-      <span class="bg-gradient-to-r from-orange-400 via-amber-300 to-orange-500 bg-clip-text text-transparent" data-ko="K-전통 웹3 메타버스" data-en="on Mars Metaverse">K-전통 웹3 메타버스</span>
+      <span class="text-orange-400" data-ko="K-전통 웹3 메타버스" data-en="on Mars Metaverse">K-전통 웹3 메타버스</span>
     </h1>
 
-    <p class="max-w-2xl mx-auto text-stone-300 text-base sm:text-lg leading-relaxed mb-10"
+    <p class="max-w-2xl mx-auto text-stone-200 text-base sm:text-lg leading-relaxed mb-10 font-medium"
        data-ko="출석만 해도 무료로 $MARSM을 채굴하고, 3D 한복과 기와한옥으로 채굴 속도를 높여 나만의 화성 영토(1대·2장·3답)의 주인이 되세요."
        data-en="Mine $MARSM free every 24 hours, boost your yield with 3D Hanbok & traditional architecture, and own your Martian land.">
       출석만 해도 무료로 $MARSM을 채굴하고, 3D 한복과 기와한옥으로 채굴 속도를 높여 나만의 화성 영토(1대·2장·3답)의 주인이 되세요.
@@ -82,11 +85,11 @@
 
     <!-- 핵심 행동 버튼 2개 -->
     <div class="flex flex-col sm:flex-row items-center justify-center gap-4 mb-20">
-      <a href="oasis.html" class="btn-primary w-full sm:w-auto px-8 py-4 rounded-2xl text-white font-bold text-lg flex items-center justify-center gap-2">
+      <a href="oasis.html" class="btn-primary w-full sm:w-auto px-8 py-4 rounded-2xl font-bold text-lg flex items-center justify-center gap-2">
         <span>🏛️</span>
         <span data-ko="3D 오아시스 광장 입장하기" data-en="Enter 3D Oasis Plaza">3D 오아시스 광장 입장하기</span>
       </a>
-      <button onclick="openWhitepaperModal()" class="btn-secondary w-full sm:w-auto px-8 py-4 rounded-2xl text-amber-200 font-bold text-lg flex items-center justify-center gap-2">
+      <button onclick="openWhitepaperModal()" class="btn-secondary w-full sm:w-auto px-8 py-4 rounded-2xl font-bold text-lg flex items-center justify-center gap-2">
         <span>📜</span>
         <span data-ko="공식 백서 v2.0 요약 보기" data-en="Read Whitepaper v2.0">공식 백서 v2.0 요약 보기</span>
       </button>
@@ -97,7 +100,7 @@
       <div class="glass-card p-6 rounded-2xl">
         <div class="text-orange-400 font-orbitron font-bold text-sm mb-2">STEP 01</div>
         <h3 class="text-xl font-bold text-white mb-2" data-ko="무료 24시간 출석 채굴" data-en="Free 24H Mining">무료 24시간 출석 채굴</h3>
-        <p class="text-stone-400 text-sm leading-relaxed"
+        <p class="text-stone-300 text-sm leading-relaxed"
            data-ko="지갑 없이도 광장에 입장해 24시간마다 무료로 $MARSM을 채굴할 수 있습니다. (초기 개척기 시간당 100 MARSM)"
            data-en="Enter the plaza and mine $MARSM every 24 hours with zero upfront cost. (Up to 100 MARSM/hr in Pioneer Stage)">
           지갑 없이도 광장에 입장해 24시간마다 무료로 $MARSM을 채굴할 수 있습니다. (초기 개척기 시간당 100 MARSM)
@@ -107,7 +110,7 @@
       <div class="glass-card p-6 rounded-2xl">
         <div class="text-amber-400 font-orbitron font-bold text-sm mb-2">STEP 02</div>
         <h3 class="text-xl font-bold text-white mb-2" data-ko="3D 한복 부스터 & 영구 소각" data-en="3D Hanbok Booster & Burn">3D 한복 부스터 & 영구 소각</h3>
-        <p class="text-stone-400 text-sm leading-relaxed"
+        <p class="text-stone-300 text-sm leading-relaxed"
            data-ko="도포(+10%), 비단한복(+25%), 곤룡포(+100%) 착용 시 채굴 속도가 폭발하며 사용된 코인은 100% 영구 소각됩니다."
            data-en="Equip Dopo (+10%), Silk Hanbok (+25%), or Gonryongpo (+100%) to boost mining while 100% of spent tokens are burned.">
           도포(+10%), 비단한복(+25%), 곤룡포(+100%) 착용 시 채굴 속도가 폭발하며 사용된 코인은 100% 영구 소각됩니다.
@@ -117,7 +120,7 @@
       <div class="glass-card p-6 rounded-2xl">
         <div class="text-orange-400 font-orbitron font-bold text-sm mb-2">STEP 03</div>
         <h3 class="text-xl font-bold text-white mb-2" data-ko="화성 토지 분양 & 기와 건축" data-en="Mars Land & Hanok Build">화성 토지 분양 & 기와 건축</h3>
-        <p class="text-stone-400 text-sm leading-relaxed"
+        <p class="text-stone-300 text-sm leading-relaxed"
            data-ko="0.1 SOL로 나만의 화성 지번을 분양받고 정자·기와한옥·화성누각을 지어 최대 +150% 추가 채굴 혜택을 누리세요."
            data-en="Claim your Martian plot for 0.1 SOL and construct traditional pavilions & Hanoks for up to +150% passive mining boost.">
           0.1 SOL로 나만의 화성 지번을 분양받고 정자·기와한옥·화성누각을 지어 최대 +150% 추가 채굴 혜택을 누리세요.
@@ -127,37 +130,37 @@
   </main>
 
   <!-- 백서 요약 모달 창 -->
-  <div id="wpModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+  <div id="wpModal" class="fixed inset-0 bg-black/85 hidden items-center justify-center p-4 z-50">
     <div class="glass-card max-w-2xl w-full rounded-3xl p-6 sm:p-8 max-h-[85vh] overflow-y-auto text-left relative">
-      <button onclick="closeWhitepaperModal()" class="absolute top-5 right-5 text-stone-400 hover:text-white text-xl font-bold">✕</button>
+      <button onclick="closeWhitepaperModal()" class="absolute top-5 right-5 text-stone-300 hover:text-white text-xl font-bold">✕</button>
       <div class="text-orange-400 font-orbitron text-xs font-bold mb-1">OFFICIAL WHITEPAPER v2.0</div>
       <h2 class="text-2xl font-black text-white mb-4">ARES TERRA ($MARSM) 토큰 이코노미</h2>
       
-      <div class="space-y-4 text-sm text-stone-300">
-        <div class="p-4 rounded-xl bg-white/5 border border-white/10">
+      <div class="space-y-4 text-sm text-stone-200">
+        <div class="p-4 rounded-xl bg-black/50 border border-orange-500/25">
           <div class="font-bold text-amber-300 mb-1">1. 총 발행량 10억 개 고정 분배</div>
           <p>• 채굴 및 생태계 보상: 50% (5억 개 / 5단계 반감기)<br>• DEX 유동성 풀: 20% (2억 개 / 초기 2.0 SOL 시드)<br>• 생태계 기금: 15% (1.5억 개) / 팀 물량: 15% (1.5억 개, 6개월 락업)</p>
         </div>
-        <div class="p-4 rounded-xl bg-white/5 border border-white/10">
+        <div class="p-4 rounded-xl bg-black/50 border border-orange-500/25">
           <div class="font-bold text-amber-300 mb-1">2. 이중 소각 엔진 (Dual-Burn Engine)</div>
           <p>• 화성 토지 분양(0.1 SOL) 매출의 50%는 매월 DEX 바이백 후 영구 소각<br>• 3등급 한복 및 3등급 건축물(초가정자·기와한옥·화성누각) 결제 코인 100% 소각</p>
         </div>
-        <div class="p-4 rounded-xl bg-white/5 border border-white/10">
+        <div class="p-4 rounded-xl bg-black/50 border border-orange-500/25">
           <div class="font-bold text-amber-300 mb-1">3. 멀티 프로빈스(Multi-Province) 확장</div>
           <p>• 오아시스주 이후 엘리시움주, 타르시스주 확장 시에도 추가 코인 발행 없이 전 세계 일일 채굴 상한(75만 개)을 공유하여 디플레이션 가치를 극대화합니다.</p>
         </div>
       </div>
 
       <div class="mt-6 flex justify-end gap-3">
-        <button onclick="window.print()" class="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-sm font-semibold">🖨️ 인쇄 / PDF 저장</button>
+        <button onclick="window.print()" class="px-4 py-2 rounded-xl bg-stone-800 hover:bg-stone-700 text-white text-sm font-semibold">🖨️ 인쇄 / PDF 저장</button>
         <a href="oasis.html" class="px-5 py-2 rounded-xl bg-orange-600 hover:bg-orange-500 text-white text-sm font-bold">광장 바로가기 →</a>
       </div>
     </div>
   </div>
 
   <!-- 하단 푸터 -->
-  <footer class="w-full border-t border-white/10 py-6 px-6 text-center text-xs text-stone-500">
-    <p>© 2026 ARES TERRA (<span class="text-stone-400">aresterra.io</span>) • Solana Ecosystem Metaverse ($MARSM)</p>
+  <footer class="w-full border-t border-white/10 py-6 px-6 text-center text-xs text-stone-400">
+    <p>© 2026 ARES TERRA (<span class="text-stone-300">aresterra.io</span>) • Solana Ecosystem Metaverse ($MARSM)</p>
   </footer>
 
   <script>
