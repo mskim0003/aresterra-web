@@ -48,7 +48,7 @@
   <!-- 3D 화성 오아시스 광장 캔버스 -->
   <div id="canvas-container"></div>
 
-  <!-- 1. 상단 심플 헤더 (홈 버튼 / 내 MARSM 잔액 / 지갑연결) -->
+  <!-- 1. 상단 심플 헤더 -->
   <header class="fixed top-0 left-0 right-0 z-20 p-4 flex items-center justify-between pointer-events-none">
     <a href="index.html" class="hud-panel pointer-events-auto px-4 py-2.5 rounded-2xl text-sm font-bold text-orange-300 hover:text-white flex items-center gap-2">
       <span>←</span>
@@ -59,7 +59,7 @@
     <div class="hud-panel pointer-events-auto px-5 py-2.5 rounded-2xl flex items-center gap-3">
       <div class="text-xs text-stone-400 hidden sm:block" data-ko="보유 잔액" data-en="Balance">보유 잔액</div>
       <div class="font-orbitron font-black text-lg sm:text-xl text-amber-300">
-        <span id="marsmBalance">0.00</span> <span class="text-xs text-orange-400">MARSM</span>
+        <span id="marsmBalance">100,000.00</span> <span class="text-xs text-orange-400">MARSM</span>
       </div>
       <span id="totalBoostBadge" class="text-xs px-2 py-0.5 rounded-full bg-orange-600/30 border border-orange-400/50 text-orange-200 font-bold">
         +0%
@@ -76,7 +76,7 @@
     </div>
   </header>
 
-  <!-- 중앙 상단 안내 배지 (드래그 시점 조작 안내) -->
+  <!-- 중앙 상단 안내 배지 -->
   <div class="fixed top-20 left-1/2 -translate-x-1/2 z-10 pointer-events-none">
     <div class="px-4 py-1 rounded-full bg-black/60 border border-white/10 text-[11px] text-stone-300 whitespace-nowrap"
          data-ko="🖱️ 화면을 드래그해 오아시스주 3D 광장을 둘러보세요"
@@ -85,7 +85,7 @@
     </div>
   </div>
 
-  <!-- 2. 하단 3대 핵심 액션 도크 (채굴 / 한복 입기 / 토지 분양·건축) -->
+  <!-- 2. 하단 3대 핵심 액션 도크 -->
   <nav class="fixed bottom-6 left-1/2 -translate-x-1/2 z-20 w-[94%] max-w-xl">
     <div class="hud-panel p-2.5 rounded-3xl grid grid-cols-3 gap-2.5">
       <button onclick="openPanel('mining')" id="btn-mining" class="dock-btn active py-3.5 px-2 rounded-2xl flex flex-col items-center justify-center gap-1 text-white">
@@ -105,7 +105,7 @@
     </div>
   </nav>
 
-  <!-- 3. 팝업 기능 패널 (한 번에 하나씩만 깔끔하게 열림) -->
+  <!-- 3. 팝업 기능 패널 -->
   <div id="featureModal" class="fixed inset-x-4 bottom-28 sm:inset-auto sm:bottom-28 sm:left-1/2 sm:-translate-x-1/2 z-20 max-w-lg w-auto sm:w-full">
     <div class="hud-panel rounded-3xl p-5 sm:p-6 relative">
       <button onclick="closePanel()" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-stone-300 hover:text-white text-sm font-bold">✕</button>
@@ -205,8 +205,8 @@
   </div>
 
   <script>
-    // 상태 변수
-    let balance = 12500.00; // 초기 테스트 체험 잔액 (실제 오픈 시 0.00으로 시작)
+    // 넉넉한 테스트 잔액 10만 개 설정
+    let balance = 100000.00; 
     let hanbokBoost = 0;
     let buildingBoost = 0;
     let hasLand = false;
@@ -339,7 +339,7 @@
     grid.position.y = 0.05;
     scene.add(grid);
 
-    // 중앙 오아시스 전통 누각 (기단 + 기둥 + 팔작지붕 형상)
+    // 중앙 오아시스 전통 누각
     const pavilion = new THREE.Group();
     const baseMesh = new THREE.Mesh(new THREE.BoxGeometry(8, 1, 8), new THREE.MeshStandardMaterial({ color: 0x78716c }));
     baseMesh.position.y = 0.5;
