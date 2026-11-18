@@ -149,7 +149,6 @@
         </div>
         <h2 class="text-xl font-black text-white">화성 토지 분양 & 전통 건축</h2>
         
-        <!-- 도시계획도 지적도 팝업 여는 버튼 -->
         <button onclick="openCadastreModal()" class="w-full py-2.5 rounded-xl bg-amber-600/30 hover:bg-amber-600/50 border border-amber-500/50 text-amber-200 font-bold text-xs flex items-center justify-center gap-2">
           <span>🗺️</span> <span>오아시스주 100필지 상세 지적도(도시계획도) 열기</span>
         </button>
@@ -194,7 +193,6 @@
   </div>
 
   <script>
-    // 브라우저 로컬 저장소(LocalStorage) 연동으로 새로고침해도 상태 유지!
     let balance = parseFloat(localStorage.getItem('marsm_balance')) || 100000.00;
     let hanbokBoost = parseInt(localStorage.getItem('marsm_hanbok_boost')) || 0;
     let equippedHanbokName = localStorage.getItem('marsm_hanbok_name') || '없음';
@@ -257,7 +255,7 @@
     function refillTestCoins() {
       balance = 100000.00;
       updateUI();
-      alert('🪙 테스트용 MARSM 100,000개가 리필되었습니다! (보유 토지 및 건축물은 안전하게 유지됩니다)');
+      alert('🪙 테스트용 MARSM 100,000개가 리필되었습니다! (토지 및 건축물은 안전하게 유지됩니다)');
     }
 
     function openPanel(name) {
@@ -414,7 +412,7 @@
       });
     }
 
-    // Three.js 3D 광장 & 정교한 지적도 그리드 & 큼직한 아바타 캐릭터
+    // Three.js 3D 광장 & 정교한 지적도(도시계획도) 그리드 & 리얼 한복 아바타 캐릭터
     const scene = new THREE.Scene();
     scene.fog = new THREE.FogExp2(0x140805, 0.025);
     const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -434,7 +432,7 @@
     ground.rotation.x = -Math.PI / 2;
     scene.add(ground);
 
-    // 도시계획도 스타일의 지적도 그리드
+    // 🌟 화성 대지 위에 펼쳐진 정교한 도시계획도(지적도) 그리드
     const cadastreGrid = new THREE.GridHelper(70, 35, 0xf97316, 0x4a180c);
     cadastreGrid.position.y = 0.08;
     scene.add(cadastreGrid);
@@ -458,24 +456,29 @@
     pavilion.add(roofMesh);
     scene.add(pavilion);
 
-    // 큼직하고 뚜렷한 한복 아바타 캐릭터
+    // 🌟 진짜 K-전통 한복 & 갓을 쓴 리얼 아바타 캐릭터 (누각 바로 옆에 배치)
     const avatarGroup = new THREE.Group();
-    const bodyMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.8, 1.2, 3.2, 16), new THREE.MeshStandardMaterial({ color: 0xd97706 }));
-    bodyMesh.position.y = 2.1;
-    avatarGroup.add(bodyMesh);
+    
+    // 한복 도포 몸체
+    const hanbokBody = new THREE.Mesh(new THREE.CylinderGeometry(0.7, 1.1, 3.0, 16), new THREE.MeshStandardMaterial({ color: 0xea580c }));
+    hanbokBody.position.y = 1.8;
+    avatarGroup.add(hanbokBody);
 
-    const headMesh = new THREE.Mesh(new THREE.SphereGeometry(0.55, 16, 16), new THREE.MeshStandardMaterial({ color: 0xfde047 }));
-    headMesh.position.y = 4.0;
-    avatarGroup.add(headMesh);
+    // 얼굴 (머리)
+    const avatarHead = new THREE.Mesh(new THREE.SphereGeometry(0.45, 16, 16), new THREE.MeshStandardMaterial({ color: 0xfde047 }));
+    avatarHead.position.y = 3.5;
+    avatarGroup.add(avatarHead);
 
-    const hatBrim = new THREE.Mesh(new THREE.CylinderGeometry(1.4, 1.4, 0.1, 16), new THREE.MeshStandardMaterial({ color: 0x18181b }));
-    hatBrim.position.y = 4.4;
-    avatarGroup.add(hatBrim);
+    // 조선시대 전통 갓 (챙과 모자)
+    const gatBrim = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 1.2, 0.08, 16), new THREE.MeshStandardMaterial({ color: 0x18181b }));
+    gatBrim.position.y = 3.85;
+    avatarGroup.add(gatBrim);
 
-    const hatTop = new THREE.Mesh(new THREE.CylinderGeometry(0.6, 0.6, 0.6, 16), new THREE.MeshStandardMaterial({ color: 0x18181b }));
-    hatTop.position.y = 4.75;
-    avatarGroup.add(hatTop);
+    const gatTop = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 0.5, 16), new THREE.MeshStandardMaterial({ color: 0x18181b }));
+    gatTop.position.y = 4.15;
+    avatarGroup.add(gatTop);
 
+    // 아바타 위치 고정 (x: 5, z: 5)
     avatarGroup.position.set(5, 0, 5);
     scene.add(avatarGroup);
 
@@ -494,7 +497,10 @@
       camera.position.x = Math.sin(angle) * 28;
       camera.position.z = Math.cos(angle) * 28;
       camera.lookAt(0, 3, 0);
-      avatarGroup.position.y = Math.sin(Date.now() * 0.003) * 0.2;
+
+      // 아바타가 살아 움직이듯 부드럽게 숨쉬는 모션
+      avatarGroup.position.y = Math.sin(Date.now() * 0.003) * 0.15;
+
       renderer.render(scene, camera);
     }
     animate();
