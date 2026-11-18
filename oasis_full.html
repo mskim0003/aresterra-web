@@ -3905,5 +3905,16 @@ window.copyInviteText = function() {
   }, 200);
 })();
 </script>
+    <!-- 로비(oasis.html)에서 선택한 메뉴(토지/건축)로 바로 열어주는 연결 코드 -->
+<a href="oasis.html" style="position:fixed; bottom:20px; left:20px; z-index:9999; background:rgba(15,10,8,0.9); color:#fdba74; border:1px solid #f97316; padding:10px 16px; border-radius:999px; font-size:12px; font-weight:800; text-decoration:none; box-shadow:0 4px 15px rgba(0,0,0,0.6);">
+  ← 메인 로비로
+</a>
+<script>
+  window.addEventListener('load', () => {
+    const mode = new URLSearchParams(window.location.search).get('mode');
+    if (mode === 'map' && typeof switchViewMode === 'function') switchViewMode('map');
+    if (mode === 'field' && typeof switchViewMode === 'function') switchViewMode('field');
+  });
+</script>
   </body>
 </html>
