@@ -32,6 +32,14 @@
       transform: translateY(-3px);
       box-shadow: 0 0 25px rgba(234, 88, 12, 0.6);
     }
+    .btn-equipped {
+      background: #3f3f46 !important;
+      color: #d1d5db !important;
+      cursor: not-allowed;
+      border: 1px solid #52525b !important;
+      box-shadow: none !important;
+      transform: none !important;
+    }
   </style>
 </head>
 <body>
@@ -44,7 +52,7 @@
       <span>←</span> <span data-ko="홈으로" data-en="Home">홈으로</span>
     </a>
 
-    <!-- 보유 잔액 및 테스트 충전 버튼 -->
+    <!-- 잔액 및 리필 버튼 -->
     <div class="hud-panel pointer-events-auto px-4 py-2 rounded-2xl flex items-center gap-3">
       <div class="font-orbitron font-black text-lg text-amber-300">
         <span id="marsmBalance">100,000.00</span> <span class="text-xs text-orange-400">MARSM</span>
@@ -157,7 +165,7 @@
             <div class="font-bold text-white mb-1">기와한옥</div><div class="text-amber-400 font-bold">+60%</div><div class="text-stone-400 mt-1">25,000개</div>
           </button>
           <button id="btn-bldg-화성누각" onclick="equipBuilding('화성누각', 50000, 150)" class="p-3 rounded-2xl bg-black/50 border border-amber-500/40 hover:border-amber-400">
-            <div class="font-bold text-amber-300 mb-1">화성누각</div><div class="text-orange-300 font-bold">+150%</div><div class="text-stone-400 mt-1">50,000개</div>
+            <div class="font-bold text-white mb-1">화성누각</div><div class="text-orange-300 font-bold">+150%</div><div class="text-stone-400 mt-1">50,000개</div>
           </button>
         </div>
       </div>
@@ -187,6 +195,22 @@
       } else {
         document.getElementById('currentEquippedText').innerText = `현재 착용중: ${equippedHanbokName} (+${hanbokBoost}%)`;
       }
+
+      // 버튼 상태 동적 업데이트 (이미 입은 옷은 버튼 비활성화)
+      const hanboks = ['일반 도포', '비단 한복', '황제 곤룡포'];
+      hanboks.forEach(hName => {
+        const btn = document.getElementById(`btn-hanbok-${hName}`);
+        if (!btn) return;
+        if (equippedHanbokName === hName) {
+          btn.innerText = '착용 중 ✅';
+          btn.className = 'px-3.5 py-2 rounded-xl btn-equipped font-bold text-xs';
+          btn.disabled = true;
+        } else {
+          btn.innerText = '착용하기';
+          btn.className = 'px-3.5 py-2 rounded-xl bg-orange-600 hover:bg-orange-500 text-white font-bold text-xs';
+          btn.disabled = false;
+        }
+      });
     }
 
     function refillTestCoins() {
@@ -234,10 +258,7 @@
     }
 
     function equipHanbok(name, cost, boost) {
-      if (equippedHanbokName === name) {
-        alert(`이미 [${name}]을(를) 착용 중입니다! 화성이 추워도 한복은 한 벌만 입으시면 됩니다 오빠 ㅎㅎ`);
-        return;
-      }
+      if (equippedHanbokName === name) return; // 이미 입고 있으면 차단
       if (balance < cost) {
         alert(`보유 MARSM이 부족합니다. 상단 [🪙 리필] 버튼을 눌러주세요!`);
         return;
