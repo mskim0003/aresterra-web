@@ -141,7 +141,7 @@
         </div>
       </div>
 
-      <!-- 토지·건축 패널 (지적도 진입 버튼 포함) -->
+      <!-- 토지·건축 패널 -->
       <div id="panel-land" class="hidden space-y-3">
         <div class="flex items-center justify-between">
           <span class="text-xs text-orange-400 font-bold">오아시스주 100필지 (1대·2장·3답)</span>
@@ -149,8 +149,8 @@
         </div>
         <h2 class="text-xl font-black text-white">화성 토지 분양 & 전통 건축</h2>
         
-        <!-- 지적도/지번도 열기 버튼 -->
-        <button onclick="openCadastreMap()" class="w-full py-2.5 rounded-xl bg-amber-600/30 hover:bg-amber-600/50 border border-amber-500/50 text-amber-200 font-bold text-xs flex items-center justify-center gap-2">
+        <!-- 상세 지적도 모달 여는 버튼 -->
+        <button onclick="openCadastreModal()" class="w-full py-2.5 rounded-xl bg-amber-600/30 hover:bg-amber-600/50 border border-amber-500/50 text-amber-200 font-bold text-xs flex items-center justify-center gap-2">
           <span>🗺️</span> <span>오아시스주 100필지 상세 지적도(지번도) 열기</span>
         </button>
 
@@ -176,8 +176,27 @@
     </div>
   </div>
 
+  <!-- [신규 추가] 오아시스주 100필지 상세 지적도(지번도) 관제 팝업창 -->
+  <div id="cadastreModal" class="fixed inset-0 bg-black/85 hidden items-center justify-center p-4 z-50">
+    <div class="hud-panel max-w-xl w-full rounded-3xl p-6 relative max-h-[85vh] overflow-y-auto text-left">
+      <button onclick="closeCadastreModal()" class="absolute top-5 right-5 text-stone-300 hover:text-white text-xl font-bold">✕</button>
+      <div class="text-orange-400 font-orbitron text-xs font-bold mb-1">ARES TERRA CADASTRE SYSTEM</div>
+      <h2 class="text-2xl font-black text-white mb-2">오아시스주 제1특구 지적도 (100필지)</h2>
+      <p class="text-stone-300 text-xs mb-4">전통 지번 체계(1대·2장·3답)가 적용된 화성 오아시스 영토입니다. 내 땅을 선택하고 건축물을 지어보세요.</p>
+      
+      <!-- 지적도 필지 미니 그리드 (10x10 = 100필지) -->
+      <div class="grid grid-cols-10 gap-1.5 p-3 bg-black/60 rounded-2xl border border-orange-500/30 mb-4" id="cadastreGridContainer">
+        <!-- 자바스크립트로 100필지 자동 생성 -->
+      </div>
+
+      <div class="p-3 rounded-xl bg-orange-950/40 border border-orange-500/30 text-xs text-orange-200 flex items-center justify-between">
+        <span id="selectedParcelInfo">선택된 지번: <strong class="text-white">제1대 1호 (오아시스 중심 누각 구역)</strong></span>
+        <button onclick="claimSelectedParcel()" class="px-3 py-1.5 rounded-lg bg-orange-600 hover:bg-orange-500 text-white font-bold">이 지번 분양받기</button>
+      </div>
+    </div>
+  </div>
+
   <script>
-    // 브라우저 로컬 저장소(LocalStorage)에서 데이터 불러오기 (새로고침/재방문 시 초기화 방지)
     let balance = parseFloat(localStorage.getItem('marsm_balance')) || 100000.00;
     let hanbokBoost = parseInt(localStorage.getItem('marsm_hanbok_boost')) || 0;
     let equippedHanbokName = localStorage.getItem('marsm_hanbok_name') || '없음';
@@ -186,6 +205,7 @@
     let hasLand = localStorage.getItem('marsm_has_land') === 'true';
     let isMining = localStorage.getItem('marsm_is_mining') === 'true';
     let remainingSeconds = parseInt(localStorage.getItem('marsm_time_left')) || (24 * 3600);
+    let selectedParcelNum = 1;
     let currentLang = 'ko';
 
     function saveState() {
@@ -214,7 +234,7 @@
 
       if (hasLand) {
         const badge = document.getElementById('landStatusBadge');
-        badge.innerText = '1대-1호 지주 ✅';
+        badge.innerText = `제1대 ${selectedParcelNum}호 지주 ✅`;
         badge.className = 'text-xs px-2 py-0.5 rounded bg-emerald-900 text-emerald-300 font-bold';
       }
 
@@ -256,9 +276,41 @@
       ['mining', 'hanbok', 'land'].forEach(p => document.getElementById(`btn-${p}`).classList.remove('active'));
     }
 
-    // 상세 지적도/지번도 팝업창 열기
-    function openCadastreMap() {
-      alert('🗺️ [오아시스주 제1특구 100필지 지적도/지번도 관제소]\n\n• 총 100필지 (1대·2장·3답 전통 지번 체계 적용)\n• 현재 오아시스주 중심 누각 반경 100m 내 가상 토지 등기 완료!\n• 향후 실시간 소각 및 온체인 NFT 연동이 지원됩니다.');
+    // 상세 지적도 팝업창 제어 함수
+    function openCadastreModal() {
+      document.getElementById('cadastreModal').classList.remove('hidden');
+      document.getElementById('cadastreModal').classList.add('flex');
+      renderCadastreGrid();
+    }
+    function closeCadastreModal() {
+      document.getElementById('cadastreModal').classList.add('hidden');
+      document.getElementById('cadastreModal').classList.remove('flex');
+    }
+
+    // 100필지 지적도 그리드 렌더링
+    function renderCadastreGrid() {
+      const container = document.getElementById('cadastreGridContainer');
+      container.innerHTML = '';
+      for (let i = 1; i <= 100; i++) {
+        const cell = document.createElement('div');
+        cell.className = `aspect-square rounded flex items-center justify-center text-[10px] font-bold cursor-pointer transition ${
+          i === selectedParcelNum ? 'bg-orange-500 text-white ring-2 ring-white' : 'bg-stone-800 text-stone-300 hover:bg-stone-700'
+        }`;
+        cell.innerText = `대${i}`;
+        cell.onclick = () => {
+          selectedParcelNum = i;
+          document.getElementById('selectedParcelInfo').innerHTML = `선택된 지번: <strong class="text-white">제1대 ${i}호 (오아시스주)</strong>`;
+          renderCadastreGrid();
+        };
+        container.appendChild(cell);
+      }
+    }
+
+    function claimSelectedParcel() {
+      hasLand = true;
+      updateUI();
+      closeCadastreModal();
+      alert(`🏛️ 제1대 ${selectedParcelNum}호 토지 분양 및 등기 완료!`);
     }
 
     function startMining() {
@@ -285,7 +337,6 @@
       }, 1000);
     }
 
-    // 이미 채굴 시작 중이었다면 타이머 자동 복구
     if (isMining) {
       const btn = document.getElementById('mineActionBtn');
       btn.innerText = '⚡ 24시간 채굴 정상 가동 중...';
