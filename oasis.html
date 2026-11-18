@@ -108,29 +108,29 @@
 
       <!-- 한복 패널 -->
       <div id="panel-hanbok" class="hidden space-y-3">
-        <div class="text-xs text-orange-400 font-bold" id="currentEquippedText">현재 착용중: 없음</div>
+        <div class="text-xs text-orange-400 font-bold" id="currentEquippedText">현재 착용중: 없음 (계정당 1벌 대표 장착)</div>
         <h2 class="text-xl font-black text-white">3D 전통 한복 부스터</h2>
         <div class="space-y-2.5 text-sm">
           <div class="p-3.5 rounded-2xl bg-black/50 border border-white/10 flex items-center justify-between">
             <div>
               <div class="font-bold text-white">일반 도포 <span class="text-orange-400 text-xs">(+10%)</span></div>
-              <div class="text-xs text-stone-400">비용: 5,000 MARSM</div>
+              <div class="text-xs text-stone-400">비용: 5,000 MARSM (전량 소각)</div>
             </div>
-            <button onclick="equipItem('hanbok', '일반 도포', 5000, 10)" class="px-3.5 py-2 rounded-xl bg-orange-600 hover:bg-orange-500 text-white font-bold text-xs">착용하기</button>
+            <button id="btn-hanbok-도포" onclick="equipHanbok('일반 도포', 5000, 10)" class="px-3.5 py-2 rounded-xl bg-orange-600 hover:bg-orange-500 text-white font-bold text-xs">착용하기</button>
           </div>
           <div class="p-3.5 rounded-2xl bg-black/50 border border-white/10 flex items-center justify-between">
             <div>
               <div class="font-bold text-white">비단 한복 <span class="text-amber-400 text-xs">(+25%)</span></div>
-              <div class="text-xs text-stone-400">비용: 10,000 MARSM</div>
+              <div class="text-xs text-stone-400">비용: 10,000 MARSM (전량 소각)</div>
             </div>
-            <button onclick="equipItem('hanbok', '비단 한복', 10000, 25)" class="px-3.5 py-2 rounded-xl bg-orange-600 hover:bg-orange-500 text-white font-bold text-xs">착용하기</button>
+            <button id="btn-hanbok-비단 한복" onclick="equipHanbok('비단 한복', 10000, 25)" class="px-3.5 py-2 rounded-xl bg-orange-600 hover:bg-orange-500 text-white font-bold text-xs">착용하기</button>
           </div>
           <div class="p-3.5 rounded-2xl bg-black/50 border border-amber-500/40 flex items-center justify-between">
             <div>
               <div class="font-bold text-amber-300">황제 곤룡포 <span class="text-orange-300 text-xs">(+100%)</span></div>
-              <div class="text-xs text-stone-400">비용: 30,000 MARSM</div>
+              <div class="text-xs text-stone-400">비용: 30,000 MARSM (전량 소각)</div>
             </div>
-            <button onclick="equipItem('hanbok', '황제 곤룡포', 30000, 100)" class="px-3.5 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs">착용하기</button>
+            <button id="btn-hanbok-황제 곤룡포" onclick="equipHanbok('황제 곤룡포', 30000, 100)" class="px-3.5 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs">착용하기</button>
           </div>
         </div>
       </div>
@@ -150,13 +150,13 @@
           <button onclick="claimLand()" class="px-4 py-2 rounded-xl bg-orange-600 hover:bg-orange-500 text-white font-bold text-xs">0.1 SOL 분양</button>
         </div>
         <div class="grid grid-cols-3 gap-2 pt-1 text-center text-xs">
-          <button onclick="equipItem('building', '초가정자', 10000, 20)" class="p-3 rounded-2xl bg-black/50 border border-white/10 hover:border-orange-400">
+          <button id="btn-bldg-초가정자" onclick="equipBuilding('초가정자', 10000, 20)" class="p-3 rounded-2xl bg-black/50 border border-white/10 hover:border-orange-400">
             <div class="font-bold text-white mb-1">초가정자</div><div class="text-orange-400 font-bold">+20%</div><div class="text-stone-400 mt-1">10,000개</div>
           </button>
-          <button onclick="equipItem('building', '기와한옥', 25000, 60)" class="p-3 rounded-2xl bg-black/50 border border-white/10 hover:border-orange-400">
+          <button id="btn-bldg-기와한옥" onclick="equipBuilding('기와한옥', 25000, 60)" class="p-3 rounded-2xl bg-black/50 border border-white/10 hover:border-orange-400">
             <div class="font-bold text-white mb-1">기와한옥</div><div class="text-amber-400 font-bold">+60%</div><div class="text-stone-400 mt-1">25,000개</div>
           </button>
-          <button onclick="equipItem('building', '화성누각', 50000, 150)" class="p-3 rounded-2xl bg-black/50 border border-amber-500/40 hover:border-amber-400">
+          <button id="btn-bldg-화성누각" onclick="equipBuilding('화성누각', 50000, 150)" class="p-3 rounded-2xl bg-black/50 border border-amber-500/40 hover:border-amber-400">
             <div class="font-bold text-amber-300 mb-1">화성누각</div><div class="text-orange-300 font-bold">+150%</div><div class="text-stone-400 mt-1">50,000개</div>
           </button>
         </div>
@@ -169,6 +169,7 @@
     let hanbokBoost = 0;
     let equippedHanbokName = '없음';
     let buildingBoost = 0;
+    let equippedBuildingName = '없음';
     let hasLand = false;
     let isMining = false;
     let remainingSeconds = 24 * 3600;
@@ -180,7 +181,12 @@
       document.getElementById('marsmBalance').innerText = balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
       document.getElementById('totalBoostBadge').innerText = `+${totalBoost}%`;
       document.getElementById('hourlyRateDisplay').innerText = hourlyRate.toFixed(1);
-      document.getElementById('currentEquippedText').innerText = `현재 착용중: ${equippedHanbokName} (+${hanbokBoost}%)`;
+      
+      if (equippedHanbokName === '없음') {
+        document.getElementById('currentEquippedText').innerText = `현재 착용중: 없음 (계정당 1벌 대표 장착)`;
+      } else {
+        document.getElementById('currentEquippedText').innerText = `현재 착용중: ${equippedHanbokName} (+${hanbokBoost}%)`;
+      }
     }
 
     function refillTestCoins() {
@@ -227,29 +233,40 @@
       }, 1000);
     }
 
-    function equipItem(type, name, cost, boost) {
-      if (type === 'hanbok' && equippedHanbokName === name) {
-        alert(`이미 [${name}]을(를) 착용하고 계십니다! 추운데 그만 껴입으셔도 돼요 오빠 ㅎㅎ`);
-        return;
-      }
-      if (type === 'building' && !hasLand) {
-        alert('먼저 화성 토지(0.1 SOL)를 분양받아야 건축물을 지을 수 있습니다!');
+    function equipHanbok(name, cost, boost) {
+      if (equippedHanbokName === name) {
+        alert(`이미 [${name}]을(를) 착용 중입니다! 화성이 추워도 한복은 한 벌만 입으시면 됩니다 오빠 ㅎㅎ`);
         return;
       }
       if (balance < cost) {
-        alert(`보유 MARSM이 부족합니다. 상단 [🪙 리필] 버튼을 눌러 테스트 코인을 충전해 주세요!`);
+        alert(`보유 MARSM이 부족합니다. 상단 [🪙 리필] 버튼을 눌러주세요!`);
         return;
       }
       balance -= cost;
-      if (type === 'hanbok') {
-        hanbokBoost = boost;
-        equippedHanbokName = name;
-      }
-      if (type === 'building') {
-        buildingBoost = boost;
-      }
+      hanbokBoost = boost;
+      equippedHanbokName = name;
       updateUI();
-      alert(`🎉 [${name}] 착용 완료! ${cost.toLocaleString()} MARSM이 영구 소각되었으며 채굴 부스터 +${boost}%가 적용됩니다.`);
+      alert(`🎉 [${name}] 장착 완료! ${cost.toLocaleString()} MARSM이 영구 소각되었으며 부스터 +${boost}%가 적용됩니다.`);
+    }
+
+    function equipBuilding(name, cost, boost) {
+      if (!hasLand) {
+        alert('먼저 화성 토지(0.1 SOL)를 분양받아야 건축물을 지을 수 있습니다!');
+        return;
+      }
+      if (equippedBuildingName === name) {
+        alert(`이미 내 땅 위에 [${name}]이(가) 건설되어 있습니다!`);
+        return;
+      }
+      if (balance < cost) {
+        alert(`보유 MARSM이 부족합니다!`);
+        return;
+      }
+      balance -= cost;
+      buildingBoost = boost;
+      equippedBuildingName = name;
+      updateUI();
+      alert(`🏛️ [${name}] 건설 완료! ${cost.toLocaleString()} MARSM이 영구 소각되고 추가 부스터 +${boost}%가 가동됩니다.`);
     }
 
     function claimLand() {
