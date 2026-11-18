@@ -1,998 +1,184 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ares Terra ($REDM) - 3D Mars v3.0 HD</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <style>
-        * { box-sizing: border-box; user-select: none; }
-        body, html {
-            margin: 0; padding: 0; width: 100%; height: 100%;
-            overflow: hidden; background-color: #020307;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #f3f4f6;
-        }
-
-        #webglContainer {
-            position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: 1; cursor: grab;
-        }
-        #webglContainer:active { cursor: grabbing; }
-
-        .lens-vignette {
-            position: fixed; inset: 0; pointer-events: none; z-index: 2;
-            background: radial-gradient(circle at center, transparent 60%, rgba(0, 5, 15, 0.85) 100%);
-            box-shadow: inset 0 0 80px rgba(0, 229, 255, 0.12);
-        }
-
-        .hud-top {
-            position: fixed; top: 0; left: 0; right: 0; z-index: 10;
-            padding: 15px 28px; display: flex; justify-content: space-between; align-items: center;
-            background: linear-gradient(180deg, rgba(4, 8, 20, 0.85) 0%, transparent 100%);
-            pointer-events: none;
-        }
-        .hud-top > * { pointer-events: auto; }
-        .brand-box { display: flex; align-items: center; gap: 12px; }
-        .brand-title {
-            font-size: 1.35rem; font-weight: 800; color: #ff5722;
-            letter-spacing: 2px; text-shadow: 0 0 15px rgba(255, 87, 34, 0.6);
-        }
-        .ver-tag {
-            background: #00e5ff; color: #020617; font-size: 0.72rem; font-weight: bold;
-            padding: 3px 9px; border-radius: 10px; box-shadow: 0 0 10px rgba(0, 229, 255, 0.5);
-        }
-        .altitude-badge {
-            font-family: monospace; background: rgba(0, 229, 255, 0.12);
-            border: 1px solid rgba(0, 229, 255, 0.4); color: #00e5ff;
-            padding: 4px 10px; border-radius: 6px; font-size: 0.85rem;
-        }
-        .stats-hud {
-            display: flex; gap: 20px; background: rgba(10, 16, 32, 0.82);
-            border: 1px solid rgba(255, 255, 255, 0.15); padding: 8px 18px;
-            border-radius: 30px; backdrop-filter: blur(8px); font-size: 0.9rem;
-        }
-        .stats-hud b { color: #00e5ff; }
-
-        .bora-hud {
-            position: fixed; bottom: 24px; left: 24px; z-index: 10;
-            width: 430px; max-width: calc(100vw - 48px);
-            background: rgba(10, 16, 34, 0.88); border: 1px solid rgba(0, 229, 255, 0.5);
-            border-radius: 16px; padding: 16px 20px; backdrop-filter: blur(12px);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7), 0 0 20px rgba(0, 229, 255, 0.15);
-            display: flex; gap: 15px; align-items: flex-start;
-        }
-        .bora-holo-avatar {
-            width: 54px; height: 54px; border-radius: 50%;
-            background: radial-gradient(circle at 50% 30%, #ff80ab, #651fff);
-            border: 2px solid #00e5ff; display: flex; justify-content: center; align-items: center;
-            font-size: 1.7rem; flex-shrink: 0; box-shadow: 0 0 15px #00e5ff;
-        }
-        .bora-content h4 {
-            margin: 0 0 5px 0; color: #00e5ff; font-size: 0.9rem;
-            display: flex; justify-content: space-between;
-        }
-        .bora-content p { margin: 0; font-size: 0.88rem; line-height: 1.5; color: #e2e8f0; }
-
-        .control-hud {
-            position: fixed; bottom: 24px; right: 24px; z-index: 10;
-            width: 450px; max-width: calc(100vw - 48px);
-            background: rgba(12, 18, 36, 0.9); border: 1px solid rgba(255, 87, 34, 0.55);
-            border-radius: 16px; padding: 18px 22px; backdrop-filter: blur(12px);
-            box-shadow: 0 10px 35px rgba(0, 0, 0, 0.8);
-        }
-        .panel-header {
-            display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px;
-        }
-        .panel-title { font-weight: bold; color: #ffab91; font-size: 1rem; }
-        .btn-zoom-out {
-            background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.3);
-            color: #fff; padding: 5px 12px; border-radius: 6px; font-size: 0.8rem;
-            cursor: pointer; display: none;
-        }
-        .btn-zoom-out:hover { background: #ff5722; border-color: #ff5722; }
-
-        .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .holo-btn {
-            background: rgba(20, 30, 55, 0.9); border: 1px solid #00e5ff; color: #fff;
-            padding: 10px 12px; border-radius: 10px; cursor: pointer; text-align: left;
-            transition: 0.2s; font-size: 0.85rem;
-        }
-        .holo-btn:hover {
-            background: rgba(0, 229, 255, 0.2); transform: translateY(-2px);
-            box-shadow: 0 0 15px rgba(0, 229, 255, 0.4);
-        }
-        .holo-btn.free-tag { border-color: #10b981; }
-        .holo-btn.city-tag { border-color: #f59e0b; }
-        .holo-btn small { display: block; font-size: 0.72rem; color: #94a3b8; margin-top: 3px; }
-
-        #markersLayer { position: fixed; inset: 0; pointer-events: none; z-index: 5; }
-        .spatial-marker {
-            position: absolute; transform: translate(-50%, -50%);
-            pointer-events: auto; cursor: pointer; transition: transform 0.2s, opacity 0.3s;
-        }
-        .spatial-marker:hover { transform: translate(-50%, -50%) scale(1.15); z-index: 20; }
-        .region-pin {
-            background: rgba(5, 10, 24, 0.88); border: 2px solid #00e5ff; color: #fff;
-            padding: 6px 14px; border-radius: 20px; font-size: 0.82rem; font-weight: bold;
-            box-shadow: 0 0 20px rgba(0, 229, 255, 0.6); white-space: nowrap;
-        }
-        .region-pin.free { border-color: #10b981; box-shadow: 0 0 20px rgba(16, 185, 129, 0.6); }
-        .region-pin.city { border-color: #f59e0b; box-shadow: 0 0 20px rgba(245, 158, 11, 0.6); }
-
-        .plot-grid-box {
-            width: 118px; height: 78px; background: rgba(16, 185, 129, 0.32);
-            border: 2px solid #10b981; border-radius: 8px; display: flex; flex-direction: column;
-            justify-content: center; align-items: center; text-align: center;
-            backdrop-filter: blur(2px); box-shadow: 0 0 15px rgba(16, 185, 129, 0.4);
-        }
-        .plot-grid-box.city-plot {
-            width: 96px; height: 66px; background: rgba(245, 158, 11, 0.32);
-            border-color: #f59e0b; box-shadow: 0 0 15px rgba(245, 158, 11, 0.4);
-        }
-        .plot-grid-box.owned {
-            background: rgba(255, 87, 34, 0.55); border-color: #fff; box-shadow: 0 0 25px #ff5722;
-        }
-        .plot-grid-box b { font-size: 0.78rem; color: #fff; text-shadow: 0 1px 3px #000; }
-        .plot-grid-box span {
-            font-size: 0.65rem; color: #ecfdf5; background: rgba(0,0,0,0.7);
-            padding: 1px 6px; border-radius: 4px; margin-top: 3px;
-        }
-
-        .action-row { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
-        .btn-primary {
-            flex: 1; background: #10b981; color: #022c22; border: none; padding: 11px;
-            border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 0.85rem; transition: 0.15s;
-        }
-        .btn-primary:hover { filter: brightness(1.15); transform: translateY(-1px); }
-        .btn-coin {
-            flex: 1; background: #ff5722; color: #fff; border: none; padding: 11px;
-            border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 0.85rem; transition: 0.15s;
-        }
-        .btn-coin:hover { filter: brightness(1.15); transform: translateY(-1px); }
-        .timeline-row { display: flex; gap: 6px; margin-top: 8px; }
-        .time-btn {
-            flex: 1; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2);
-            color: #cbd5e1; padding: 7px; border-radius: 6px; font-size: 0.75rem; cursor: pointer;
-        }
-        .time-btn.active { background: #00e5ff; color: #000; font-weight: bold; border-color: #00e5ff; }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ARES TERRA ($MARSM) | 화성 메타버스 오아시스주</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=Orbitron:wght@600;800;900&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Noto Sans KR', sans-serif;
+      background-color: #090504;
+      color: #f8fafc;
+      overflow-x: hidden;
+    }
+    .font-orbitron { font-family: 'Orbitron', sans-serif; }
+    .mars-glow {
+      background: radial-gradient(circle at 50% 35%, rgba(234, 88, 12, 0.28) 0%, rgba(124, 45, 18, 0.12) 45%, rgba(9, 5, 4, 1) 80%);
+    }
+    .glass-card {
+      background: rgba(24, 15, 12, 0.72);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(251, 146, 60, 0.22);
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%);
+      box-shadow: 0 0 25px rgba(234, 88, 12, 0.45);
+      transition: all 0.25s ease;
+    }
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 0 35px rgba(249, 115, 22, 0.75);
+    }
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(251, 191, 36, 0.4);
+      transition: all 0.25s ease;
+    }
+    .btn-secondary:hover {
+      background: rgba(251, 191, 36, 0.14);
+      transform: translateY(-2px);
+    }
+  </style>
 </head>
-<body>
+<body class="mars-glow min-h-screen flex flex-col justify-between">
 
-    <div id="webglContainer"></div>
-    <div class="lens-vignette"></div>
-    <div id="markersLayer"></div>
-
-    <div class="hud-top">
-        <div class="brand-box">
-            <div class="brand-title">🪐 ARES TERRA</div>
-            <span class="ver-tag">v3.0 HD 디테일업</span>
-            <div class="altitude-badge" id="altitudeDisplay">고도: 15,000 KM (우주 궤도 뷰)</div>
-        </div>
-        <div class="stats-hud">
-            <div>보유 잔고: <b id="balanceText">10,000</b> REDM</div>
-            <div>무상임대권: <b id="leaseTicketText" style="color:#10b981;">1회 가능(30일)</b></div>
-            <div>소각(Burn): <b id="burnText">0</b> REDM</div>
-        </div>
+  <!-- 상단 최소 네비게이션 (로고 + 언어전환만 배치) -->
+  <header class="w-full max-w-6xl mx-auto px-6 py-6 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 rounded-full bg-gradient-to-br from-orange-500 to-amber-700 flex items-center justify-center font-orbitron font-black text-white shadow-lg">
+        M
+      </div>
+      <div>
+        <span class="font-orbitron font-extrabold text-xl tracking-wider text-orange-400">ARES TERRA</span>
+        <span class="ml-2 text-xs px-2 py-0.5 rounded-full bg-orange-500/20 text-orange-300 font-orbitron">$MARSM</span>
+      </div>
     </div>
 
-    <div class="bora-hud">
-        <div class="bora-holo-avatar">👩‍🚀</div>
-        <div class="bora-content">
-            <h4><span>AI 개척 파트너 보라</span> <span style="font-size:0.75rem; color:#10b981;">● LIVE 수신중</span></h4>
-            <p id="boraSpeech">“사장님! v3.0에서는 기지 뒤편의 뿌연 노란 선을 싹 지우고, <b>실제 3D 암석·크레이터·운하 물길</b>을 입체로 조각했어요! 특히 <b>[📜 지난달 황무지]</b>를 누르면 황량한 3D 바위 사막과 측량 비콘이 나타난답니다!”</p>
-        </div>
+    <button id="langToggle" onclick="toggleLanguage()" class="px-3.5 py-1.5 rounded-full text-xs font-semibold border border-orange-400/40 text-orange-200 hover:bg-orange-500/20 transition">
+      🌐 ENGLISH
+    </button>
+  </header>
+
+  <!-- 메인 히어로 섹션: 핵심 버튼 딱 2개만 배치 -->
+  <main class="w-full max-w-5xl mx-auto px-6 pt-10 pb-20 text-center">
+    <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-orange-500/15 border border-orange-500/30 text-orange-300 text-xs sm:text-sm font-medium mb-6">
+      <span>🚀 SOLANA MAINNET</span>
+      <span>•</span>
+      <span data-ko="총 발행량 10억 개 엄격 고정" data-en="1B Fixed Total Supply">총 발행량 10억 개 엄격 고정</span>
     </div>
 
-    <div class="control-hud">
-        <div class="panel-header">
-            <span class="panel-title" id="panelTitle">🔭 1단계: 화성 대륙 타겟팅</span>
-            <button class="btn-zoom-out" id="btnZoomOut" onclick="stepZoomOut()">↩ 상공으로 줌아웃</button>
-        </div>
-        <div id="panelBody"></div>
+    <h1 class="text-4xl sm:text-6xl font-black tracking-tight leading-tight mb-6">
+      <span class="block text-white" data-ko="화성 위에 세우는" data-en="Build Your Legacy">화성 위에 세우는</span>
+      <span class="bg-gradient-to-r from-orange-400 via-amber-300 to-orange-500 bg-clip-text text-transparent" data-ko="K-전통 웹3 메타버스" data-en="on Mars Metaverse">K-전통 웹3 메타버스</span>
+    </h1>
+
+    <p class="max-w-2xl mx-auto text-stone-300 text-base sm:text-lg leading-relaxed mb-10"
+       data-ko="출석만 해도 무료로 $MARSM을 채굴하고, 3D 한복과 기와한옥으로 채굴 속도를 높여 나만의 화성 영토(1대·2장·3답)의 주인이 되세요."
+       data-en="Mine $MARSM free every 24 hours, boost your yield with 3D Hanbok & traditional architecture, and own your Martian land.">
+      출석만 해도 무료로 $MARSM을 채굴하고, 3D 한복과 기와한옥으로 채굴 속도를 높여 나만의 화성 영토(1대·2장·3답)의 주인이 되세요.
+    </p>
+
+    <!-- 핵심 행동 버튼 2개 -->
+    <div class="flex flex-col sm:flex-row items-center justify-center gap-4 mb-20">
+      <a href="oasis.html" class="btn-primary w-full sm:w-auto px-8 py-4 rounded-2xl text-white font-bold text-lg flex items-center justify-center gap-2">
+        <span>🏛️</span>
+        <span data-ko="3D 오아시스 광장 입장하기" data-en="Enter 3D Oasis Plaza">3D 오아시스 광장 입장하기</span>
+      </a>
+      <button onclick="openWhitepaperModal()" class="btn-secondary w-full sm:w-auto px-8 py-4 rounded-2xl text-amber-200 font-bold text-lg flex items-center justify-center gap-2">
+        <span>📜</span>
+        <span data-ko="공식 백서 v2.0 요약 보기" data-en="Read Whitepaper v2.0">공식 백서 v2.0 요약 보기</span>
+      </button>
     </div>
 
-    <script>
-        let myBalance = 10000;
-        let burnedCoin = 0;
-        let hasUsedFreeLease = false;
-
-        let currentZoomStage = 1;
-        let activeRegion = null;
-        let activePlot = null;
-        let currentTimelineMode = 'current';
-
-        const marsRegions = [
-            {
-                id: 'riverside',
-                name: '🌿 리버사이드 강변 녹지',
-                sub: '넓은 땅 · 30일 무상임대',
-                type: 'free',
-                lat: 12, lon: -25,
-                boraMsg: '“리버사이드 강변 상공입니다! 푸른 강줄기 옆에 쳐진 <b>초록색 토지 구획</b>들이 보이시죠? 첫 토지는 30일 무상임대가 가능하니 원하는 위치를 클릭해 보세요!”',
-                plots: [
-                    { id: 'RV-01', name: '강변 녹지 A-01호(대형)', dLat: 3.5, dLon: -5, price: 1200, canFree: true, owner: null, status: 'none', level: 1, desc: '대운하 북서쪽 수변 광활한 녹지' },
-                    { id: 'RV-02', name: '강변 녹지 A-02호(대형)', dLat: 4, dLon: 5, price: 1300, canFree: true, owner: null, status: 'none', level: 1, desc: '강물 취수가 가장 유리한 특급 명당' },
-                    { id: 'RV-03', name: '강변 숲 구역 A-03호(대형)', dLat: -4, dLon: -4, price: 1100, canFree: true, owner: null, status: 'none', level: 1, desc: '대규모 산소 돔 및 생태 농장 부지' },
-                    { id: 'RV-04', name: '강변 삼각주 A-04호(대형)', dLat: -3.5, dLon: 6, price: 1500, canFree: true, owner: null, status: 'none', level: 1, desc: '두 강줄기가 합류하는 비옥한 삼각주' }
-                ]
-            },
-            {
-                id: 'greenvalley',
-                name: '🌲 그린밸리 대평원',
-                sub: '넓은 땅 · 30일 무상임대',
-                type: 'free',
-                lat: -16, lon: 35,
-                boraMsg: '“그린밸리 대평원 상공입니다, 사장님! 푸른 숲과 호수가 어우러진 대형 녹지 구획들이에요. 마음에 드는 구획을 골라보세요!”',
-                plots: [
-                    { id: 'GV-01', name: '그린밸리 B-01호(대형)', dLat: 3.5, dLon: -4.5, price: 1000, canFree: true, owner: null, status: 'none', level: 1, desc: '태양광 발전 및 대평원 복합 단지' },
-                    { id: 'GV-02', name: '오아시스 B-02호(대형)', dLat: 3, dLon: 5, price: 1400, canFree: true, owner: null, status: 'none', level: 1, desc: '천연 지하수 호수를 품은 핵심 녹지' },
-                    { id: 'GV-03', name: '그린밸리 남단 B-03호(대형)', dLat: -4, dLon: 0, price: 1100, canFree: true, owner: null, status: 'none', level: 1, desc: '테라포밍 산림 공원 예정 구역' }
-                ]
-            },
-            {
-                id: 'coastal',
-                name: '🌊 코스탈 베이 해안도시',
-                sub: '소형 알짜 · $REDM 코인 전용',
-                type: 'city',
-                lat: 20, lon: 40,
-                boraMsg: '“푸른 바다와 해안선이 펼쳐진 코스탈 베이 해안도시 상공이에요! 여긴 중요 도시 구역이라 무상임대 없이 <b>$REDM 코인 정식 분양</b>으로만 선점하실 수 있어요!”',
-                plots: [
-                    { id: 'CB-01', name: '오션뷰 하버 C-01호(소형)', dLat: 3, dLon: -4, price: 2500, canFree: false, owner: null, status: 'none', level: 1, desc: '바다 조망권 1열 최고급 해안 상업지' },
-                    { id: 'CB-02', name: '마리나 부두 C-02호(소형)', dLat: 3.5, dLon: 4.5, price: 2800, canFree: false, owner: null, status: 'none', level: 1, desc: '해상 교역선 중심 항만 노른자위 땅' },
-                    { id: 'CB-03', name: '선셋 비치 C-03호(소형)', dLat: -3.5, dLon: 1, price: 2400, canFree: false, owner: null, status: 'none', level: 1, desc: '해안 휴양 돔 복합 개발 지구' }
-                ]
-            },
-            {
-                id: 'olympus',
-                name: '🏙️ 올림푸스 센트럴 시티',
-                sub: '초밀집 도심 · $REDM 코인 전용',
-                type: 'city',
-                lat: -12, lon: -38,
-                boraMsg: '“화성의 수도 올림푸스 센트럴 시티 상공입니다! 행정과 금융이 집중된 핵심지라 오직 <b>$REDM 코인</b>으로만 영구 분양이 가능합니다!”',
-                plots: [
-                    { id: 'OL-01', name: '센트럴 광장 D-01호(소형)', dLat: 3, dLon: -4, price: 3200, canFree: false, owner: null, status: 'none', level: 1, desc: '중앙 광장 바로 앞 초특급 랜드마크 부지' },
-                    { id: 'OL-02', name: '테크 타워 D-02호(소형)', dLat: 3, dLon: 4.5, price: 3000, canFree: false, owner: null, status: 'none', level: 1, desc: '우주 엘리베이터 및 통신 본부 인접지' },
-                    { id: 'OL-03', name: '메트로 역세권 D-03호(소형)', dLat: -3.5, dLon: 0, price: 2700, canFree: false, owner: null, status: 'none', level: 1, desc: '자기부상열차 중앙역 환승 특구' }
-                ]
-            }
-        ];
-
-        let scene, camera, renderer, planetGroup, marsMesh;
-        // 3단계에서 시기별로 보여줄 3가지 정밀 3D 레이어
-        let stage3Root, currentBaseGroup, lastWeekGroup, wastelandGroup, upgradeBuildingsGroup;
-        let radarDish, roverMesh, beaconLaser, craneArm;
-        const PLANET_RADIUS = 10;
-
-        let camPos = new THREE.Vector3(0, 0, 28);
-        let targetCamPos = new THREE.Vector3(0, 0, 28);
-        let camLook = new THREE.Vector3(0, 0, 0);
-        let targetCamLook = new THREE.Vector3(0, 0, 0);
-
-        let currentRotX = 0.15, currentRotY = 0;
-        let targetRotX = 0.15, targetRotY = 0;
-        let autoRotate = true;
-        let animTick = 0;
-
-        function latLonToVector3(lat, lon, radius) {
-            const phi = (90 - lat) * (Math.PI / 180);
-            const theta = (lon + 90) * (Math.PI / 180);
-            const x = -radius * Math.sin(phi) * Math.cos(theta);
-            const z = radius * Math.sin(phi) * Math.sin(theta);
-            const y = radius * Math.cos(phi);
-            return new THREE.Vector3(x, y, z);
-        }
-
-        // ★ 뿌옇게 번지던 노란 격자선을 텍스처에서 완전히 제거하고 깨끗한 자연 지형만 렌더링!
-        function generateCleanMarsTexture(mode = 'current') {
-            const canvas = document.createElement('canvas');
-            canvas.width = 2048;
-            canvas.height = 1024;
-            const ctx = canvas.getContext('2d');
-
-            const bgGrad = ctx.createLinearGradient(0, 0, 0, 1024);
-            if (mode === 'lastMonth') {
-                bgGrad.addColorStop(0, '#3b1109');
-                bgGrad.addColorStop(0.5, '#7c2412');
-                bgGrad.addColorStop(1, '#260904');
-            } else {
-                bgGrad.addColorStop(0, '#4a150b');
-                bgGrad.addColorStop(0.5, '#9a3412');
-                bgGrad.addColorStop(1, '#2e0c05');
-            }
-            ctx.fillStyle = bgGrad;
-            ctx.fillRect(0, 0, 2048, 1024);
-
-            for (let i = 0; i < 240; i++) {
-                const x = Math.random() * 2048;
-                const y = Math.random() * 1024;
-                const r = Math.random() * 55 + 10;
-                const g = ctx.createRadialGradient(x, y, r * 0.1, x, y, r);
-                g.addColorStop(0, i % 2 === 0 ? 'rgba(30, 8, 4, 0.35)' : 'rgba(234, 88, 12, 0.22)');
-                g.addColorStop(1, 'transparent');
-                ctx.fillStyle = g;
-                ctx.beginPath();
-                ctx.arc(x, y, r, 0, Math.PI * 2);
-                ctx.fill();
-            }
-
-            if (mode === 'lastMonth') return new THREE.CanvasTexture(canvas);
-
-            const alpha = mode === 'lastWeek' ? 0.45 : 0.95;
-
-            marsRegions.forEach(reg => {
-                const u = ((reg.lon + 180) / 360) * 2048;
-                const v = ((90 - reg.lat) / 180) * 1024;
-
-                const greenGrad = ctx.createRadialGradient(u, v, 10, u, v, 190);
-                greenGrad.addColorStop(0, `rgba(16, 185, 129, ${0.72 * alpha})`);
-                greenGrad.addColorStop(0.55, `rgba(5, 150, 105, ${0.42 * alpha})`);
-                greenGrad.addColorStop(1, 'transparent');
-                ctx.fillStyle = greenGrad;
-                ctx.beginPath();
-                ctx.arc(u, v, 190, 0, Math.PI * 2);
-                ctx.fill();
-
-                for (let step = -120; step <= 120; step += 8) {
-                    const wx = u + step;
-                    const wy = v + Math.sin(step * 0.035) * 38 + (step * 0.25);
-                    const radius = (1 - Math.abs(step) / 135) * 24 + 4;
-                    const wGrad = ctx.createRadialGradient(wx, wy, 1, wx, wy, radius);
-                    wGrad.addColorStop(0, `rgba(56, 189, 248, ${0.88 * alpha})`);
-                    wGrad.addColorStop(0.6, `rgba(2, 132, 199, ${0.6 * alpha})`);
-                    wGrad.addColorStop(1, 'transparent');
-                    ctx.fillStyle = wGrad;
-                    ctx.beginPath();
-                    ctx.arc(wx, wy, radius, 0, Math.PI * 2);
-                    ctx.fill();
-                }
-
-                if (reg.id === 'coastal') {
-                    const seaGrad = ctx.createRadialGradient(u + 60, v - 35, 15, u + 60, v - 35, 145);
-                    seaGrad.addColorStop(0, `rgba(3, 105, 161, ${alpha})`);
-                    seaGrad.addColorStop(0.6, `rgba(14, 165, 233, ${0.75 * alpha})`);
-                    seaGrad.addColorStop(1, 'transparent');
-                    ctx.fillStyle = seaGrad;
-                    ctx.beginPath();
-                    ctx.arc(u + 60, v - 35, 145, 0, Math.PI * 2);
-                    ctx.fill();
-                }
-            });
-
-            return new THREE.CanvasTexture(canvas);
-        }
-
-        // ★ 3단계 초근접 지형(현재 기지 + 지난주 공사장 + 지난달 3D 바위 황무지) 통합 생성!
-        function createStage3Environment() {
-            const root = new THREE.Group();
-            root.position.set(0, 0, PLANET_RADIUS);
-
-            const surface = new THREE.Group();
-            surface.rotation.x = Math.PI / 2;
-            root.add(surface);
-
-            // [공통 외곽 지형] 기지 주변을 둘러싼 입체 화성 바위 언덕 18개 (현재/과거 모두 밋밋함 방지!)
-            const rockMat = new THREE.MeshStandardMaterial({ color: 0x7c2d12, roughness: 0.9, flatShading: true });
-            for (let i = 0; i < 18; i++) {
-                const ang = (i / 18) * Math.PI * 2 + (i % 3) * 0.2;
-                const dist = 0.44 + (i % 4) * 0.08;
-                const size = 0.025 + (i % 3) * 0.018;
-                const rock = new THREE.Mesh(new THREE.DodecahedronGeometry(size, 0), rockMat);
-                rock.position.set(Math.cos(ang) * dist, size * 0.5, Math.sin(ang) * dist);
-                rock.rotation.set(i, i * 2, 0);
-                rock.scale.set(1.3, 0.75, 1.1);
-                surface.add(rock);
-            }
-
-            // =========================================================================
-            // A. [현재 푸른 기지] 그룹 (currentBaseGroup)
-            // =========================================================================
-            currentBaseGroup = new THREE.Group();
-            surface.add(currentBaseGroup);
-
-            const gridHelper = new THREE.PolarGridHelper(0.58, 16, 7, 64, 0x00e5ff, 0x10b981);
-            gridHelper.position.y = 0.004;
-            currentBaseGroup.add(gridHelper);
-
-            // 기지 옆을 흐르는 선명한 3D 테라포밍 운하(수로) 물길과 교량
-            const canalWater = new THREE.Mesh(
-                new THREE.BoxGeometry(0.95, 0.008, 0.11),
-                new THREE.MeshStandardMaterial({ color: 0x0ea5e9, emissive: 0x0284c7, emissiveIntensity: 0.35, roughness: 0.15 })
-            );
-            canalWater.position.set(0, 0.004, -0.34);
-            canalWater.rotation.y = -0.18;
-            currentBaseGroup.add(canalWater);
-
-            // 착륙 패드 & 생태 잔디 공원
-            const pad = new THREE.Mesh(
-                new THREE.CylinderGeometry(0.26, 0.29, 0.02, 32),
-                new THREE.MeshStandardMaterial({ color: 0x1e293b, metalness: 0.5, roughness: 0.4 })
-            );
-            pad.position.y = 0.01;
-            currentBaseGroup.add(pad);
-
-            const lawn = new THREE.Mesh(
-                new THREE.CylinderGeometry(0.18, 0.18, 0.024, 32),
-                new THREE.MeshStandardMaterial({ color: 0x059669, roughness: 0.8 })
-            );
-            lawn.position.y = 0.012;
-            currentBaseGroup.add(lawn);
-
-            // 중앙 메인 지오데식 생태 산소 돔
-            const mainDomeMat = new THREE.MeshStandardMaterial({
-                color: 0x38bdf8, transparent: true, opacity: 0.42, roughness: 0.15, metalness: 0.2
-            });
-            const mainDome = new THREE.Mesh(
-                new THREE.SphereGeometry(0.16, 24, 16, 0, Math.PI * 2, 0, Math.PI / 2),
-                mainDomeMat
-            );
-            mainDome.position.y = 0.015;
-            currentBaseGroup.add(mainDome);
-
-            const wireMat = new THREE.MeshBasicMaterial({ color: 0x00e5ff, wireframe: true, transparent: true, opacity: 0.8 });
-            const wireDome = new THREE.Mesh(
-                new THREE.SphereGeometry(0.162, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2),
-                wireMat
-            );
-            wireDome.position.y = 0.015;
-            currentBaseGroup.add(wireDome);
-
-            // 돔 내부 마천루 빌딩 6개 + 초록 숲 나무 8그루
-            for (let i = 0; i < 6; i++) {
-                const bH = 0.05 + (i % 3) * 0.03;
-                const bMesh = new THREE.Mesh(
-                    new THREE.BoxGeometry(0.025, bH, 0.025),
-                    new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0x0284c7, emissiveIntensity: 0.6 })
-                );
-                const angle = (i / 5) * Math.PI * 2;
-                const r = i === 0 ? 0 : 0.058;
-                bMesh.position.set(Math.cos(angle) * r, 0.015 + bH / 2, Math.sin(angle) * r);
-                currentBaseGroup.add(bMesh);
-            }
-            for (let t = 0; t < 8; t++) {
-                const tang = (t / 8) * Math.PI * 2 + 0.3;
-                const tree = new THREE.Mesh(
-                    new THREE.ConeGeometry(0.016, 0.04, 6),
-                    new THREE.MeshStandardMaterial({ color: 0x10b981, flatShading: true })
-                );
-                tree.position.set(Math.cos(tang) * 0.115, 0.035, Math.sin(tang) * 0.115);
-                currentBaseGroup.add(tree);
-            }
-
-            // 주변 3개 보조 바이오 돔 + 연결 터널
-            [-0.6, 2.5, 3.8].forEach(ang => {
-                const dist = 0.23;
-                const sx = Math.cos(ang) * dist;
-                const sz = Math.sin(ang) * dist;
-
-                const subDome = new THREE.Mesh(new THREE.SphereGeometry(0.065, 16, 12, 0, Math.PI * 2, 0, Math.PI / 2), mainDomeMat);
-                subDome.position.set(sx, 0.012, sz);
-                currentBaseGroup.add(subDome);
-
-                const subWire = new THREE.Mesh(new THREE.SphereGeometry(0.067, 8, 6, 0, Math.PI * 2, 0, Math.PI / 2), wireMat);
-                subWire.position.set(sx, 0.012, sz);
-                currentBaseGroup.add(subWire);
-
-                const tunnel = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.018, 0.024), new THREE.MeshStandardMaterial({ color: 0x94a3b8 }));
-                tunnel.position.set(sx * 0.65, 0.02, sz * 0.65);
-                tunnel.rotation.y = -ang;
-                currentBaseGroup.add(tunnel);
-            });
-
-            // 채굴 타워 & 회전 레이더 & 순찰 로버
-            const tower = new THREE.Mesh(
-                new THREE.CylinderGeometry(0.012, 0.028, 0.22, 12),
-                new THREE.MeshStandardMaterial({ color: 0xff5722, emissive: 0x9a3412, emissiveIntensity: 0.7 })
-            );
-            tower.position.set(0.19, 0.12, 0.08);
-            currentBaseGroup.add(tower);
-
-            radarDish = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.014, 0.02), new THREE.MeshBasicMaterial({ color: 0x00e5ff }));
-            radarDish.position.set(0.19, 0.235, 0.08);
-            currentBaseGroup.add(radarDish);
-
-            roverMesh = new THREE.Mesh(new THREE.BoxGeometry(0.038, 0.022, 0.052), new THREE.MeshBasicMaterial({ color: 0xfacc15 }));
-            roverMesh.position.set(0.35, 0.02, 0);
-            currentBaseGroup.add(roverMesh);
-
-            // [🏗️ 증축] 버튼 클릭 시 실시간으로 추가될 레벨업 건물 그룹 (태양광 발전 단지, 서브 원자로 등)
-            upgradeBuildingsGroup = new THREE.Group();
-            currentBaseGroup.add(upgradeBuildingsGroup);
-
-            // =========================================================================
-            // B. [지난주 수로공사] 전용 기초 공사장 그룹 (lastWeekGroup)
-            // =========================================================================
-            lastWeekGroup = new THREE.Group();
-            lastWeekGroup.visible = false;
-            surface.add(lastWeekGroup);
-
-            const workGrid = new THREE.PolarGridHelper(0.45, 12, 5, 32, 0xf59e0b, 0x78350f);
-            workGrid.position.y = 0.004;
-            lastWeekGroup.add(workGrid);
-
-            // 기초 철골 돔 뼈대 (유리 없이 철골만 올라간 상태)
-            const frameDome = new THREE.Mesh(
-                new THREE.SphereGeometry(0.13, 10, 6, 0, Math.PI * 2, 0, Math.PI / 2),
-                new THREE.MeshBasicMaterial({ color: 0xfbbf24, wireframe: true })
-            );
-            frameDome.position.y = 0.01;
-            lastWeekGroup.add(frameDome);
-
-            // 회전하는 노란 타워 크레인
-            const craneMast = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.24, 0.02), new THREE.MeshStandardMaterial({ color: 0xf59e0b }));
-            craneMast.position.set(-0.14, 0.12, 0);
-            lastWeekGroup.add(craneMast);
-
-            craneArm = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.015, 0.015), new THREE.MeshBasicMaterial({ color: 0xfacc15 }));
-            craneArm.position.set(-0.14, 0.23, 0);
-            lastWeekGroup.add(craneArm);
-
-            // =========================================================================
-            // C. [지난달 황무지] 전용 3D 원시 암석·크레이터·측량 비콘 그룹 (wastelandGroup)
-            // =========================================================================
-            wastelandGroup = new THREE.Group();
-            wastelandGroup.visible = false;
-            surface.add(wastelandGroup);
-
-            // 중앙 원시 운석 충돌 크레이터(분화구 링)
-            const craterRim = new THREE.Mesh(
-                new THREE.TorusGeometry(0.22, 0.028, 12, 32),
-                new THREE.MeshStandardMaterial({ color: 0x6b210b, roughness: 0.95, flatShading: true })
-            );
-            craterRim.rotation.x = Math.PI / 2;
-            craterRim.scale.set(1, 1, 0.45);
-            craterRim.position.y = 0.008;
-            wastelandGroup.add(craterRim);
-
-            // 크레이터 주변에 흩어진 거친 3D 화성 바위 12개
-            for (let r = 0; r < 12; r++) {
-                const a = (r / 12) * Math.PI * 2;
-                const d = 0.08 + (r % 3) * 0.09;
-                const s = 0.018 + (r % 4) * 0.012;
-                const boulder = new THREE.Mesh(new THREE.DodecahedronGeometry(s, 0), rockMat);
-                boulder.position.set(Math.cos(a) * d, s * 0.5, Math.sin(a) * d);
-                boulder.rotation.set(r, r * 1.5, 0);
-                wastelandGroup.add(boulder);
-            }
-
-            // "미개척 토지 좌표"를 표시하는 붉은 홀로그램 측량 레이저 말뚝(비콘)과 구획선
-            const surveyGrid = new THREE.PolarGridHelper(0.32, 8, 3, 32, 0xef4444, 0x7f1d1d);
-            surveyGrid.position.y = 0.004;
-            wastelandGroup.add(surveyGrid);
-
-            beaconLaser = new THREE.Mesh(
-                new THREE.CylinderGeometry(0.008, 0.008, 0.35, 8),
-                new THREE.MeshBasicMaterial({ color: 0xff3d00, transparent: true, opacity: 0.85 })
-            );
-            beaconLaser.position.set(0, 0.175, 0);
-            wastelandGroup.add(beaconLaser);
-
-            return root;
-        }
-
-        // [🏗️ 증축]을 누를 때마다 태양광 패널 단지, 보조 발전기 등이 실제로 하나씩 건설됨!
-        function rebuildUpgradeStructures(level) {
-            while (upgradeBuildingsGroup.children.length > 0) {
-                upgradeBuildingsGroup.remove(upgradeBuildingsGroup.children[0]);
-            }
-            const count = Math.min(8, level - 1);
-            for (let i = 0; i < count; i++) {
-                const ang = (i / 8) * Math.PI * 2 + 0.5;
-                const dist = 0.36;
-                const gx = Math.cos(ang) * dist;
-                const gz = Math.sin(ang) * dist;
-
-                // 파란 태양광 발전소 윙 + 미니 에너지 코어
-                const solarWing = new THREE.Mesh(
-                    new THREE.BoxGeometry(0.08, 0.006, 0.05),
-                    new THREE.MeshStandardMaterial({ color: 0x1d4ed8, emissive: 0x1e40af, emissiveIntensity: 0.5, metalness: 0.8 })
-                );
-                solarWing.position.set(gx, 0.025, gz);
-                solarWing.rotation.x = 0.25;
-                solarWing.rotation.y = -ang;
-                upgradeBuildingsGroup.add(solarWing);
-            }
-        }
-
-        function initWorld() {
-            const container = document.getElementById('webglContainer');
-            scene = new THREE.Scene();
-
-            camera = new THREE.PerspectiveCamera(42, window.innerWidth / window.innerHeight, 0.1, 1000);
-            camera.position.copy(camPos);
-
-            renderer = new THREE.WebGLRenderer({ antialias: true });
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-            container.appendChild(renderer.domElement);
-
-            scene.add(new THREE.AmbientLight(0xdbeafe, 0.75));
-            const sun = new THREE.DirectionalLight(0xfff1e6, 1.35);
-            sun.position.set(18, 22, 28);
-            scene.add(sun);
-
-            planetGroup = new THREE.Group();
-            scene.add(planetGroup);
-
-            const marsGeo = new THREE.SphereGeometry(PLANET_RADIUS, 128, 128);
-            const tex = generateCleanMarsTexture('current');
-            const marsMat = new THREE.MeshStandardMaterial({
-                map: tex, roughness: 0.82, metalness: 0.06
-            });
-            marsMesh = new THREE.Mesh(marsGeo, marsMat);
-            planetGroup.add(marsMesh);
-
-            const atmosGeo = new THREE.SphereGeometry(PLANET_RADIUS + 0.32, 64, 64);
-            const atmosMat = new THREE.MeshBasicMaterial({
-                color: 0x38bdf8, transparent: true, opacity: 0.14, side: THREE.BackSide
-            });
-            planetGroup.add(new THREE.Mesh(atmosGeo, atmosMat));
-
-            stage3Root = createStage3Environment();
-            stage3Root.visible = false;
-            scene.add(stage3Root);
-
-            const starGeo = new THREE.BufferGeometry();
-            const starPos = new Float32Array(2000 * 3);
-            for (let i = 0; i < 2000 * 3; i++) starPos[i] = (Math.random() - 0.5) * 180;
-            starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
-            scene.add(new THREE.Points(starGeo, new THREE.PointsMaterial({ color: 0xffffff, size: 0.12 })));
-
-            let dragging = false;
-            let prev = { x: 0, y: 0 };
-            container.addEventListener('mousedown', e => {
-                dragging = true; autoRotate = false; prev = { x: e.clientX, y: e.clientY };
-            });
-            window.addEventListener('mouseup', () => dragging = false);
-            window.addEventListener('mousemove', e => {
-                if (!dragging || currentZoomStage === 3) return;
-                const speed = currentZoomStage === 1 ? 0.005 : 0.0018;
-                targetRotY += (e.clientX - prev.x) * speed;
-                targetRotX = Math.max(-1.2, Math.min(1.2, targetRotX + (e.clientY - prev.y) * speed));
-                prev = { x: e.clientX, y: e.clientY };
-            });
-
-            window.addEventListener('resize', () => {
-                camera.aspect = window.innerWidth / window.innerHeight;
-                camera.updateProjectionMatrix();
-                renderer.setSize(window.innerWidth, window.innerHeight);
-            });
-
-            buildSpatialMarkers();
-            renderControlPanel();
-            animateLoop();
-        }
-
-        const domMarkers = [];
-
-        function buildSpatialMarkers() {
-            const layer = document.getElementById('markersLayer');
-            layer.innerHTML = '';
-            domMarkers.length = 0;
-
-            marsRegions.forEach(reg => {
-                const pinEl = document.createElement('div');
-                pinEl.className = `spatial-marker region-pin ${reg.type}`;
-                pinEl.innerHTML = `${reg.name} <div style="font-size:0.68rem; font-weight:normal; opacity:0.85;">${reg.sub}</div>`;
-                pinEl.onclick = () => zoomToStage2(reg);
-                layer.appendChild(pinEl);
-
-                domMarkers.push({
-                    stage: 1, regionId: reg.id, el: pinEl,
-                    localPos: latLonToVector3(reg.lat, reg.lon, PLANET_RADIUS + 0.15)
-                });
-
-                reg.plots.forEach(plot => {
-                    const boxEl = document.createElement('div');
-                    boxEl.id = `marker-${plot.id}`;
-                    boxEl.className = `spatial-marker plot-grid-box ${reg.type === 'city' ? 'city-plot' : ''} ${plot.owner ? 'owned' : ''}`;
-                    updatePlotMarkerText(boxEl, plot);
-                    boxEl.onclick = () => selectPlotIn3D(reg, plot);
-                    layer.appendChild(boxEl);
-
-                    domMarkers.push({
-                        stage: 2, regionId: reg.id, plotId: plot.id, el: boxEl,
-                        localPos: latLonToVector3(reg.lat + plot.dLat, reg.lon + plot.dLon, PLANET_RADIUS + 0.05)
-                    });
-                });
-            });
-        }
-
-        function updatePlotMarkerText(el, plot) {
-            let tag = plot.canFree ? (hasUsedFreeLease ? `${plot.price} REDM` : `🎁 30일 무상임대`) : `💎 ${plot.price} REDM`;
-            if (plot.status === 'leased') tag = `🕒 사장님 임대중(D-30)`;
-            if (plot.status === 'owned') tag = `👑 사장님 영구소유`;
-            el.className = `spatial-marker plot-grid-box ${!plot.canFree ? 'city-plot' : ''} ${plot.owner ? 'owned' : ''}`;
-            el.innerHTML = `<b>${plot.name}</b><span>${tag}</span>`;
-        }
-
-        function syncMarkersWith3DGlobe() {
-            domMarkers.forEach(m => {
-                if (currentZoomStage === 1 && m.stage !== 1) { m.el.style.display = 'none'; return; }
-                if (currentZoomStage === 2 && (m.stage !== 2 || m.regionId !== activeRegion.id)) { m.el.style.display = 'none'; return; }
-                if (currentZoomStage === 3) { m.el.style.display = 'none'; return; }
-
-                const worldPos = m.localPos.clone().applyEuler(planetGroup.rotation);
-                if (worldPos.z < 2.5) { m.el.style.display = 'none'; return; }
-
-                const projected = worldPos.clone().project(camera);
-                const x = (projected.x * 0.5 + 0.5) * window.innerWidth;
-                const y = (-(projected.y * 0.5) + 0.5) * window.innerHeight;
-
-                m.el.style.display = 'flex';
-                m.el.style.left = `${x}px`;
-                m.el.style.top = `${y}px`;
-            });
-        }
-
-        function aimGlobeAt(lat, lon) {
-            autoRotate = false;
-            targetRotX = lat * (Math.PI / 180);
-            targetRotY = -lon * (Math.PI / 180);
-        }
-
-        function zoomToStage2(region) {
-            currentZoomStage = 2;
-            activeRegion = region;
-            activePlot = null;
-            stage3Root.visible = false;
-
-            aimGlobeAt(region.lat, region.lon);
-            targetCamPos.set(0, 0, 13.5);
-            targetCamLook.set(0, 0, 0);
-
-            document.getElementById('boraSpeech').innerHTML = region.boraMsg;
-            document.getElementById('btnZoomOut').style.display = 'block';
-            renderControlPanel();
-        }
-
-        function selectPlotIn3D(region, plot) {
-            activePlot = plot;
-            aimGlobeAt(region.lat + plot.dLat, region.lon + plot.dLon);
-            targetCamPos.set(0, 0, 12.3);
-            targetCamLook.set(0, 0, 0);
-
-            if (plot.owner) {
-                document.getElementById('boraSpeech').innerHTML = `“사장님의 영토인 <b>[${plot.name}]</b>입니다! 오른쪽 아래의 <b>[🚀 드론 기지 뷰로 착륙하기]</b>를 누르면 초정밀 3D 기지 단지가 펼쳐져요!”`;
-            } else if (plot.canFree) {
-                if (!hasUsedFreeLease) {
-                    document.getElementById('boraSpeech').innerHTML = `“사장님, <b>[${plot.name}]</b> 위치가 정말 끝내줘요! 첫 녹지 혜택으로 <b>30일간 비용 없이 무상임대</b>를 받아 바로 개척해 보시겠어요?”`;
-                } else {
-                    document.getElementById('boraSpeech').innerHTML = `“사장님, 1인당 1회 무상임대 혜택은 이미 사용하셔서, 이 땅을 추가로 확보하시려면 <b>${plot.price.toLocaleString()} REDM 코인</b>으로 정식 분양을 받으셔야 해요!”`;
-                }
-            } else {
-                document.getElementById('boraSpeech').innerHTML = `“핵심 도시 구역인 <b>[${plot.name}]</b>을 고르셨네요! 여긴 중요 지역이라 무상임대 없이 <b>${plot.price.toLocaleString()} REDM 코인</b>으로만 영구 분양받으실 수 있어요!”`;
-            }
-            renderControlPanel();
-        }
-
-        function zoomToStage3Base(plot) {
-            currentZoomStage = 3;
-            const lat = activeRegion.lat + plot.dLat;
-            const lon = activeRegion.lon + plot.dLon;
-
-            aimGlobeAt(lat, lon);
-            rebuildUpgradeStructures(plot.level);
-
-            stage3Root.visible = true;
-            applyTimelineLayer('current');
-
-            targetCamPos.set(0, -0.78, 10.98);
-            targetCamLook.set(0, 0.08, PLANET_RADIUS);
-
-            document.getElementById('boraSpeech').innerHTML = `“<b>[${plot.name}]</b> 드론 조망 뷰로 착륙했어요! 기지 뒤편으로 흐르는 <b>3D 푸른 운하 물길과 외곽 화성 바위 언덕</b>까지 선명하게 보이죠? <b>[📜 지난달 황무지]</b>나 <b>[🏗️ 증축]</b>도 눌러보세요!”`;
-            renderControlPanel();
-        }
-
-        function stepZoomOut() {
-            if (currentZoomStage === 3) {
-                zoomToStage2(activeRegion);
-            } else {
-                currentZoomStage = 1;
-                activeRegion = null;
-                activePlot = null;
-                stage3Root.visible = false;
-                targetCamPos.set(0, 0, 28);
-                targetCamLook.set(0, 0, 0);
-                autoRotate = true;
-                document.getElementById('btnZoomOut').style.display = 'none';
-                document.getElementById('boraSpeech').innerHTML = `“다시 우주 궤도로 줌아웃했습니다, 사장님! 둥근 화성을 돌려보며 다른 대륙이나 해안 도시도 클릭해 보세요.”`;
-                renderControlPanel();
-            }
-        }
-
-        function claimFreeLease() {
-            if (!activePlot) return;
-            if (hasUsedFreeLease) {
-                alert(`❗ [무상임대 거절 안내]\n\n보라: "사장님! 30일 무상임대 혜택은 한 아이디당 1곳만 제공됩니다.\n이 토지를 원하시면 $REDM 코인을 지불해 정식 분양을 받아주세요!"`);
-                return;
-            }
-            hasUsedFreeLease = true;
-            activePlot.owner = "사장님";
-            activePlot.status = "leased";
-            updatePlotMarkerText(document.getElementById(`marker-${activePlot.id}`), activePlot);
-            updateTopHUD();
-            alert(`🎉 [${activePlot.name}] 30일 무상임대 완료!\n이제 드론 기지 뷰로 착륙해 전경을 감상해 보세요!`);
-            zoomToStage3Base(activePlot);
-        }
-
-        function buyPlotWithCoin() {
-            if (!activePlot) return;
-            if (myBalance < activePlot.price) {
-                alert("❌ 보유하신 $REDM 코인이 부족합니다!");
-                return;
-            }
-            myBalance -= activePlot.price;
-            burnedCoin += Math.floor(activePlot.price * 0.1);
-            activePlot.owner = "사장님";
-            activePlot.status = "owned";
-            updatePlotMarkerText(document.getElementById(`marker-${activePlot.id}`), activePlot);
-            updateTopHUD();
-            alert(`👑 [${activePlot.name}] 영구 소유 등기 완료!`);
-            zoomToStage3Base(activePlot);
-        }
-
-        function runBaseWork(workName, reward, isUpgrade = false) {
-            myBalance += reward;
-            updateTopHUD();
-
-            if (currentTimelineMode !== 'current') {
-                const firstBtn = document.querySelector('.time-btn');
-                if (firstBtn) change3DTimeline('current', firstBtn);
-            }
-
-            if (isUpgrade && activePlot) {
-                activePlot.level = (activePlot.level || 1) + 1;
-                rebuildUpgradeStructures(activePlot.level);
-                renderControlPanel();
-            }
-
-            currentBaseGroup.scale.set(1.15, 1.15, 1.15);
-            setTimeout(() => currentBaseGroup.scale.set(1, 1, 1), 300);
-
-            document.getElementById('boraSpeech').innerHTML = isUpgrade
-                ? `“와아! <b>[기지 Lv.${activePlot.level} 증축 완료]</b> 기지 외곽에 새로운 <b>3D 태양광 발전 시설</b>이 추가로 건설되었어요! (+${reward} REDM 획득)”`
-                : `“멋져요 사장님! <b>[${workName}]</b> 작업으로 <b>+${reward} REDM</b> 코인을 획득하셨습니다!”`;
-        }
-
-        function applyTimelineLayer(mode) {
-            currentTimelineMode = mode;
-            marsMesh.material.map = generateCleanMarsTexture(mode);
-            marsMesh.material.needsUpdate = true;
-
-            currentBaseGroup.visible = (mode === 'current');
-            lastWeekGroup.visible = (mode === 'lastWeek');
-            wastelandGroup.visible = (mode === 'lastMonth');
-        }
-
-        function change3DTimeline(mode, btn) {
-            document.querySelectorAll('.time-btn').forEach(b => b.classList.remove('active'));
-            if (btn) btn.classList.add('active');
-
-            applyTimelineLayer(mode);
-
-            if (mode === 'current') {
-                document.getElementById('boraSpeech').innerHTML = `“<b>[현재 모습]</b> 푸른 3D 운하 물길과 육각형 생태 돔, 태양광 발전소가 힘차게 가동 중이에요!”`;
-            } else if (mode === 'lastWeek') {
-                document.getElementById('boraSpeech').innerHTML = `“<b>[지난주 기록]</b> 노란 타워 크레인이 돌아가며 철골 돔 뼈대를 올리던 기초 공사 현장 모습입니다!”`;
-            } else {
-                document.getElementById('boraSpeech').innerHTML = `“<b>[지난달 황무지]</b> 개척 전, 거친 <b>3D 바위와 운석 분화구(크레이터), 붉은 측량 레이저 말뚝(비콘)</b>만 덩그러니 서 있던 원시 화성 땅바닥이에요!”`;
-            }
-        }
-
-        function updateTopHUD() {
-            document.getElementById('balanceText').innerText = myBalance.toLocaleString();
-            document.getElementById('burnText').innerText = burnedCoin.toLocaleString();
-            const t = document.getElementById('leaseTicketText');
-            if (hasUsedFreeLease) {
-                t.innerText = "사용 완료 (추가 토지는 코인 결제)";
-                t.style.color = "#f59e0b";
-            }
-        }
-
-        function renderControlPanel() {
-            const titleEl = document.getElementById('panelTitle');
-            const bodyEl = document.getElementById('panelBody');
-
-            if (currentZoomStage === 1) {
-                titleEl.innerText = "🔭 1단계: 클로즈업할 화성 지역 선택";
-                bodyEl.innerHTML = `
-                    <div class="btn-grid">
-                        ${marsRegions.map(r => `
-                            <button class="holo-btn ${r.type === 'free' ? 'free-tag' : 'city-tag'}" onclick="zoomToStage2ById('${r.id}')">
-                                <b>${r.name}</b>
-                                <small>${r.sub}</small>
-                            </button>
-                        `).join('')}
-                    </div>
-                `;
-            } else if (currentZoomStage === 2) {
-                titleEl.innerText = `📍 2단계: ${activeRegion.name}`;
-                if (!activePlot) {
-                    bodyEl.innerHTML = `<p style="margin:0; font-size:0.88rem; color:#cbd5e1;">👆 눈앞의 3D 화성 표면 위에 펼쳐진 <b>네모 구획(필지)</b>을 직접 클릭해 원하는 땅을 골라보세요!</p>`;
-                } else {
-                    let buttonsHtml = '';
-                    if (activePlot.owner) {
-                        if (activePlot.status === 'leased') {
-                            buttonsHtml += `<button class="btn-coin" onclick="buyPlotWithCoin()">👑 영구 소유 전환 (${activePlot.price} REDM)</button>`;
-                        }
-                        buttonsHtml += `<button class="btn-primary" onclick="zoomToStage3Base(activePlot)">🚀 드론 기지 뷰로 착륙하기</button>`;
-                    } else {
-                        if (activePlot.canFree) {
-                            buttonsHtml += `<button class="btn-primary" onclick="claimFreeLease()">🎁 30일 무상임대 (0 REDM)</button>`;
-                        }
-                        buttonsHtml += `<button class="btn-coin" onclick="buyPlotWithCoin()">💰 코인 영구 분양 (${activePlot.price} REDM)</button>`;
-                    }
-
-                    bodyEl.innerHTML = `
-                        <div style="font-size:0.92rem; font-weight:bold; color:#00e5ff;">선택됨: ${activePlot.name}</div>
-                        <div style="font-size:0.8rem; color:#94a3b8; margin-top:3px;">${activePlot.desc}</div>
-                        <div class="action-row">${buttonsHtml}</div>
-                    `;
-                }
-            } else if (currentZoomStage === 3) {
-                titleEl.innerText = `🚀 3단계: ${activePlot.name} (기지 Lv.${activePlot.level || 1})`;
-                bodyEl.innerHTML = `
-                    <div class="timeline-row">
-                        <button class="time-btn ${currentTimelineMode==='current'?'active':''}" onclick="change3DTimeline('current', this)">🟢 현재 푸른 기지</button>
-                        <button class="time-btn ${currentTimelineMode==='lastWeek'?'active':''}" onclick="change3DTimeline('lastWeek', this)">⏳ 지난주 철골공사</button>
-                        <button class="time-btn ${currentTimelineMode==='lastMonth'?'active':''}" onclick="change3DTimeline('lastMonth', this)">📜 지난달 바위황무지</button>
-                    </div>
-                    <div class="action-row">
-                        <button class="btn-primary" onclick="runBaseWork('지하 수맥 탐사', 50, false)">🛰️ 탐사 (+50)</button>
-                        <button class="btn-coin" onclick="runBaseWork('레드엠 코어 채굴', 120, false)">⛏️ 채굴 (+120)</button>
-                        <button class="btn-primary" style="background:#00e5ff;" onclick="runBaseWork('태양광 단지 증축', 200, true)">🏗️ 시설증축 (+200)</button>
-                    </div>
-                `;
-            }
-        }
-
-        function zoomToStage2ById(id) {
-            const reg = marsRegions.find(r => r.id === id);
-            if (reg) zoomToStage2(reg);
-        }
-
-        function animateLoop() {
-            requestAnimationFrame(animateLoop);
-            animTick += 0.03;
-
-            if (autoRotate && currentZoomStage === 1) {
-                targetRotY += 0.0012;
-            }
-
-            if (stage3Root && stage3Root.visible) {
-                if (radarDish) radarDish.rotation.y += 0.05;
-                if (roverMesh) {
-                    roverMesh.position.set(Math.cos(animTick * 0.6) * 0.35, 0.02, Math.sin(animTick * 0.6) * 0.35);
-                    roverMesh.rotation.y = -(animTick * 0.6);
-                }
-                if (craneArm) craneArm.rotation.y = Math.sin(animTick * 0.5) * 0.8;
-                if (beaconLaser) beaconLaser.material.opacity = 0.45 + Math.sin(animTick * 3) * 0.4;
-            }
-
-            currentRotX += (targetRotX - currentRotX) * 0.07;
-            currentRotY += (targetRotY - currentRotY) * 0.07;
-            planetGroup.rotation.x = currentRotX;
-            planetGroup.rotation.y = currentRotY;
-
-            camPos.lerp(targetCamPos, 0.07);
-            camLook.lerp(targetCamLook, 0.07);
-            camera.position.copy(camPos);
-            camera.lookAt(camLook);
-
-            const km = currentZoomStage === 3 ? 2 : Math.max(15, Math.floor((camPos.z - 10.9) * 850));
-            document.getElementById('altitudeDisplay').innerText = `고도: ${km.toLocaleString()} KM (${currentZoomStage === 1 ? '우주 궤도' : currentZoomStage === 2 ? '지역 상공 구획 뷰' : '지표면 HD 드론 뷰'})`;
-
-            syncMarkersWith3DGlobe();
-            renderer.render(scene, camera);
-        }
-
-        window.onload = initWorld;
-    </script>
-    <!-- 제1특구 100필지(oasis.html) 직행 플로팅 버튼 -->
-<a href="oasis.html" style="position: fixed; bottom: 28px; right: 28px; z-index: 9999; background: linear-gradient(135deg, #f59e0b, #ea580c); color: #ffffff; padding: 14px 26px; border-radius: 9999px; font-weight: 800; font-size: 16px; text-decoration: none; box-shadow: 0 10px 25px rgba(234, 88, 12, 0.5); border: 2px solid #fde047; display: flex; align-items: center; gap: 10px; font-family: 'Segoe UI', sans-serif; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
-  <span>👘</span>
-  <span>오아시스구 100필지 & 한복 임장소 입장 ➔</span>
-</a>
+    <!-- 처음 방문자를 위한 3단계 직관적 가이드 -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-left">
+      <div class="glass-card p-6 rounded-2xl">
+        <div class="text-orange-400 font-orbitron font-bold text-sm mb-2">STEP 01</div>
+        <h3 class="text-xl font-bold text-white mb-2" data-ko="무료 24시간 출석 채굴" data-en="Free 24H Mining">무료 24시간 출석 채굴</h3>
+        <p class="text-stone-400 text-sm leading-relaxed"
+           data-ko="지갑 없이도 광장에 입장해 24시간마다 무료로 $MARSM을 채굴할 수 있습니다. (초기 개척기 시간당 100 MARSM)"
+           data-en="Enter the plaza and mine $MARSM every 24 hours with zero upfront cost. (Up to 100 MARSM/hr in Pioneer Stage)">
+          지갑 없이도 광장에 입장해 24시간마다 무료로 $MARSM을 채굴할 수 있습니다. (초기 개척기 시간당 100 MARSM)
+        </p>
+      </div>
+
+      <div class="glass-card p-6 rounded-2xl">
+        <div class="text-amber-400 font-orbitron font-bold text-sm mb-2">STEP 02</div>
+        <h3 class="text-xl font-bold text-white mb-2" data-ko="3D 한복 부스터 & 영구 소각" data-en="3D Hanbok Booster & Burn">3D 한복 부스터 & 영구 소각</h3>
+        <p class="text-stone-400 text-sm leading-relaxed"
+           data-ko="도포(+10%), 비단한복(+25%), 곤룡포(+100%) 착용 시 채굴 속도가 폭발하며 사용된 코인은 100% 영구 소각됩니다."
+           data-en="Equip Dopo (+10%), Silk Hanbok (+25%), or Gonryongpo (+100%) to boost mining while 100% of spent tokens are burned.">
+          도포(+10%), 비단한복(+25%), 곤룡포(+100%) 착용 시 채굴 속도가 폭발하며 사용된 코인은 100% 영구 소각됩니다.
+        </p>
+      </div>
+
+      <div class="glass-card p-6 rounded-2xl">
+        <div class="text-orange-400 font-orbitron font-bold text-sm mb-2">STEP 03</div>
+        <h3 class="text-xl font-bold text-white mb-2" data-ko="화성 토지 분양 & 기와 건축" data-en="Mars Land & Hanok Build">화성 토지 분양 & 기와 건축</h3>
+        <p class="text-stone-400 text-sm leading-relaxed"
+           data-ko="0.1 SOL로 나만의 화성 지번을 분양받고 정자·기와한옥·화성누각을 지어 최대 +150% 추가 채굴 혜택을 누리세요."
+           data-en="Claim your Martian plot for 0.1 SOL and construct traditional pavilions & Hanoks for up to +150% passive mining boost.">
+          0.1 SOL로 나만의 화성 지번을 분양받고 정자·기와한옥·화성누각을 지어 최대 +150% 추가 채굴 혜택을 누리세요.
+        </p>
+      </div>
+    </div>
+  </main>
+
+  <!-- 백서 요약 모달 창 -->
+  <div id="wpModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+    <div class="glass-card max-w-2xl w-full rounded-3xl p-6 sm:p-8 max-h-[85vh] overflow-y-auto text-left relative">
+      <button onclick="closeWhitepaperModal()" class="absolute top-5 right-5 text-stone-400 hover:text-white text-xl font-bold">✕</button>
+      <div class="text-orange-400 font-orbitron text-xs font-bold mb-1">OFFICIAL WHITEPAPER v2.0</div>
+      <h2 class="text-2xl font-black text-white mb-4">ARES TERRA ($MARSM) 토큰 이코노미</h2>
+      
+      <div class="space-y-4 text-sm text-stone-300">
+        <div class="p-4 rounded-xl bg-white/5 border border-white/10">
+          <div class="font-bold text-amber-300 mb-1">1. 총 발행량 10억 개 고정 분배</div>
+          <p>• 채굴 및 생태계 보상: 50% (5억 개 / 5단계 반감기)<br>• DEX 유동성 풀: 20% (2억 개 / 초기 2.0 SOL 시드)<br>• 생태계 기금: 15% (1.5억 개) / 팀 물량: 15% (1.5억 개, 6개월 락업)</p>
+        </div>
+        <div class="p-4 rounded-xl bg-white/5 border border-white/10">
+          <div class="font-bold text-amber-300 mb-1">2. 이중 소각 엔진 (Dual-Burn Engine)</div>
+          <p>• 화성 토지 분양(0.1 SOL) 매출의 50%는 매월 DEX 바이백 후 영구 소각<br>• 3등급 한복 및 3등급 건축물(초가정자·기와한옥·화성누각) 결제 코인 100% 소각</p>
+        </div>
+        <div class="p-4 rounded-xl bg-white/5 border border-white/10">
+          <div class="font-bold text-amber-300 mb-1">3. 멀티 프로빈스(Multi-Province) 확장</div>
+          <p>• 오아시스주 이후 엘리시움주, 타르시스주 확장 시에도 추가 코인 발행 없이 전 세계 일일 채굴 상한(75만 개)을 공유하여 디플레이션 가치를 극대화합니다.</p>
+        </div>
+      </div>
+
+      <div class="mt-6 flex justify-end gap-3">
+        <button onclick="window.print()" class="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-sm font-semibold">🖨️ 인쇄 / PDF 저장</button>
+        <a href="oasis.html" class="px-5 py-2 rounded-xl bg-orange-600 hover:bg-orange-500 text-white text-sm font-bold">광장 바로가기 →</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- 하단 푸터 -->
+  <footer class="w-full border-t border-white/10 py-6 px-6 text-center text-xs text-stone-500">
+    <p>© 2026 ARES TERRA (<span class="text-stone-400">aresterra.io</span>) • Solana Ecosystem Metaverse ($MARSM)</p>
+  </footer>
+
+  <script>
+    let currentLang = 'ko';
+    function toggleLanguage() {
+      currentLang = currentLang === 'ko' ? 'en' : 'ko';
+      document.getElementById('langToggle').innerText = currentLang === 'ko' ? '🌐 ENGLISH' : '🌐 한국어';
+      document.querySelectorAll('[data-ko]').forEach(el => {
+        el.innerText = el.getAttribute(`data-${currentLang}`);
+      });
+    }
+    function openWhitepaperModal() {
+      const m = document.getElementById('wpModal');
+      m.classList.remove('hidden');
+      m.classList.add('flex');
+    }
+    function closeWhitepaperModal() {
+      const m = document.getElementById('wpModal');
+      m.classList.add('hidden');
+      m.classList.remove('flex');
+    }
+  </script>
 </body>
 </html>
