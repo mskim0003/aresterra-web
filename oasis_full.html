@@ -4039,24 +4039,32 @@ window.copyInviteText = function() {
     if (mode === 'field' && typeof switchViewMode === 'function') switchViewMode('field');
   });
 </script>
-    <!-- MARSM 토큰 정보 카드 -->
-<div style="background: #1a1a2e; color: #fff; padding: 20px; border-radius: 12px; max-width: 500px; font-family: sans-serif;">
-  <h3 style="margin-top: 0; color: #ff6b35;">🪙 ARESTERRA ($MARSM) 공식 토큰</h3>
-  <p style="font-size: 14px; color: #ccc;">Solana Mainnet · 총 발행량 1,000,000,000 MARSM</p>
-  
-  <div style="display: flex; gap: 8px; margin: 12px 0;">
-    <input type="text" id="marsmCA" value="85gB9jtSVqY78zs5sYNoQHPVMBzV8hgufsfKJH1Db4zs" readonly 
-           style="flex: 1; padding: 8px; border-radius: 6px; border: none; background: #0f0f1a; color: #fff;">
-    <button onclick="copyCA()" 
-            style="padding: 8px 14px; background: #ff6b35; color: #fff; border: none; border-radius: 6px; cursor: pointer;">
+<!-- MARSM 토큰 정보 카드 -->
+<div style="background: #1a1a2e; color: #fff; padding: 18px; border-radius: 12px; max-width: 460px; margin: 16px; font-family: sans-serif; border: 1px solid #333;">
+  <h3 style="margin: 0 0 6px 0; color: #ff6b35; font-size: 17px;">ARESTERRA ($MARSM) 공식 토큰</h3>
+  <p style="margin: 0 0 12px 0; font-size: 13px; color: #ccc;">Solana Mainnet · 총 발행량 1,000,000,000 MARSM</p>
+
+  <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+    <input type="text" id="marsmCA" value="85gB9jtSVqY78zs5sYNoQHPVMBzV8hgufsfKJH1Db4zs" readonly
+           style="flex: 1; min-width: 0; padding: 8px 10px; border-radius: 6px; border: 1px solid #444; background: #0f0f1a; color: #fff; font-size: 12px;">
+    <button type="button" onclick="copyCA()"
+            style="flex-shrink: 0; padding: 8px 14px; background: #ff6b35; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">
       주소 복사
     </button>
   </div>
 
-  <a href="https://solscan.io/token/85gB9jtSVqY78zs5sYNoQHPVMBzV8hgufsfKJH1Db4zs" target="_blank" 
-     style="color: #4cc9f0; font-size: 13px; text-decoration: none;">
-    🔍 솔스캔(Solscan)에서 공식 기록 보기 ↗
-  </a>
+  <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px;">
+    <a href="https://solscan.io/token/85gB9jtSVqY78zs5sYNoQHPVMBzV8hgufsfKJH1Db4zs" target="_blank"
+       style="color: #4cc9f0; font-size: 13px; text-decoration: none;">
+      솔스캔(Solscan)에서 공식 기록 보기
+    </a>
+    <button type="button" id="connectBtn" onclick="connectPhantom()"
+            style="padding: 8px 14px; background: #ab9ff2; color: #111; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; font-size: 13px;">
+      팬텀 지갑 연결하기
+    </button>
+  </div>
+
+  <p id="walletStatus" style="margin: 10px 0 0 0; font-size: 12px; color: #a3f7bf;"></p>
 </div>
 
 <script>
@@ -4065,27 +4073,15 @@ function copyCA() {
   navigator.clipboard.writeText(caInput.value);
   alert("MARSM 토큰 주소가 복사되었습니다!");
 }
-</script>
-<!-- 화면 왼쪽 아래 고정 팬텀 지갑 버튼 -->
-<div style="position: fixed; bottom: 20px; left: 20px; z-index: 9999; display: flex; flex-direction: column; align-items: flex-start; gap: 6px;">
-  <button id="connectBtn" onclick="connectPhantom()" 
-          style="padding: 12px 18px; background: #ab9ff2; color: #111; font-weight: bold; border: 2px solid #fff; border-radius: 30px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.4);">
-    👻 팬텀 지갑 연결하기
-  </button>
-  <span id="walletStatus" style="font-size: 12px; color: #fff; background: rgba(0,0,0,0.75); padding: 4px 10px; border-radius: 12px; display: none;"></span>
-</div>
 
-<script>
 async function connectPhantom() {
   if (window.solana && window.solana.isPhantom) {
     try {
       const response = await window.solana.connect();
       const walletAddress = response.publicKey.toString();
-      
       document.getElementById("connectBtn").innerText = "✅ 지갑 연결됨";
-      const statusEl = document.getElementById("walletStatus");
-      statusEl.innerText = "연결됨: " + walletAddress.slice(0, 4) + "..." + walletAddress.slice(-4);
-      statusEl.style.display = "inline-block";
+      document.getElementById("walletStatus").innerText =
+        "연결된 지갑: " + walletAddress.slice(0, 4) + "..." + walletAddress.slice(-4);
     } catch (err) {
       alert("지갑 연결이 취소되었습니다.");
     }
@@ -4094,7 +4090,6 @@ async function connectPhantom() {
     window.open("https://phantom.app/", "_blank");
   }
 }
-</script>
 </script>
   </body>
 </html>
