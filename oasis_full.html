@@ -4066,25 +4066,26 @@ function copyCA() {
   alert("MARSM 토큰 주소가 복사되었습니다!");
 }
 </script>
-    <!-- 팬텀 지갑 연결 버튼 -->
-<button id="connectBtn" onclick="connectPhantom()" 
-        style="padding: 12px 20px; background: #ab9ff2; color: #111; font-weight: bold; border: none; border-radius: 8px; cursor: pointer;">
-  👻 팬텀 지갑 연결하기
-</button>
-<p id="walletStatus" style="font-size: 14px; margin-top: 8px;"></p>
+<!-- 화면 왼쪽 아래 고정 팬텀 지갑 버튼 -->
+<div style="position: fixed; bottom: 20px; left: 20px; z-index: 9999; display: flex; flex-direction: column; align-items: flex-start; gap: 6px;">
+  <button id="connectBtn" onclick="connectPhantom()" 
+          style="padding: 12px 18px; background: #ab9ff2; color: #111; font-weight: bold; border: 2px solid #fff; border-radius: 30px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.4);">
+    👻 팬텀 지갑 연결하기
+  </button>
+  <span id="walletStatus" style="font-size: 12px; color: #fff; background: rgba(0,0,0,0.75); padding: 4px 10px; border-radius: 12px; display: none;"></span>
+</div>
 
 <script>
 async function connectPhantom() {
-  // 팬텀 지갑이 설치되어 있는지 확인
   if (window.solana && window.solana.isPhantom) {
     try {
       const response = await window.solana.connect();
       const walletAddress = response.publicKey.toString();
       
-      // 연결 성공 시 주소 앞뒤만 줄여서 표시
       document.getElementById("connectBtn").innerText = "✅ 지갑 연결됨";
-      document.getElementById("walletStatus").innerText = 
-        "연결된 지갑: " + walletAddress.slice(0, 4) + "..." + walletAddress.slice(-4);
+      const statusEl = document.getElementById("walletStatus");
+      statusEl.innerText = "연결됨: " + walletAddress.slice(0, 4) + "..." + walletAddress.slice(-4);
+      statusEl.style.display = "inline-block";
     } catch (err) {
       alert("지갑 연결이 취소되었습니다.");
     }
@@ -4093,6 +4094,7 @@ async function connectPhantom() {
     window.open("https://phantom.app/", "_blank");
   }
 }
+</script>
 </script>
   </body>
 </html>
