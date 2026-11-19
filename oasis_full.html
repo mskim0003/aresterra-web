@@ -3905,13 +3905,13 @@ window.copyInviteText = function() {
   }, 200);
 })();
 </script>
-  <!-- =====================================================================
-     [ARESTERRA 유저/시스템 분리 클린 모드]
-     - 기본: 일반 유저용 깔끔한 화면 (시스템/관리자 도구 자동 숨김)
-     - 오른쪽 위 [⚙️ 시스템 메뉴] 클릭 시 전체 관리자 도구 즉시 표시
+<!-- =====================================================================
+     [ARESTERRA 유저/시스템 분리 클린 모드 v2]
+     - 영구 삭제: 상단 지인초대장, 3D 화성지구본, 타 유저(jay, bora) 버튼
+     - 기본(유저 모드): 깔끔한 화면 + 본인(mskim0003)만 표시
+     - [⚙️ 시스템 메뉴] 클릭 시 관리자 도구만 표시
 ====================================================================== -->
 <style>
-  /* 오른쪽 위 고정 컨트롤 바 (로비 복귀 + 시스템 메뉴 토글) */
   #aresterra-top-controls {
     position: fixed;
     top: 12px;
@@ -3944,49 +3944,71 @@ window.copyInviteText = function() {
     color: #ffffff;
   }
 
-  /* 유저 모드일 때 시스템/관리자 전용 요소 숨김 */
+  /* 시스템 메뉴를 열어도 영구적으로 안 보이게 숨김 */
+  .perm-hide {
+    display: none !important;
+  }
+
+  /* 유저 모드일 때만 숨기는 시스템/관리자 전용 요소 */
   body.user-clean-mode .sys-admin-only {
     display: none !important;
   }
-  /* 유저 모드일 때 헤더 여백을 슬림하게 압축 */
   body.user-clean-mode header {
     padding-top: 6px !important;
     padding-bottom: 6px !important;
   }
 </style>
 
-<!-- 오른쪽 위 고정 버튼 (겹침 방지) -->
+<!-- 오른쪽 위 고정 버튼 -->
 <div id="aresterra-top-controls">
   <a href="oasis.html" class="at-ctrl-btn">← 메인 로비로</a>
   <button id="toggle-sys-btn" class="at-ctrl-btn" onclick="toggleSystemMode()">⚙️ 시스템 메뉴</button>
 </div>
 
 <script>
-  // 1. 시스템/관리자용 메뉴 자동 분류 (원본 코드를 건드리지 않고 이름표만 붙임)
   function tagSystemElements() {
-    // 숨길 시스템·관리자·중복 버튼 키워드
-    const adminKeywords = [
-      '테스트코인', '24H QA', '3중 금고', '사전청약', '3분 AI비서',
-      'AI 비서', '주소분양', '직행이동', 'aresterra.io/jay',
-      'aresterra.io/bora', 'aresterra.io/mskim0003', '3D 화성 지구본'
+    // 1. 영구 삭제할 버튼들 (시스템 메뉴에서도 안 보임)
+    const permHideKeywords = [
+      '3D 화성 지구본',
+      'aresterra.io/jay',
+      'aresterra.io/bora'
     ];
 
-    // 버튼 및 링크 검사
+    // 2. 시스템 메뉴(관리자 모드)에만 넣어둘 버튼들
+    const adminKeywords = [
+      '테스트코인', '24H QA', '3중 금고', '사전청약',
+      '3분 AI비서', 'AI 비서', '주소분양', '직행이동'
+    ];
+
     document.querySelectorAll('button, a').forEach(el => {
       if (el.closest('#aresterra-top-controls')) return;
       const txt = (el.innerText || '').trim();
+
+      // 상단 헤더에 있는 중복 '지인 초대장' 영구 숨김 (아래쪽 버튼은 유지)
+      if (el.closest('header') && txt.includes('지인 초대장')) {
+        el.classList.add('perm-hide');
+        return;
+      }
+
+      // 영구 삭제 대상 처리
+      if (permHideKeywords.some(k => txt.includes(k))) {
+        el.classList.add('perm-hide');
+        return;
+      }
+
+      // 시스템 메뉴 전용 대상 처리
       if (adminKeywords.some(k => txt.includes(k))) {
         el.classList.add('sys-admin-only');
       }
     });
 
-    // 상단 직행 주소창 박스 숨김
+    // 상단 직행 주소창 박스는 시스템 메뉴에 숨김
     const domainInput = document.getElementById('top-domain-bar-input');
     if (domainInput && domainInput.parentElement) {
       domainInput.parentElement.classList.add('sys-admin-only');
     }
 
-    // 상단 헤더의 2번째 줄(핫플레이스/뷰전환 중복 바) 숨김
+    // 상단 헤더 2번째 줄은 유저 모드에서 숨김 (시스템 메뉴 열면 본인 mskim0003만 깔끔하게 표시)
     const header = document.querySelector('header');
     if (header) {
       const rows = header.querySelectorAll('.max-w-\\[1600px\\] > div');
@@ -3996,7 +4018,6 @@ window.copyInviteText = function() {
     }
   }
 
-  // 2. 유저 모드 <-> 시스템(관리자) 모드 전환
   function toggleSystemMode() {
     const isClean = document.body.classList.toggle('user-clean-mode');
     const btn = document.getElementById('toggle-sys-btn');
@@ -4009,10 +4030,9 @@ window.copyInviteText = function() {
     }
   }
 
-  // 3. 페이지 로드 시 자동 정리 + 로비에서 선택한 모드(토지/건축)로 바로 이동
   window.addEventListener('load', () => {
     tagSystemElements();
-    document.body.classList.add('user-clean-mode'); // 기본은 깔끔한 유저 모드
+    document.body.classList.add('user-clean-mode');
 
     const mode = new URLSearchParams(window.location.search).get('mode');
     if (mode === 'map' && typeof switchViewMode === 'function') switchViewMode('map');
