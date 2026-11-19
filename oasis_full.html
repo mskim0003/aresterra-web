@@ -4039,5 +4039,32 @@ window.copyInviteText = function() {
     if (mode === 'field' && typeof switchViewMode === 'function') switchViewMode('field');
   });
 </script>
+    <!-- MARSM 토큰 정보 카드 -->
+<div style="background: #1a1a2e; color: #fff; padding: 20px; border-radius: 12px; max-width: 500px; font-family: sans-serif;">
+  <h3 style="margin-top: 0; color: #ff6b35;">🪙 ARESTERRA ($MARSM) 공식 토큰</h3>
+  <p style="font-size: 14px; color: #ccc;">Solana Mainnet · 총 발행량 1,000,000,000 MARSM</p>
+  
+  <div style="display: flex; gap: 8px; margin: 12px 0;">
+    <input type="text" id="marsmCA" value="여기에_MARSM_전체주소_붙여넣기" readonly 
+           style="flex: 1; padding: 8px; border-radius: 6px; border: none; background: #0f0f1a; color: #fff;">
+    <button onclick="copyCA()" 
+            style="padding: 8px 14px; background: #ff6b35; color: #fff; border: none; border-radius: 6px; cursor: pointer;">
+      주소 복사
+    </button>
+  </div>
+
+  <a href="https://solscan.io/token/여기에_MARSM_전체주소_붙여넣기" target="_blank" 
+     style="color: #4cc9f0; font-size: 13px; text-decoration: none;">
+    🔍 솔스캔(Solscan)에서 공식 기록 보기 ↗
+  </a>
+</div>
+
+<script>
+function copyCA() {
+  const caInput = document.getElementById("marsmCA");
+  navigator.clipboard.writeText(caInput.value);
+  alert("MARSM 토큰 주소가 복사되었습니다!");
+}
+</script>
   </body>
 </html>
