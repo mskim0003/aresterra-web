@@ -4066,5 +4066,33 @@ function copyCA() {
   alert("MARSM 토큰 주소가 복사되었습니다!");
 }
 </script>
+    <!-- 팬텀 지갑 연결 버튼 -->
+<button id="connectBtn" onclick="connectPhantom()" 
+        style="padding: 12px 20px; background: #ab9ff2; color: #111; font-weight: bold; border: none; border-radius: 8px; cursor: pointer;">
+  👻 팬텀 지갑 연결하기
+</button>
+<p id="walletStatus" style="font-size: 14px; margin-top: 8px;"></p>
+
+<script>
+async function connectPhantom() {
+  // 팬텀 지갑이 설치되어 있는지 확인
+  if (window.solana && window.solana.isPhantom) {
+    try {
+      const response = await window.solana.connect();
+      const walletAddress = response.publicKey.toString();
+      
+      // 연결 성공 시 주소 앞뒤만 줄여서 표시
+      document.getElementById("connectBtn").innerText = "✅ 지갑 연결됨";
+      document.getElementById("walletStatus").innerText = 
+        "연결된 지갑: " + walletAddress.slice(0, 4) + "..." + walletAddress.slice(-4);
+    } catch (err) {
+      alert("지갑 연결이 취소되었습니다.");
+    }
+  } else {
+    alert("팬텀 지갑이 설치되어 있지 않습니다. 팬텀 공식 사이트로 이동합니다.");
+    window.open("https://phantom.app/", "_blank");
+  }
+}
+</script>
   </body>
 </html>
